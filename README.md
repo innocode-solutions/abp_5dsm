@@ -72,7 +72,7 @@ A solução busca **antecipar problemas de aprendizagem** e fornecer **insights 
 - **Segurança**: JWT, bcrypt, HTTPS, controle de acesso por perfil.  
 
 📊 **Fluxograma da arquitetura:**  
-![Fluxo AthenaAI](./athenaai_fluxo.png)  
+![Fluxo AthenaAI](./fluxo_projeto.png)  
 
 ---
 
