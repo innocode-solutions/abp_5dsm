@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 # Carregar o dataset original
 try:
-    df = pd.read_csv('datasets/StudentPerformanceFactors.csv')
+    df = pd.read_csv('../datasets/StudentPerformanceFactors.csv')
     print("✅ Dataset carregado com sucesso!")
 except FileNotFoundError:
     print("❌ Erro: Arquivo 'datasets/StudentPerformanceFactors.csv' não encontrado.")
