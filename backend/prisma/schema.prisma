@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Curso {
+  IDCurso      String      @id @default(uuid())
+  NomeDoCurso  String
+  Descricao    String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relacionamentos
+  disciplinas  Disciplina[]
+  alunos       Aluno[]
+  
+  @@map("cursos")
+}
+
+model Disciplina {
+  IDDisciplina        String    @id @default(uuid())
+  IDCurso             String
+  NomeDaDisciplina    String
+  CodigoDaDisciplina  String?
+  Ativa               Boolean   @default(true)
+  CargaHoraria        Int?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  // Relacionamentos
+  curso               Curso     @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
+  matriculas          Matricula[]
+  
+  // Índices e constraints
+  @@unique([IDCurso, CodigoDaDisciplina])
+  @@map("disciplinas")
+}
+
+model Aluno {
+  IDAluno   String    @id @default(uuid())
+  Nome      String
+  Email     String    @unique
+  Idade     Int?
+  IDCurso   String
+  Semestre  Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relacionamentos
+  curso     Curso     @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
+  matriculas Matricula[]
+  user      User?     // Relacionamento opcional com User
+  
+  @@map("alunos")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model User {
+  IDUser       String    @id @default(uuid())
+  Email        String    @unique
+  PasswordHash String
+  Role         UserRole  @default(STUDENT)
+  name         String?
+  studentId    String?   @unique // FK opcional para Aluno
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  // Relacionamento opcional com Aluno
+  aluno        Aluno?    @relation(fields: [studentId], references: [IDAluno])
+  
+  @@map("users")
+}
+
+model PeriodoLetivo {
+  IDPeriodo   String    @id @default(uuid())
+  Nome        String
+  DataInicio  DateTime
+  DataFim     DateTime
+  Ativo       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relacionamentos
+  matriculas  Matricula[]
+  
+  @@map("periodos_letivos")
+}
+
+enum StatusMatricula {
+  ENROLLED
+  DROPPED
+  COMPLETED
+}
+
+model Matricula {
+  IDMatricula   String          @id @default(uuid())
+  IDAluno       String
+  IDDisciplina  String
+  IDPeriodo     String
+  Status        StatusMatricula @default(ENROLLED)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  // Relacionamentos
+  aluno         Aluno           @relation(fields: [IDAluno], references: [IDAluno], onDelete: Cascade)
+  disciplina    Disciplina      @relation(fields: [IDDisciplina], references: [IDDisciplina], onDelete: Cascade)
+  periodo       PeriodoLetivo   @relation(fields: [IDPeriodo], references: [IDPeriodo], onDelete: Cascade)
+  
+  // Constraint única
+  @@unique([IDAluno, IDDisciplina, IDPeriodo])
+  @@map("matriculas")
+}
