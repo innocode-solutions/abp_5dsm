@@ -1,5 +1,4 @@
 # =============================================================================
-# ARQUIVO: 1_criar_preprocessador.py (VERSÃO FINAL E CORRIGIDA)
 # OBJETIVO: Criar, treinar e salvar o pipeline de pré-processamento.
 # =============================================================================
 
@@ -12,7 +11,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 # --- CONFIGURAÇÕES ---
 DATASET_PATH = '../datasets/StudentPerformanceFactors.csv'
-PREPROCESSOR_PATH = 'perf_preprocess.pkl'
+PREPROCESSOR_PATH = '../pipelines/perf_preprocess.pkl'
 
 print("Iniciando a criação do pré-processador...")
 
