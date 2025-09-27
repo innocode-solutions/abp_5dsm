@@ -19,9 +19,9 @@ from sklearn.metrics import (
 
 # --- CONFIGURAÇÕES ---
 DATASET_PATH = '../datasets/StudentPerformanceFactors.csv'
-PREPROCESSOR_PATH = 'perf_preprocess.pkl'
-LOGREG_MODEL_PATH = 'perf_logreg_model.pkl'
-LINREG_MODEL_PATH = 'perf_reglin_model.pkl' # Corrigido o nome do arquivo
+PREPROCESSOR_PATH = '../pipelines/perf_preprocess.pkl'
+LOGREG_MODEL_PATH = '../pipelines/perf_logreg_model.pkl'
+LINREG_MODEL_PATH = '../pipelines/perf_reglin_model.pkl' # Corrigido o nome do arquivo
 NOTA_DE_CORTE = 60
 RANDOM_STATE = 42
 
@@ -88,8 +88,8 @@ plt.ylabel('Taxa de Verdadeiros Positivos')
 plt.title('Curva ROC para Modelo de Classificação')
 plt.legend()
 plt.grid()
-plt.savefig('grafico_curva_roc.png')
-print("\n✅ Gráfico da Curva ROC salvo como 'grafico_curva_roc.png'.")
+plt.savefig('../data/grafico_curva_roc.png')
+print("\n✅ Gráfico da Curva ROC salvo como '../data/grafico_curva_roc.png'.")
 
 # Gráfico 2: Gráfico de Resíduos para o modelo de Regressão
 plt.figure(figsize=(10, 7))
@@ -100,8 +100,8 @@ plt.xlabel('Valores Previstos (Nota do Exame)')
 plt.ylabel('Resíduos (Real - Previsto)')
 plt.title('Gráfico de Resíduos para Modelo de Regressão')
 plt.grid()
-plt.savefig('grafico_residuos.png')
-print("✅ Gráfico de Resíduos salvo como 'grafico_residuos.png'.")
+plt.savefig('../data/grafico_residuos.png')
+print("✅ Gráfico de Resíduos salvo como '../data/grafico_residuos.png'.")
 
 
 # --- 4. DOCUMENTAÇÃO DA DECISÃO ---
