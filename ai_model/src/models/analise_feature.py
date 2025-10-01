@@ -1,7 +1,7 @@
 import pandas as pd
 
 DATASET_PATH = '../datasets/StudentPerformanceFactors.csv'
-NOTA_DE_CORTE = 60
+NOTA_DE_CORTE = 68
 
 df = pd.read_csv(DATASET_PATH)
 df['Aprovado'] = (df['Exam_Score'] >= NOTA_DE_CORTE).astype(int)

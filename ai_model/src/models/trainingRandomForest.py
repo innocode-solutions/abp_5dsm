@@ -1,12 +1,14 @@
 # =============================================================================
-# OBJETIVO: Treinar e otimizar um modelo RandomForestClassifier.
+# ARQUIVO: treinamentoRandomForest.py (VERSÃO FINAL OTIMIZADA)
+# OBJETIVO: Treinar e otimizar um modelo RandomForestClassifier, aplicando
+#           hiperparâmetros restritivos para combater o overfitting.
 # =============================================================================
 
 import pandas as pd
 import joblib
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.metrics import classification_report
 
 class ModelTrainer:
     """
@@ -22,7 +24,7 @@ class ModelTrainer:
             print(f"❌ Erro: Pré-processador '{preprocessor_path}' não encontrado.")
             self.preprocessor = None
 
-    def train(self, data, nota_de_corte=60):
+    def train(self, data, nota_de_corte=68):
         if self.preprocessor is None:
             return
 
@@ -36,31 +38,40 @@ class ModelTrainer:
         X_test_proc = self.preprocessor.transform(X_test)
         print("✅ Dados de treino e teste transformados.")
         
-        # 3. Otimização e Treinamento
-        print("\n--- Iniciando busca pelos melhores hiperparâmetros (GridSearch) ---")
+        # 2. Otimização e Treinamento com Foco em Regularização
+        print("\n--- Iniciando busca pelos melhores hiperparâmetros para evitar overfitting ---")
 
-        # ==========================================================================
-        # !! ALTERAÇÃO PRINCIPAL AQUI !!
-        # Expandimos a grade de parâmetros para uma busca mais completa.
-        # ==========================================================================
+        # Grade de parâmetros APRIMORADA para forçar o modelo a ser mais simples
+        # e generalista, combatendo o vício em features específicas.
         param_grid = {
             'n_estimators': [100, 200],
-            'max_depth': [5, 8, 10],            # <-- Tente profundidades BEM menores
-            'min_samples_leaf': [5, 10, 15],    # <-- Exija um número MAIOR de amostras por folha
+            # Profundidades menores evitam que as árvores se aprofundem demais e memorizem dados
+            'max_depth': [5, 8, 10],
+            # Exigir mais amostras por "folha" impede a criação de regras para casos muito específicos
+            'min_samples_leaf': [5, 10, 15],
+            # Limitar as features por árvore aumenta a diversidade e robustez do modelo
             'max_features': ['sqrt', 'log2']
         }
-                
+        
         rf = RandomForestClassifier(random_state=self.random_state, n_jobs=-1, class_weight='balanced')
-        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, scoring='roc_auc', verbose=2) # Aumentei cv e verbose
+        
+        # O GridSearchCV testará todas as combinações e encontrará o melhor modelo
+        grid_search = GridSearchCV(
+            estimator=rf,
+            param_grid=param_grid,
+            cv=5,               # Validação cruzada com 5 folds para mais robustez
+            scoring='roc_auc',  # Métrica de otimização
+            verbose=2           # Mostra o progresso detalhado da busca
+        )
         grid_search.fit(X_train_proc, y_train)
         
         print(f"\nMelhores parâmetros encontrados: {grid_search.best_params_}")
         self.model = grid_search.best_estimator_
         
-        # 4. Avaliar o modelo final
+        # 3. Avaliar o modelo final otimizado
         self._evaluate(X_test_proc, y_test)
         
-        # 5. Salvar o MODELO
+        # 4. Salvar o MODELO
         self._save_model()
         
     def _evaluate(self, X_test_proc, y_test):
@@ -69,12 +80,9 @@ class ModelTrainer:
         print(classification_report(y_test, y_pred, target_names=['Reprovado', 'Aprovado']))
 
     def _save_model(self):
-        # Ajuste o caminho se necessário
         joblib.dump(self.model, '../pipelines/perf_rf_model.pkl')
-        print("\n💾 Modelo RandomForestClassifier salvo com sucesso em '../pipelines/perf_rf_model.pkl'!")
+        print("\n💾 Modelo RandomForestClassifier otimizado salvo com sucesso em '../pipelines/perf_rf_model.pkl'!")
 
-
-# O restante do seu arquivo (load_data e if __name__ == "__main__") continua igual.
 def load_data(filepath):
     try:
         df = pd.read_csv(filepath)
@@ -84,10 +92,10 @@ def load_data(filepath):
         return None
 
 if __name__ == "__main__":
-    print("--- INICIANDO PROCESSO DE TREINAMENTO DE MODELO (Random Forest Classifier) ---")
+    print("--- INICIANDO PROCESSO DE TREINAMENTO OTIMIZADO (Random Forest Classifier) ---")
     
     DATASET_PATH = '../datasets/StudentPerformanceFactors.csv'
-    PREPROCESSOR_PATH = '../pipelines/perf_preprocess.pkl' # <-- Garanta que este caminho está correto
+    PREPROCESSOR_PATH = '../pipelines/perf_preprocess.pkl'
     
     dataframe = load_data(DATASET_PATH)
     
