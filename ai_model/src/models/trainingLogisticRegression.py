@@ -119,7 +119,7 @@ if __name__ == "__main__":
     print("--- INICIANDO PROCESSO DE TREINAMENTO OTIMIZADO (Classificação Binária) ---")
     
     DATASET_PATH = '../datasets/StudentPerformanceFactors.csv'
-    PREPROCESSOR_PATH = '../pipelines/perf_preprocess.pkl' # <-- Garanta que este caminho está correto
+    PREPROCESSOR_PATH = './pipelines/perf_preprocess.pkl' # <-- Garanta que este caminho está correto
     
     dataframe = load_data(DATASET_PATH)
     

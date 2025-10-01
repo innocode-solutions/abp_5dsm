@@ -70,7 +70,7 @@ class ModelTrainer:
     def _save_model(self):
         # O nome do arquivo salvo continua o mesmo para consistência com o script de previsão
         joblib.dump(self.model, '../pipelines/perf_reglin_model.pkl')
-        print("\n💾 Modelo salvo com sucesso em '../pipelinesperf_reglin_model.pkl'!")
+        print("\n💾 Modelo salvo com sucesso em '../pipelines/perf_reglin_model.pkl'!")
 
 def load_data(filepath):
     try:
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     print("--- INICIANDO PROCESSO DE TREINAMENTO DE MODELO (Regressão Linear) ---")
     
     DATASET_PATH = '../datasets/StudentPerformanceFactors.csv'
-    PREPROCESSOR_PATH = './pipelines/perf_preprocess.pkl'
+    PREPROCESSOR_PATH = '../pipelines/perf_preprocess.pkl'
     
     dataframe = load_data(DATASET_PATH)
     
