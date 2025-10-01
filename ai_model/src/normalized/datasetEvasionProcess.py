@@ -68,13 +68,15 @@ pipeline.fit(X)
 X_processed = pipeline.transform(X)
 
 # 11. Validar se não restam valores nulos
+from scipy import sparse
+
 X_df = pd.DataFrame(
-    X_processed.toarray() if hasattr(X_processed, "toarray") else X_processed
+    X_processed.toarray() if sparse.issparse(X_processed) else X_processed
 )
 assert X_df.isnull().sum().sum() == 0, "Ainda existem valores nulos!"
 
 # 12. Salvar pipeline para reuso
-joblib.dump(pipeline, "dropout_preprocess.pkl")
+joblib.dump(pipeline, "../pipelines/dropout_preprocess.pkl")
 
 # 13. Exportar dataset com label já criada
 df.to_csv("../datasets/xAPI_dropout.csv", index=False)
