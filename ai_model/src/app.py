@@ -104,7 +104,7 @@ app = FastAPI(
 )
 
 # --- DEFINIÇÃO DA ROTA DA API ---
-@app.post('/predict', summary="Gera um relatório de predição de desempenho")
+@app.post('/predict/performance', summary="Gera um relatório de predição de desempenho")
 def predict(student_data: StudentData):
     """
     Recebe os dados do aluno em formato de texto categórico e retorna o relatório.
