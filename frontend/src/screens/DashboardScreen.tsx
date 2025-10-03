@@ -1,10 +1,19 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, ListRenderItemInfo } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, FlatList, ListRenderItemInfo, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from '@react-navigation/native';
 import Card from '../components/Card';
 import Section from '../components/Section';
 import StudentItem from '../components/StudentItem';
 import colors from '../theme/colors';
+import {NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  Dashboard: undefined;
+  ClassPerformance: undefined;
+};
+
+type DashboardScreenProp = NativeStackNavigationProp<RootStackParamList, 'Dashboard'>;
 
 type Student = {
   id: string;
@@ -25,7 +34,6 @@ const MOCK = {
   risco: [
     { id: '1', name: 'Lucas Oliveira',  course: 'Engenharia de Software',   avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
     { id: '2', name: 'Isabela Santos',  course: 'Ciência da Computação',    avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-    // adicione quantos quiser; o FlatList dá conta do scroll
     { id: '3', name: 'Marcos Lima',     course: 'Sistemas de Informação',   avatar: 'https://randomuser.me/api/portraits/men/11.jpg' },
     { id: '4', name: 'Ana Souza',       course: 'Engenharia de Produção',   avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
     { id: '5', name: 'Pedro Carvalho',  course: 'Engenharia Elétrica',      avatar: 'https://randomuser.me/api/portraits/men/78.jpg' },
@@ -34,12 +42,14 @@ const MOCK = {
 };
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
+
   const students = MOCK.risco;
 
   const ListHeader = useMemo(
     () => (
       <View style={{ gap: 20 }}>
-        <Section title="Visao Geral dos Alunos">
+        <Section title="Visão Geral dos Alunos">
           <View style={styles.grid}>
             <Card>
               <Text style={styles.cardLabel}>Ativos</Text>
@@ -59,13 +69,22 @@ export default function DashboardScreen() {
 
         <Section title="Indicadores de Evasão">
           <Card>
-            <Text style={styles.cardLabel}>Taxa de Evasao</Text>
+            <Text style={styles.cardLabel}>Taxa de Evasão</Text>
             <Text style={styles.cardValue}>{MOCK.evasao.taxa}</Text>
           </Card>
         </Section>
 
+        {/* Novo botão para acessar a tela de Performance da Turma */}
+        <Section title="Performance da Turma">
+          <TouchableOpacity
+            style={[styles.rowContainer, { alignItems: 'center', justifyContent: 'center' }]}
+            onPress={() => navigation.navigate('ClassPerformance' as never)}
+          >
+            <Text style={{ fontWeight: '600', color: colors.text }}>Ver Desempenho Completo da Turma</Text>
+          </TouchableOpacity>
+        </Section>
+
         <Section title="Alunos em Risco" />
-        {/* A “card box” será formada pelos próprios itens com cantos arredondados no primeiro/último */}
       </View>
     ),
     []
@@ -97,7 +116,6 @@ export default function DashboardScreen() {
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
         contentContainerStyle={styles.container}
-        // melhora o desempenho para listas grandes
         initialNumToRender={8}
         windowSize={10}
         removeClippedSubviews
@@ -107,56 +125,23 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  container: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  grid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cardLabel: {
-    color: colors.muted,
-    fontSize: 13,
-    marginBottom: 6,
-  },
-  cardValue: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  totalValue: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '700',
-  },
-
-  // “Card” que envolve a lista por meio dos próprios itens
+  safe: { flex: 1, backgroundColor: colors.bg },
+  container: { padding: 16, paddingBottom: 40 },
+  grid: { flexDirection: 'row', gap: 12 },
+  cardLabel: { color: colors.muted, fontSize: 13, marginBottom: 6 },
+  cardValue: { color: colors.text, fontSize: 20, fontWeight: '600' },
+  totalValue: { color: colors.text, fontSize: 28, fontWeight: '700' },
   rowContainer: {
     backgroundColor: '#fff',
     paddingHorizontal: 0,
-    // sombras leves
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+    paddingVertical: 12,
   },
-  rowFirst: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  rowLast: {
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    marginBottom: 4,
-  },
-  innerSeparator: {
-    height: 10,
-    backgroundColor: 'transparent',
-  },
+  rowFirst: { borderTopLeftRadius: 16, borderTopRightRadius: 16 },
+  rowLast: { borderBottomLeftRadius: 16, borderBottomRightRadius: 16, marginBottom: 4 },
+  innerSeparator: { height: 10, backgroundColor: 'transparent' },
 });
