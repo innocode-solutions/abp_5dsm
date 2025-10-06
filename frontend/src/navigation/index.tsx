@@ -11,10 +11,12 @@ import LoginScreen from '../screens/LoginScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
+import ClassPerformance from '~/screens/ClassPerformance';
 
 export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
+  ClassPerformance:undefined;
 };
 
 export type RootTabParamList = {
@@ -106,6 +108,11 @@ export default function RootNavigator() {
         component={MainTabs}
         options={{ headerShown: false }} // headers vêm do Tab Navigator
       />
+      <Stack.Screen
+        name="ClassPerformance"
+        component={ClassPerformance}
+        options={{ headerTitle: 'Performance da Turma' }}
+/>
     </Stack.Navigator>
   );
 }
