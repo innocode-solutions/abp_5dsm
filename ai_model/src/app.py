@@ -1,19 +1,48 @@
 # =============================================================================
 # ARQUIVO: src/app.py
-# OBJETIVO: Ponto de entrada da API com FastAPI. Aceita valores de string 
-#           categóricos e os valida usando Enums.
+# OBJETIVO: API FastAPI com suporte a predição direta ou via ID de aluno
 # =============================================================================
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from enum import Enum
 from pathlib import Path
+import pandas as pd
 
-# Supondo que sua classe de serviço esteja em models/preview.py
-from src.models.preview import PredictionService 
+# Serviços de ML
+from src.models.dropout_service import DropoutService
+from src.models.preview import PredictionService
 
-# --- DEFINIÇÃO DOS VALORES CATEGÓRICOS ACEITOS (Enums) ---
-# Usar Enums garante que a API só aceite os valores pré-definidos para cada campo.
+# =============================================================================
+# MODELOS DE ENTRADA
+# =============================================================================
+
+class BinaryChoice(str, Enum):
+    yes = "Yes"
+    no = "No"
+
+class SatisfactionLevel(str, Enum):
+    good = "Good"
+    bad = "Bad"
+
+class AbsenceDays(str, Enum):
+    # Valores conforme o dataset original
+    low = "Under-7"       # Menos de 7 faltas
+    high = "Above-7"      # 7 faltas ou mais
+
+
+# ==============================================================
+# MODELO DE ENTRADA PARA PREDIÇÃO DE EVASÃO
+# ==============================================================
+
+class DropoutData(BaseModel):
+    raisedhands: int                 # Quantidade de vezes que o aluno levantou a mão
+    VisITedResources: int            # Quantidade de recursos visitados
+    AnnouncementsView: int           # Quantidade de anúncios visualizados
+    Discussion: int                  # Participações em discussões
+    ParentAnsweringSurvey: BinaryChoice   # Pais responderam pesquisa (Yes/No)
+    ParentschoolSatisfaction: SatisfactionLevel  # Satisfação dos pais (Good/Bad)
+    StudentAbsenceDays: AbsenceDays          # Faixa de faltas do aluno
 
 class BinaryChoice(str, Enum):
     yes = "Yes"
@@ -81,14 +110,31 @@ class StudentData(BaseModel):
     Tutoring_Sessions: BinaryChoice
     Physical_Activity: Level
 
-# --- CONFIGURAÇÕES E INICIALIZAÇÃO DO SERVIÇO ---
-BASE_DIR = Path(__file__).resolve().parent
 
+# =============================================================================
+# CONFIGURAÇÃO DE CAMINHOS E CARREGAMENTO DE DATASETS
+# =============================================================================
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DROP = BASE_DIR / "datasets" / "xAPI_dropout.csv"
+DATA_PATH = BASE_DIR / "datasets" / "StudentPerformanceFactors.csv"
+
+df_dropout = pd.read_csv(DATA_DROP)
+df_performance = pd.read_csv(DATA_PATH)
+
+# =============================================================================
+# CARREGAMENTO DOS MODELOS
+# =============================================================================
+DROP_PREPROCESS = BASE_DIR / "pipelines" / "dropout_preprocess.pkl"
+DROP_MODEL = BASE_DIR / "pipelines" / "dropout_logreg_model.pkl"
 PREPROCESSOR_PATH = BASE_DIR / "pipelines" / "perf_preprocess.pkl"
 LOGREG_PATH = BASE_DIR / "pipelines" / "perf_logreg_model.pkl"
 RF_PATH = BASE_DIR / "pipelines" / "perf_rf_model.pkl"
-DATA_PATH = BASE_DIR / "datasets" / "StudentPerformanceFactors.csv"
 
+try:
+    dropout_service = DropoutService(DROP_PREPROCESS, DROP_MODEL)
+except Exception as e:
+    print(f"Não foi possível iniciar o serviço de predição. Erro: {e}")
+    dropout_service = None
 
 try:
     prediction_service = PredictionService(PREPROCESSOR_PATH, LOGREG_PATH, RF_PATH, DATA_PATH)
@@ -96,14 +142,49 @@ except Exception as e:
     print(f"Não foi possível iniciar o serviço de predição. Erro: {e}")
     prediction_service = None
 
-# --- CRIAÇÃO DA APLICAÇÃO FASTAPI ---
+
+# =============================================================================
+# INICIALIZAÇÃO DA API
+# =============================================================================
 app = FastAPI(
-    title="API de Predição de Desempenho de Alunos",
-    description="Uma API para prever o desempenho de alunos usando modelos de Machine Learning.",
-    version="1.1.0"
+    title="API de Predição Acadêmica",
+    description=(
+        "API que prevê **risco de evasão** e **desempenho acadêmico** "
+        "com base em dados reais de alunos."
+    ),
+    version="2.1.0"
 )
 
-# --- DEFINIÇÃO DA ROTA DA API ---
+# =============================================================================
+# ROTAS DA API
+# =============================================================================
+
+@app.post("/predict/dropout", summary="Prediz risco de evasão do aluno")
+def predict_dropout(data: DropoutData):
+    """
+    Recebe os dados de um aluno e retorna o risco de evasão previsto.
+    """
+    if not dropout_service:
+        raise HTTPException(
+            status_code=503,
+            detail="Serviço de evasão indisponível devido a erro na inicialização."
+        )
+
+    try:
+        # Converte o objeto Pydantic em dicionário limpo para o modelo
+        student_data_dict = data.dict()
+
+        # Realiza a predição
+        prediction = dropout_service.predict_dropout(student_data_dict)
+
+        return prediction
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ocorreu um erro ao processar a predição: {str(e)}"
+        )
+
 @app.post('/predict/performance', summary="Gera um relatório de predição de desempenho")
 def predict(student_data: StudentData):
     """
