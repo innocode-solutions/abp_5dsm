@@ -26,7 +26,11 @@ COPY . .
 #    O Uvicorn será configurado para rodar na porta 5000.
 EXPOSE 5000
 
-# 7. Comando para iniciar a aplicação quando o container for executado.
+# 7. Define variáveis de ambiente úteis
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONIOENCODING=utf-8
+
+# 8. Comando para iniciar a aplicação quando o container for executado.
 #    É importante usar "0.0.0.0" como host para que a API seja acessível
 #    de fora do container.
 CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "5000"]
