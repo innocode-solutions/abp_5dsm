@@ -142,7 +142,6 @@ except Exception as e:
     print(f"Não foi possível iniciar o serviço de predição. Erro: {e}")
     prediction_service = None
 
-
 # =============================================================================
 # INICIALIZAÇÃO DA API
 # =============================================================================
@@ -185,6 +184,71 @@ def predict_dropout(data: DropoutData):
             detail=f"Ocorreu um erro ao processar a predição: {str(e)}"
         )
 
+@app.get("/predict/dropout", summary="Obtém predição de evasão (mesmo que POST)")
+def get_dropout_prediction(data: DropoutData):
+    """
+    Obtém a predição de evasão com os mesmos parâmetros do POST.
+    """
+    if not dropout_service:
+        raise HTTPException(
+            status_code=503,
+            detail="Serviço de evasão indisponível devido a erro na inicialização."
+        )
+
+    try:
+        student_data_dict = data.dict()
+        prediction = dropout_service.predict_dropout(student_data_dict)
+        return prediction
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ocorreu um erro ao processar a predição: {str(e)}"
+        )
+
+@app.put("/predict/dropout", summary="Atualiza/recalcula predição de evasão")
+def update_dropout_prediction(data: DropoutData):
+    """
+    Atualiza ou recalcula a predição de evasão com novos dados.
+    """
+    if not dropout_service:
+        raise HTTPException(
+            status_code=503,
+            detail="Serviço de evasão indisponível devido a erro na inicialização."
+        )
+    
+    try:
+        student_data_dict = data.dict()
+        prediction = dropout_service.predict_dropout(student_data_dict)
+        
+        return {
+            "message": "Predição atualizada com sucesso",
+            "prediction": prediction
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ocorreu um erro ao atualizar a predição: {str(e)}"
+        )
+
+@app.delete("/predict/dropout", summary="Remove/limpa dados de predição de evasão")
+def delete_dropout_prediction(data: DropoutData):
+    """
+    Endpoint DELETE para predição de evasão (retorna confirmação).
+    """
+    try:
+        return {
+            "message": "Dados de predição de evasão removidos com sucesso",
+            "data": data.dict()
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ocorreu um erro ao processar a requisição: {str(e)}"
+        )
+
 @app.post('/predict/performance', summary="Gera um relatório de predição de desempenho")
 def predict(student_data: StudentData):
     """
@@ -211,5 +275,71 @@ def predict(student_data: StudentData):
             detail=f"Ocorreu um erro ao processar a requisição: {str(e)}"
         )
 
+@app.get("/predict/performance", summary="Obtém relatório de desempenho (mesmo que POST)")
+def get_performance_prediction(student_data: StudentData):
+    """
+    Obtém o relatório de desempenho com os mesmos parâmetros do POST.
+    """
+    if not prediction_service:
+        raise HTTPException(
+            status_code=503, 
+            detail="Serviço não está disponível devido a um erro na inicialização."
+        )
+
+    try:
+        student_data_dict = student_data.dict()
+        report = prediction_service.generate_report(student_data_dict)
+        return report
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Ocorreu um erro ao processar a requisição: {str(e)}"
+        )
+
+@app.put("/predict/performance", summary="Atualiza/recalcula relatório de desempenho")
+def update_performance_prediction(student_data: StudentData):
+    """
+    Atualiza ou recalcula o relatório de desempenho com novos dados.
+    """
+    if not prediction_service:
+        raise HTTPException(
+            status_code=503, 
+            detail="Serviço não está disponível devido a um erro na inicialização."
+        )
+    
+    try:
+        student_data_dict = student_data.dict()
+        report = prediction_service.generate_report(student_data_dict)
+        
+        return {
+            "message": "Relatório atualizado com sucesso",
+            "report": report
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Ocorreu um erro ao atualizar o relatório: {str(e)}"
+        )
+
+@app.delete("/predict/performance", summary="Remove/limpa dados de relatório de desempenho")
+def delete_performance_prediction(student_data: StudentData):
+    """
+    Endpoint DELETE para relatório de desempenho (retorna confirmação).
+    """
+    try:
+        return {
+            "message": "Dados de relatório de desempenho removidos com sucesso",
+            "data": student_data.dict()
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Ocorreu um erro ao processar a requisição: {str(e)}"
+        )
+
 # Para executar, use o comando no terminal na raiz do projeto:
 # uvicorn src.app:app --host 0.0.0.0 --port 5000 --reload
+
