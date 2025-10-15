@@ -5,6 +5,7 @@ import alunoRoutes from './alunoRoutes';
 import userRoutes from './userRoutes';
 import periodoLetivoRoutes from './periodoLetivoRoutes';
 import matriculaRoutes from './matriculaRoutes';
+import authRoutes from './authRoutes'
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.get('/health', (req, res) => {
 router.use('/cursos', cursoRoutes);
 router.use('/disciplinas', disciplinaRoutes);
 router.use('/alunos', alunoRoutes);
+router.use('/auth', authRoutes)
 router.use('/users', userRoutes);
 router.use('/periodos', periodoLetivoRoutes);
 router.use('/matriculas', matriculaRoutes);
