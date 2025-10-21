@@ -158,6 +158,50 @@ app = FastAPI(
 # ROTAS DA API
 # =============================================================================
 
+@app.get("/health", summary="Health check da API")
+def health_check():
+    """
+    Endpoint para verificar se a API está funcionando.
+    """
+    return {
+        "status": "OK",
+        "message": "API de Predição Acadêmica funcionando",
+        "version": "2.1.0",
+        "services": {
+            "dropout_service": "OK" if dropout_service else "ERROR",
+            "prediction_service": "OK" if prediction_service else "ERROR"
+        },
+        "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+
+@app.get("/", summary="Informações da API")
+def root():
+    """
+    Endpoint raiz com informações da API.
+    """
+    return {
+        "title": "API de Predição Acadêmica",
+        "description": "API que prevê risco de evasão e desempenho acadêmico",
+        "version": "2.1.0",
+        "endpoints": {
+            "health": "/health",
+            "docs": "/docs",
+            "dropout_prediction": {
+                "POST": "/predict/dropout",
+                "GET": "/predict/dropout",
+                "PUT": "/predict/dropout",
+                "DELETE": "/predict/dropout"
+            },
+            "performance_prediction": {
+                "POST": "/predict/performance",
+                "GET": "/predict/performance",
+                "PUT": "/predict/performance",
+                "DELETE": "/predict/performance"
+            }
+        },
+        "status": "OK" if (dropout_service and prediction_service) else "PARTIAL"
+    }
+
 @app.post("/predict/dropout", summary="Prediz risco de evasão do aluno")
 def predict_dropout(data: DropoutData):
     """
@@ -267,6 +311,8 @@ def predict(student_data: StudentData):
         student_data_dict = student_data.dict()
         
         report = prediction_service.generate_report(student_data_dict)
+        report["saved"] = False  # Por padrão, não salva
+            
         return report
     
     except Exception as e:
@@ -275,27 +321,64 @@ def predict(student_data: StudentData):
             detail=f"Ocorreu um erro ao processar a requisição: {str(e)}"
         )
 
-@app.get("/predict/performance", summary="Obtém relatório de desempenho (mesmo que POST)")
-def get_performance_prediction(student_data: StudentData):
+@app.get("/predict/performance", summary="Obtém informações sobre predição de desempenho")
+def get_performance_info():
     """
-    Obtém o relatório de desempenho com os mesmos parâmetros do POST.
+    Retorna informações sobre o endpoint de predição de desempenho.
     """
-    if not prediction_service:
-        raise HTTPException(
-            status_code=503, 
-            detail="Serviço não está disponível devido a um erro na inicialização."
-        )
-
-    try:
-        student_data_dict = student_data.dict()
-        report = prediction_service.generate_report(student_data_dict)
-        return report
-    
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Ocorreu um erro ao processar a requisição: {str(e)}"
-        )
+    return {
+        "message": "Use POST /predict/performance para fazer predições",
+        "required_fields": [
+            "Hours_Studied", "Previous_Scores", "Sleep_Hours", "Distance_from_Home",
+            "Attendance", "Gender", "Parental_Education_Level", "Parental_Involvement",
+            "School_Type", "Peer_Influence", "Extracurricular_Activities",
+            "Learning_Disabilities", "Internet_Access", "Access_to_Resources",
+            "Teacher_Quality", "Family_Income", "Motivation_Level",
+            "Tutoring_Sessions", "Physical_Activity"
+        ],
+        "example_approved": {
+            "Hours_Studied": 6.0,
+            "Previous_Scores": 85.0,
+            "Sleep_Hours": 8.0,
+            "Distance_from_Home": "Near",
+            "Attendance": 95.0,
+            "Gender": "Male",
+            "Parental_Education_Level": "Bachelor's",
+            "Parental_Involvement": "High",
+            "School_Type": "Public",
+            "Peer_Influence": "Positive",
+            "Extracurricular_Activities": "Yes",
+            "Learning_Disabilities": "No",
+            "Internet_Access": "Yes",
+            "Access_to_Resources": "Good",
+            "Teacher_Quality": "Good",
+            "Family_Income": "High",
+            "Motivation_Level": "High",
+            "Tutoring_Sessions": "No",
+            "Physical_Activity": "High"
+        },
+        "example_failed": {
+            "Hours_Studied": 2.0,
+            "Previous_Scores": 45.0,
+            "Sleep_Hours": 5.0,
+            "Distance_from_Home": "Far",
+            "Attendance": 60.0,
+            "Gender": "Female",
+            "Parental_Education_Level": "None",
+            "Parental_Involvement": "Low",
+            "School_Type": "Public",
+            "Peer_Influence": "Negative",
+            "Extracurricular_Activities": "No",
+            "Learning_Disabilities": "Yes",
+            "Internet_Access": "No",
+            "Access_to_Resources": "Poor",
+            "Teacher_Quality": "Poor",
+            "Family_Income": "Low",
+            "Motivation_Level": "Low",
+            "Tutoring_Sessions": "Yes",
+            "Physical_Activity": "Low"
+        }
+    }
 
 @app.put("/predict/performance", summary="Atualiza/recalcula relatório de desempenho")
 def update_performance_prediction(student_data: StudentData):

@@ -37,9 +37,9 @@ class PredictionService:
                 name: shap.Explainer(model, self.X_train_proc)
                 for name, model in self.models.items()
             }
-            print("✅ Todos os artefatos foram carregados e pré-calculados com sucesso.")
+            print("OK - Todos os artefatos foram carregados e pré-calculados com sucesso.")
         except FileNotFoundError as e:
-            print(f"❌ ERRO CRÍTICO ao carregar artefatos: {e}")
+            print(f"ERRO CRITICO ao carregar artefatos: {e}")
             raise
 
     def generate_report(self, student_data: dict, top_n=3):
@@ -80,11 +80,31 @@ class PredictionService:
             explanation_list.append({"feature": original_feature_name, "value": feature_value, "influence": influence})
         
         # --- MUDANÇA PRINCIPAL: Monta o dicionário de resposta com as chaves corretas ---
+        predicted_score = float(probability * 100)  # Score de 0-100
+        is_approved = predicted_score >= 60.0  # Nota de corte para aprovação
+        
         api_response = {
-            "probability_pass": probability,
-            "class_pass": "APROVADO" if prediction_code == 1 else "REPROVADO",
-            "score_pred": probability,  # Usando a probabilidade como o score
-            "explain": explanation_list
+            "predicted_score": predicted_score,  # Score de 0-100
+            "confidence": float(probability),  # Confiança de 0-1
+            "is_approved": is_approved,  # True se aprovado, False se reprovado
+            "approval_status": "APROVADO" if is_approved else "REPROVADO",
+            "grade_category": self._get_grade_category(predicted_score),
+            "factors": explanation_list  # Fatores que influenciam a predição
         }
         
         return api_response
+    
+    def _get_grade_category(self, score: float) -> str:
+        """
+        Categoriza a nota em faixas de desempenho.
+        """
+        if score >= 90:
+            return "EXCELENTE"
+        elif score >= 80:
+            return "MUITO BOM"
+        elif score >= 70:
+            return "BOM"
+        elif score >= 60:
+            return "REGULAR"
+        else:
+            return "INSUFICIENTE"
