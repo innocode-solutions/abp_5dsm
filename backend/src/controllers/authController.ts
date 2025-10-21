@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 import { prisma } from '../config/database'
 import { UserRole } from '@prisma/client'
 
@@ -68,21 +69,79 @@ export class AuthController {
       })
 
       if (!user) {
-        return res.status(404).json({ error: 'Usuário não encontrado' })
+        return res.status(401).json({ error: 'Credenciais inválidas' })
       }
 
       // Compara senha
       const isValid = await bcrypt.compare(password, user.PasswordHash)
       if (!isValid) {
-        return res.status(401).json({ error: 'Senha inválida' })
+        return res.status(401).json({ error: 'Credenciais inválidas' })
       }
 
-      // Retorna dados sem senha
+      // Gera token JWT
+      const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production'
+      const token = jwt.sign(
+        {
+          userId: user.IDUser,
+          role: user.Role,
+          email: user.Email
+        },
+        jwtSecret,
+        { expiresIn: '1h' } // Token válido por 1 hora
+      )
+
+      // Retorna dados do usuário e token
       const { PasswordHash, ...userWithoutPassword } = user
-      res.json(userWithoutPassword)
+      res.json({
+        user: userWithoutPassword,
+        token,
+        expiresIn: '1h'
+      })
     } catch (err) {
       console.error('Erro ao realizar login:', err)
       res.status(500).json({ error: 'Erro interno ao realizar login' })
+    }
+  }
+
+  // GET /auth/me - Verificar token atual
+  static async me(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Usuário não autenticado' })
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { IDUser: req.user.userId },
+        select: {
+          IDUser: true,
+          Email: true,
+          Role: true,
+          name: true,
+          createdAt: true,
+          aluno: {
+            select: {
+              IDAluno: true,
+              Nome: true,
+              Semestre: true,
+              curso: {
+                select: {
+                  IDCurso: true,
+                  NomeDoCurso: true
+                }
+              }
+            }
+          }
+        }
+      })
+
+      if (!user) {
+        return res.status(404).json({ error: 'Usuário não encontrado' })
+      }
+
+      res.json(user)
+    } catch (err) {
+      console.error('Erro ao verificar usuário:', err)
+      res.status(500).json({ error: 'Erro interno ao verificar usuário' })
     }
   }
 
