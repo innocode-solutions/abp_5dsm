@@ -110,6 +110,7 @@ model Matricula {
   IDDisciplina  String
   IDPeriodo     String
   Status        StatusMatricula @default(ENROLLED)
+  Nota          Float?          // Nota do aluno na disciplina
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   
@@ -117,8 +118,31 @@ model Matricula {
   aluno         Aluno           @relation(fields: [IDAluno], references: [IDAluno], onDelete: Cascade)
   disciplina    Disciplina      @relation(fields: [IDDisciplina], references: [IDDisciplina], onDelete: Cascade)
   periodo       PeriodoLetivo   @relation(fields: [IDPeriodo], references: [IDPeriodo], onDelete: Cascade)
+  predictions   Prediction[]
   
   // Constraint única
   @@unique([IDAluno, IDDisciplina, IDPeriodo])
   @@map("matriculas")
+}
+
+enum TipoPredicao {
+  DESEMPENHO
+  EVASAO
+}
+
+model Prediction {
+  IDPrediction    String        @id @default(uuid())
+  IDMatricula     String
+  TipoPredicao    TipoPredicao
+  Probabilidade   Float         // Probabilidade da predição (0-1)
+  Classificacao   String        // Classificação (ex: "baixo", "médio", "alto", "aprovado", "reprovado")
+  Explicacao      String?       // Explicação da predição
+  DadosEntrada    Json?         // Dados utilizados para a predição
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relacionamentos
+  matricula       Matricula     @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
+  
+  @@map("predictions")
 }

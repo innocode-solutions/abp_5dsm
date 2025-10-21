@@ -56,14 +56,20 @@ backend/
 - `GET /health` - Server health check
 - `GET /health/db` - Database connection check
 
-### Courses (Cursos)
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login with email and password (returns JWT token)
+- `GET /api/auth/me` - Get current user info (requires authentication)
+- `PUT /api/auth/:id/password` - Update user password (requires authentication)
+
+### Courses (Cursos) - Require Authentication
 - `GET /api/cursos` - Get all courses (with pagination and search)
 - `GET /api/cursos/:id` - Get course by ID
 - `POST /api/cursos` - Create new course
 - `PUT /api/cursos/:id` - Update course
 - `DELETE /api/cursos/:id` - Delete course
 
-### Subjects (Disciplinas)
+### Subjects (Disciplinas) - Require Authentication
 - `GET /api/disciplinas` - Get all subjects (with filters)
 - `GET /api/disciplinas/:id` - Get subject by ID
 - `POST /api/disciplinas` - Create new subject
@@ -71,23 +77,23 @@ backend/
 - `DELETE /api/disciplinas/:id` - Delete subject
 - `GET /api/disciplinas/curso/:cursoId` - Get subjects by course
 
-### Students (Alunos)
-- `GET /api/alunos` - Get all students (with pagination and search)
-- `GET /api/alunos/:id` - Get student by ID
-- `POST /api/alunos` - Create new student
-- `PUT /api/alunos/:id` - Update student
-- `DELETE /api/alunos/:id` - Delete student
-- `GET /api/alunos/curso/:cursoId` - Get students by course
-- `GET /api/alunos/:id/matriculas` - Get student enrollments
+### Students (Alunos) - Require Authentication
+- `GET /api/alunos` - Get all students (TEACHER/ADMIN only)
+- `GET /api/alunos/:id` - Get student by ID (own data, TEACHER, or ADMIN)
+- `POST /api/alunos` - Create new student (ADMIN only)
+- `PUT /api/alunos/:id` - Update student (own data or ADMIN)
+- `DELETE /api/alunos/:id` - Delete student (ADMIN only)
+- `GET /api/alunos/curso/:cursoId` - Get students by course (TEACHER/ADMIN only)
+- `GET /api/alunos/:id/matriculas` - Get student enrollments (own data, TEACHER, or ADMIN)
 
-### Users
-- `GET /api/users` - Get all users (with pagination and search)
-- `GET /api/users/:id` - Get user by ID
-- `POST /api/users` - Create new user
-- `PUT /api/users/:id` - Update user
-- `PUT /api/users/:id/password` - Update user password
-- `DELETE /api/users/:id` - Delete user
-- `GET /api/users/role/:role` - Get users by role
+### Users - Require Authentication
+- `GET /api/users` - Get all users (ADMIN only)
+- `GET /api/users/:id` - Get user by ID (own data or ADMIN)
+- `POST /api/users` - Create new user (ADMIN only)
+- `PUT /api/users/:id` - Update user (own data or ADMIN)
+- `PUT /api/users/:id/password` - Update user password (own data or ADMIN)
+- `DELETE /api/users/:id` - Delete user (ADMIN only)
+- `GET /api/users/role/:role` - Get users by role (ADMIN only)
 
 ### Academic Periods (Períodos Letivos)
 - `GET /api/periodos` - Get all academic periods
@@ -151,6 +157,34 @@ backend/
 
 The server will start on `http://localhost:3000` (or the port specified in your `.env` file).
 
+## Authentication & Authorization
+
+The API uses JWT (JSON Web Tokens) for authentication. Here's how it works:
+
+### Login Process
+1. Send POST request to `/api/auth/login` with email and password
+2. Receive JWT token with user information
+3. Include token in subsequent requests: `Authorization: Bearer <token>`
+
+### Token Structure
+```json
+{
+  "userId": "user-uuid",
+  "role": "STUDENT|TEACHER|ADMIN",
+  "email": "user@example.com",
+  "exp": 1234567890
+}
+```
+
+### Role-Based Access Control
+- **STUDENT**: Can access own data and enrollments
+- **TEACHER**: Can access student data and course information
+- **ADMIN**: Full access to all resources
+
+### Token Expiration
+- Tokens are valid for 1 hour
+- Use `/api/auth/me` to verify current token status
+
 ## Environment Variables
 
 Create a `.env` file based on `.env.example`:
@@ -161,7 +195,7 @@ PORT=3000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 JWT_SECRET=your-super-secret-jwt-key-here
-JWT_EXPIRES_IN=7d
+JWT_EXPIRES_IN=1h
 BCRYPT_ROUNDS=12
 ```
 

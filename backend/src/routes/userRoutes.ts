@@ -1,28 +1,30 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/userController';
 import { hashPassword } from '../middleware/passwordMiddleware';
+import { AuthMiddleware } from '../middleware/authMiddleware';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 
-// GET /api/users - Get all users
-router.get('/', UserController.getAll);
+// GET /api/users - Get all users (apenas ADMIN)
+router.get('/', AuthMiddleware.requireRole(UserRole.ADMIN), UserController.getAll);
 
-// GET /api/users/role/:role - Get users by role (Deve vir antes de /:id)
-router.get('/role/:role', UserController.getByRole);
+// GET /api/users/role/:role - Get users by role (apenas ADMIN)
+router.get('/role/:role', AuthMiddleware.requireRole(UserRole.ADMIN), UserController.getByRole);
 
-// GET /api/users/:id - Get user by ID
-router.get('/:id', UserController.getById);
+// GET /api/users/:id - Get user by ID (próprio usuário ou ADMIN)
+router.get('/:id', AuthMiddleware.requireOwnershipOrAdmin, UserController.getById);
 
-// POST /api/users - Create new user
-router.post('/', hashPassword, UserController.create);
+// POST /api/users - Create new user (apenas ADMIN)
+router.post('/', AuthMiddleware.requireRole(UserRole.ADMIN), hashPassword, UserController.create);
 
-// PUT /api/users/:id - Update user
-router.put('/:id', UserController.update);
+// PUT /api/users/:id - Update user (próprio usuário ou ADMIN)
+router.put('/:id', AuthMiddleware.requireOwnershipOrAdmin, UserController.update);
 
-// PUT /api/users/:id/password - Update user password
-router.put('/:id/password', hashPassword, UserController.updatePassword);
+// PUT /api/users/:id/password - Update user password (próprio usuário ou ADMIN)
+router.put('/:id/password', AuthMiddleware.requireOwnershipOrAdmin, hashPassword, UserController.updatePassword);
 
-// DELETE /api/users/:id - Delete user
-router.delete('/:id', UserController.delete);
+// DELETE /api/users/:id - Delete user (apenas ADMIN)
+router.delete('/:id', AuthMiddleware.requireRole(UserRole.ADMIN), UserController.delete);
 
 export default router;

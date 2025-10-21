@@ -5,7 +5,8 @@ import alunoRoutes from './alunoRoutes';
 import userRoutes from './userRoutes';
 import periodoLetivoRoutes from './periodoLetivoRoutes';
 import matriculaRoutes from './matriculaRoutes';
-import authRoutes from './authRoutes'
+import authRoutes from './authRoutes';
+import { AuthMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -19,12 +20,15 @@ router.get('/health', (req, res) => {
 });
 
 // API routes
-router.use('/cursos', cursoRoutes);
-router.use('/disciplinas', disciplinaRoutes);
-router.use('/alunos', alunoRoutes);
-router.use('/auth', authRoutes)
-router.use('/users', userRoutes);
-router.use('/periodos', periodoLetivoRoutes);
-router.use('/matriculas', matriculaRoutes);
+// Rotas públicas (não requerem autenticação)
+router.use('/auth', authRoutes);
+
+// Rotas protegidas (requerem autenticação)
+router.use('/cursos', AuthMiddleware.authenticateToken, cursoRoutes);
+router.use('/disciplinas', AuthMiddleware.authenticateToken, disciplinaRoutes);
+router.use('/alunos', AuthMiddleware.authenticateToken, alunoRoutes);
+router.use('/users', AuthMiddleware.authenticateToken, userRoutes);
+router.use('/periodos', AuthMiddleware.authenticateToken, periodoLetivoRoutes);
+router.use('/matriculas', AuthMiddleware.authenticateToken, matriculaRoutes);
 
 export default router;
