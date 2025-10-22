@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { AlunoController } from '../controllers/alunoController';
-import { AuthMiddleware } from '../middleware/authMiddleware';
-import { UserRole } from '@prisma/client';
+import { AuthMiddleware, UserRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
