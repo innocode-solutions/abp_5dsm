@@ -115,6 +115,11 @@ backend/
 - `GET /api/matriculas/disciplina/:disciplinaId` - Get enrollments by subject
 - `GET /api/matriculas/periodo/:periodoId` - Get enrollments by period
 
+### Dashboard
+- `GET /api/dashboard/professor/:id` - Get professor dashboard with aggregated metrics
+- `GET /api/dashboard/professor/:id/resumo` - Get quick summary (metrics only)
+- Query parameters: `?disciplinaId=xxx&periodoId=xxx` for filtering
+
 ## Setup Instructions
 
 ### Prerequisites

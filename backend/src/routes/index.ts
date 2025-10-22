@@ -5,7 +5,9 @@ import alunoRoutes from './alunoRoutes';
 import userRoutes from './userRoutes';
 import periodoLetivoRoutes from './periodoLetivoRoutes';
 import matriculaRoutes from './matriculaRoutes';
+import predictionRoutes from './predictionRoutes';
 import authRoutes from './authRoutes';
+import dashboardRoutes from './dashboardRoutes';
 import { AuthMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -30,5 +32,7 @@ router.use('/alunos', AuthMiddleware.authenticateToken, alunoRoutes);
 router.use('/users', AuthMiddleware.authenticateToken, userRoutes);
 router.use('/periodos', AuthMiddleware.authenticateToken, periodoLetivoRoutes);
 router.use('/matriculas', AuthMiddleware.authenticateToken, matriculaRoutes);
+router.use('/predictions', predictionRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 export default router;

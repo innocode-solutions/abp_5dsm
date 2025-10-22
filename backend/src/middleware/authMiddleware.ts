@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { UserRole } from '@prisma/client'
+
+// Definir UserRole localmente para evitar problemas de importação
+export enum UserRole {
+  STUDENT = 'STUDENT',
+  TEACHER = 'TEACHER',
+  ADMIN = 'ADMIN'
+}
 
 // Estende a interface Request para incluir informações do usuário
 declare global {

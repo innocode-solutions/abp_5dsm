@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { UserController } from '../controllers/userController';
 import { hashPassword } from '../middleware/passwordMiddleware';
 import { AuthMiddleware } from '../middleware/authMiddleware';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
