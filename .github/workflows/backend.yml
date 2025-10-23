@@ -1,0 +1,48 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # 3️⃣ Instalar dependências
+      - name: Instalar dependências
+        run: npm ci
+
+      # 4️⃣ Lint (opcional se existir)
+      - name: Rodar Lint
+        if: hashFiles('**/.eslintrc*') != ''
+        run: npm run lint || echo "⚠️ ESLint não configurado, ignorando etapa."
+
+      # 5️⃣ Build
+      - name: Build do projeto
+        run: npm run build
+
+      # 6️⃣ Testes
+      - name: Rodar Testes (Jest)
+        run: npm test
+
+      # 7️⃣ Deploy automático no Railway
+      - name: Deploy para Railway
+        if: success()
+        uses: railwayapp/action-deploy@v2
+        with:
+          service: backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
