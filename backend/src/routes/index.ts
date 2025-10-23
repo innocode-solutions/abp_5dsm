@@ -26,13 +26,13 @@ router.get('/health', (req, res) => {
 // ✅ Rotas públicas
 router.use('/auth', authRoutes);
 
-// ✅ Rotas protegidas
-router.use('/cursos', AuthMiddleware.authenticateToken, cursoRoutes);
-router.use('/disciplinas', AuthMiddleware.authenticateToken, disciplinaRoutes);
-router.use('/alunos', AuthMiddleware.authenticateToken, alunoRoutes);
-router.use('/users', AuthMiddleware.authenticateToken, userRoutes);
-router.use('/periodos', AuthMiddleware.authenticateToken, periodoLetivoRoutes);
-router.use('/matriculas', AuthMiddleware.authenticateToken, matriculaRoutes);
+// ✅ Rotas protegidas (autenticação aplicada individualmente em cada rota)
+router.use('/cursos', cursoRoutes);
+router.use('/disciplinas', disciplinaRoutes);
+router.use('/alunos', alunoRoutes);
+router.use('/users', userRoutes);
+router.use('/periodos', periodoLetivoRoutes);
+router.use('/matriculas', matriculaRoutes);
 router.use('/predictions', predictionRoutes);
 
 // ✅ Dashboards separados (IES e Professor)

@@ -4,17 +4,20 @@ import { AuthMiddleware, UserRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
+// Aplicar autenticação em todas as rotas
+router.use(AuthMiddleware.authenticateToken);
+
 // GET /api/alunos - Get all students (TEACHER e ADMIN)
 router.get('/', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), AlunoController.getAll);
 
 // GET /api/alunos/:id - Get student by ID (próprio aluno, TEACHER ou ADMIN)
-router.get('/:id', AlunoController.getById);
+router.get('/:id', AuthMiddleware.requireStudentOwnership, AlunoController.getById);
 
 // POST /api/alunos - Create new student (apenas ADMIN)
 router.post('/', AuthMiddleware.requireRole(UserRole.ADMIN), AlunoController.create);
 
 // PUT /api/alunos/:id - Update student (próprio aluno ou ADMIN)
-router.put('/:id', AlunoController.update);
+router.put('/:id', AuthMiddleware.requireStudentOwnership, AlunoController.update);
 
 // DELETE /api/alunos/:id - Delete student (apenas ADMIN)
 router.delete('/:id', AuthMiddleware.requireRole(UserRole.ADMIN), AlunoController.delete);
@@ -23,6 +26,6 @@ router.delete('/:id', AuthMiddleware.requireRole(UserRole.ADMIN), AlunoControlle
 router.get('/curso/:cursoId', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), AlunoController.getByCourse);
 
 // GET /api/alunos/:id/matriculas - Get student enrollments (próprio aluno, TEACHER ou ADMIN)
-router.get('/:id/matriculas', AlunoController.getEnrollments);
+router.get('/:id/matriculas', AuthMiddleware.requireStudentOwnership, AlunoController.getEnrollments);
 
 export default router;

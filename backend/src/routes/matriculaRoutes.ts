@@ -1,33 +1,37 @@
 import { Router } from 'express';
 import { MatriculaController } from '../controllers/matriculaController';
+import { AuthMiddleware, UserRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// GET /api/matriculas - Get all enrollments
-router.get('/', MatriculaController.getAll);
+// Aplicar autenticação em todas as rotas
+router.use(AuthMiddleware.authenticateToken);
 
-// GET /api/matriculas/:id - Get enrollment by ID
-router.get('/:id', MatriculaController.getById);
+// GET /api/matriculas - Get all enrollments (TEACHER e ADMIN)
+router.get('/', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), MatriculaController.getAll);
 
-// POST /api/matriculas - Create new enrollment
-router.post('/', MatriculaController.create);
+// GET /api/matriculas/:id - Get enrollment by ID (próprio aluno, TEACHER ou ADMIN)
+router.get('/:id', AuthMiddleware.requireStudentMatriculaOwnership, MatriculaController.getById);
 
-// POST /api/matriculas/bulk - Bulk create enrollments
-router.post('/bulk', MatriculaController.bulkCreate);
+// POST /api/matriculas - Create new enrollment (TEACHER e ADMIN)
+router.post('/', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), MatriculaController.create);
 
-// PUT /api/matriculas/:id - Update enrollment
-router.put('/:id', MatriculaController.update);
+// POST /api/matriculas/bulk - Bulk create enrollments (TEACHER e ADMIN)
+router.post('/bulk', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), MatriculaController.bulkCreate);
 
-// DELETE /api/matriculas/:id - Delete enrollment
-router.delete('/:id', MatriculaController.delete);
+// PUT /api/matriculas/:id - Update enrollment (TEACHER e ADMIN)
+router.put('/:id', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), MatriculaController.update);
 
-// GET /api/matriculas/aluno/:alunoId - Get enrollments by student
-router.get('/aluno/:alunoId', MatriculaController.getByStudent);
+// DELETE /api/matriculas/:id - Delete enrollment (apenas ADMIN)
+router.delete('/:id', AuthMiddleware.requireRole(UserRole.ADMIN), MatriculaController.delete);
 
-// GET /api/matriculas/disciplina/:disciplinaId - Get enrollments by subject
-router.get('/disciplina/:disciplinaId', MatriculaController.getBySubject);
+// GET /api/matriculas/aluno/:alunoId - Get enrollments by student (próprio aluno, TEACHER ou ADMIN)
+router.get('/aluno/:alunoId', AuthMiddleware.requireStudentMatriculaOwnership, MatriculaController.getByStudent);
 
-// GET /api/matriculas/periodo/:periodoId - Get enrollments by period
-router.get('/periodo/:periodoId', MatriculaController.getByPeriod);
+// GET /api/matriculas/disciplina/:disciplinaId - Get enrollments by subject (TEACHER e ADMIN)
+router.get('/disciplina/:disciplinaId', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), MatriculaController.getBySubject);
+
+// GET /api/matriculas/periodo/:periodoId - Get enrollments by period (TEACHER e ADMIN)
+router.get('/periodo/:periodoId', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), MatriculaController.getByPeriod);
 
 export default router;
