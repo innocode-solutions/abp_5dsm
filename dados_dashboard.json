@@ -1,0 +1,2281 @@
+{
+  "admin": {
+    "IDUser": "d0ebd767-8248-465e-9ec1-f58cee0d4cf7",
+    "Email": "admin@test.com",
+    "Role": "ADMIN",
+    "name": "Administrador",
+    "createdAt": "2025-10-22T00:18:05.705Z"
+  },
+  "professor": {
+    "IDUser": "e4bf0c3d-4691-4828-8992-1ca4f1d9a8ec",
+    "Email": "professor@test.com",
+    "Role": "TEACHER",
+    "name": "Professor Silva",
+    "createdAt": "2025-10-22T00:18:05.930Z"
+  },
+  "curso": {
+    "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+    "NomeDoCurso": "Ciência da Computação",
+    "Descricao": "Curso de graduação em Ciência da Computação",
+    "createdAt": "2025-10-22T00:18:55.659Z",
+    "updatedAt": "2025-10-22T00:18:55.659Z",
+    "_count": {
+      "disciplinas": 0,
+      "alunos": 0
+    }
+  },
+  "disciplinas": [
+    {
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+      "CodigoDaDisciplina": "CC001",
+      "Ativa": true,
+      "CargaHoraria": 80,
+      "createdAt": "2025-10-22T00:18:55.705Z",
+      "updatedAt": "2025-10-22T00:18:55.705Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "NomeDaDisciplina": "Programação Orientada a Objetos",
+      "CodigoDaDisciplina": "CC002",
+      "Ativa": true,
+      "CargaHoraria": 60,
+      "createdAt": "2025-10-22T00:18:55.715Z",
+      "updatedAt": "2025-10-22T00:18:55.715Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "NomeDaDisciplina": "Banco de Dados",
+      "CodigoDaDisciplina": "CC003",
+      "Ativa": true,
+      "CargaHoraria": 60,
+      "createdAt": "2025-10-22T00:18:55.722Z",
+      "updatedAt": "2025-10-22T00:18:55.722Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "NomeDaDisciplina": "Engenharia de Software",
+      "CodigoDaDisciplina": "CC004",
+      "Ativa": true,
+      "CargaHoraria": 80,
+      "createdAt": "2025-10-22T00:18:55.729Z",
+      "updatedAt": "2025-10-22T00:18:55.729Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    }
+  ],
+  "periodos": [
+    {
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Nome": "2024.1",
+      "DataInicio": "2024-01-01T00:00:00.000Z",
+      "DataFim": "2024-06-30T00:00:00.000Z",
+      "Ativo": true,
+      "createdAt": "2025-10-22T00:18:55.740Z",
+      "updatedAt": "2025-10-22T00:18:55.740Z",
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDPeriodo": "c2a9bb0e-506e-4a06-8336-ff1eba547283",
+      "Nome": "2024.2",
+      "DataInicio": "2024-07-01T00:00:00.000Z",
+      "DataFim": "2024-12-31T00:00:00.000Z",
+      "Ativo": false,
+      "createdAt": "2025-10-22T00:18:55.745Z",
+      "updatedAt": "2025-10-22T00:18:55.745Z",
+      "_count": {
+        "matriculas": 0
+      }
+    }
+  ],
+  "alunos": [
+    {
+      "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+      "Nome": "João Silva",
+      "Email": "joao@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 3,
+      "createdAt": "2025-10-22T00:18:55.752Z",
+      "updatedAt": "2025-10-22T00:18:55.752Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+      "Nome": "Maria Santos",
+      "Email": "maria@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 3,
+      "createdAt": "2025-10-22T00:18:55.759Z",
+      "updatedAt": "2025-10-22T00:18:55.759Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+      "Nome": "Pedro Costa",
+      "Email": "pedro@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 5,
+      "createdAt": "2025-10-22T00:18:55.765Z",
+      "updatedAt": "2025-10-22T00:18:55.765Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+      "Nome": "Ana Oliveira",
+      "Email": "ana@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 3,
+      "createdAt": "2025-10-22T00:18:55.771Z",
+      "updatedAt": "2025-10-22T00:18:55.771Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+      "Nome": "Carlos Lima",
+      "Email": "carlos@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 5,
+      "createdAt": "2025-10-22T00:18:55.777Z",
+      "updatedAt": "2025-10-22T00:18:55.777Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+      "Nome": "Julia Ferreira",
+      "Email": "julia@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 3,
+      "createdAt": "2025-10-22T00:18:55.783Z",
+      "updatedAt": "2025-10-22T00:18:55.783Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+      "Nome": "Lucas Rodrigues",
+      "Email": "lucas@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 5,
+      "createdAt": "2025-10-22T00:18:55.788Z",
+      "updatedAt": "2025-10-22T00:18:55.788Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    },
+    {
+      "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+      "Nome": "Fernanda Alves",
+      "Email": "fernanda@test.com",
+      "Idade": null,
+      "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+      "Semestre": 3,
+      "createdAt": "2025-10-22T00:18:55.794Z",
+      "updatedAt": "2025-10-22T00:18:55.794Z",
+      "curso": {
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDoCurso": "Ciência da Computação"
+      },
+      "_count": {
+        "matriculas": 0
+      }
+    }
+  ],
+  "matriculas": [
+    {
+      "IDMatricula": "85a3525b-56d1-48ef-b3b0-1a3192c0e4ab",
+      "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.804Z",
+      "updatedAt": "2025-10-22T00:18:55.804Z",
+      "aluno": {
+        "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+        "Nome": "João Silva",
+        "Email": "joao@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.752Z",
+        "updatedAt": "2025-10-22T00:18:55.752Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "af41ac71-83c1-4ac2-a923-be9d7a7ec508",
+      "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.814Z",
+      "updatedAt": "2025-10-22T00:18:55.814Z",
+      "aluno": {
+        "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+        "Nome": "João Silva",
+        "Email": "joao@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.752Z",
+        "updatedAt": "2025-10-22T00:18:55.752Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "c1b029a3-6295-4906-bc05-e90acf9c27a9",
+      "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.826Z",
+      "updatedAt": "2025-10-22T00:18:55.826Z",
+      "aluno": {
+        "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+        "Nome": "João Silva",
+        "Email": "joao@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.752Z",
+        "updatedAt": "2025-10-22T00:18:55.752Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "fa295936-2ddd-417e-8680-355f78207575",
+      "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.835Z",
+      "updatedAt": "2025-10-22T00:18:55.835Z",
+      "aluno": {
+        "IDAluno": "856c6579-39b0-47e7-a2ea-b39203e3f7ad",
+        "Nome": "João Silva",
+        "Email": "joao@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.752Z",
+        "updatedAt": "2025-10-22T00:18:55.752Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "7e81c2d0-42c9-4569-8d79-de715f224a7b",
+      "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.845Z",
+      "updatedAt": "2025-10-22T00:18:55.845Z",
+      "aluno": {
+        "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+        "Nome": "Maria Santos",
+        "Email": "maria@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.759Z",
+        "updatedAt": "2025-10-22T00:18:55.759Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "be4a3da4-9313-47a1-8587-bb78a102780f",
+      "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.856Z",
+      "updatedAt": "2025-10-22T00:18:55.856Z",
+      "aluno": {
+        "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+        "Nome": "Maria Santos",
+        "Email": "maria@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.759Z",
+        "updatedAt": "2025-10-22T00:18:55.759Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "0714038a-b7c1-49d7-98bb-36022c866433",
+      "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.866Z",
+      "updatedAt": "2025-10-22T00:18:55.866Z",
+      "aluno": {
+        "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+        "Nome": "Maria Santos",
+        "Email": "maria@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.759Z",
+        "updatedAt": "2025-10-22T00:18:55.759Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "3d8f01b4-2cae-43fc-9823-a6924f84704c",
+      "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.876Z",
+      "updatedAt": "2025-10-22T00:18:55.876Z",
+      "aluno": {
+        "IDAluno": "cdf086e9-bade-44e9-b19b-1392c4ac680b",
+        "Nome": "Maria Santos",
+        "Email": "maria@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.759Z",
+        "updatedAt": "2025-10-22T00:18:55.759Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "4e3b285f-d615-48a5-aebb-a1a0d52447ee",
+      "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.887Z",
+      "updatedAt": "2025-10-22T00:18:55.887Z",
+      "aluno": {
+        "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+        "Nome": "Pedro Costa",
+        "Email": "pedro@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.765Z",
+        "updatedAt": "2025-10-22T00:18:55.765Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "f42c3eef-e3c4-47a7-80f3-8946cd83fbb2",
+      "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.898Z",
+      "updatedAt": "2025-10-22T00:18:55.898Z",
+      "aluno": {
+        "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+        "Nome": "Pedro Costa",
+        "Email": "pedro@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.765Z",
+        "updatedAt": "2025-10-22T00:18:55.765Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "c546b69d-1412-43c2-a463-01e064c4e6ee",
+      "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.910Z",
+      "updatedAt": "2025-10-22T00:18:55.910Z",
+      "aluno": {
+        "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+        "Nome": "Pedro Costa",
+        "Email": "pedro@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.765Z",
+        "updatedAt": "2025-10-22T00:18:55.765Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "f4b363a4-0b52-4c6d-b5ed-f0e1727550ea",
+      "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.918Z",
+      "updatedAt": "2025-10-22T00:18:55.918Z",
+      "aluno": {
+        "IDAluno": "0aaf426f-6832-4c59-8df3-cc633a6965ed",
+        "Nome": "Pedro Costa",
+        "Email": "pedro@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.765Z",
+        "updatedAt": "2025-10-22T00:18:55.765Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "9c502fcc-fded-417b-a279-2a3188a396c1",
+      "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.928Z",
+      "updatedAt": "2025-10-22T00:18:55.928Z",
+      "aluno": {
+        "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+        "Nome": "Ana Oliveira",
+        "Email": "ana@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.771Z",
+        "updatedAt": "2025-10-22T00:18:55.771Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "fc0877ae-0bb7-4e80-99bd-277c1b85074d",
+      "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.937Z",
+      "updatedAt": "2025-10-22T00:18:55.937Z",
+      "aluno": {
+        "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+        "Nome": "Ana Oliveira",
+        "Email": "ana@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.771Z",
+        "updatedAt": "2025-10-22T00:18:55.771Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "8520e5ea-f469-4c1f-a39b-9731bdd29b98",
+      "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.946Z",
+      "updatedAt": "2025-10-22T00:18:55.946Z",
+      "aluno": {
+        "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+        "Nome": "Ana Oliveira",
+        "Email": "ana@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.771Z",
+        "updatedAt": "2025-10-22T00:18:55.771Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "0fec9ad0-108b-4f5b-a903-944e1413f660",
+      "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.955Z",
+      "updatedAt": "2025-10-22T00:18:55.955Z",
+      "aluno": {
+        "IDAluno": "8dbcf3f5-3884-47f2-818f-c1c7990c194d",
+        "Nome": "Ana Oliveira",
+        "Email": "ana@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.771Z",
+        "updatedAt": "2025-10-22T00:18:55.771Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "811c593d-3cb7-433b-afdd-de85fc0e77c1",
+      "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.965Z",
+      "updatedAt": "2025-10-22T00:18:55.965Z",
+      "aluno": {
+        "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+        "Nome": "Carlos Lima",
+        "Email": "carlos@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.777Z",
+        "updatedAt": "2025-10-22T00:18:55.777Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "679a8f95-fe61-4d53-a260-af3a9c26c37d",
+      "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.974Z",
+      "updatedAt": "2025-10-22T00:18:55.974Z",
+      "aluno": {
+        "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+        "Nome": "Carlos Lima",
+        "Email": "carlos@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.777Z",
+        "updatedAt": "2025-10-22T00:18:55.777Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "27587ab5-7b4a-4cee-a23f-a5e862d5b49b",
+      "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.983Z",
+      "updatedAt": "2025-10-22T00:18:55.983Z",
+      "aluno": {
+        "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+        "Nome": "Carlos Lima",
+        "Email": "carlos@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.777Z",
+        "updatedAt": "2025-10-22T00:18:55.777Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "6cc17d27-d92a-4559-89bf-0c9c251c6e60",
+      "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:55.993Z",
+      "updatedAt": "2025-10-22T00:18:55.993Z",
+      "aluno": {
+        "IDAluno": "be73c054-37a6-4948-9403-81f90c224468",
+        "Nome": "Carlos Lima",
+        "Email": "carlos@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.777Z",
+        "updatedAt": "2025-10-22T00:18:55.777Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "3b4fa37f-b381-4bba-bd80-32c231d96a30",
+      "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.004Z",
+      "updatedAt": "2025-10-22T00:18:56.004Z",
+      "aluno": {
+        "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+        "Nome": "Julia Ferreira",
+        "Email": "julia@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.783Z",
+        "updatedAt": "2025-10-22T00:18:55.783Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "c40607f4-60df-4b97-8ab4-07157fae4f3c",
+      "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.014Z",
+      "updatedAt": "2025-10-22T00:18:56.014Z",
+      "aluno": {
+        "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+        "Nome": "Julia Ferreira",
+        "Email": "julia@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.783Z",
+        "updatedAt": "2025-10-22T00:18:55.783Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "b140c0df-5a44-42ca-a3f3-e24ab1a1a8b3",
+      "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.024Z",
+      "updatedAt": "2025-10-22T00:18:56.024Z",
+      "aluno": {
+        "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+        "Nome": "Julia Ferreira",
+        "Email": "julia@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.783Z",
+        "updatedAt": "2025-10-22T00:18:55.783Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "0a2637cd-7bb2-4974-bc45-b32da8ea19f2",
+      "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.033Z",
+      "updatedAt": "2025-10-22T00:18:56.033Z",
+      "aluno": {
+        "IDAluno": "6624a5c5-7fa4-4644-bf09-a68ecdf137ad",
+        "Nome": "Julia Ferreira",
+        "Email": "julia@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.783Z",
+        "updatedAt": "2025-10-22T00:18:55.783Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "2c26cc21-7ed9-4340-999e-c25d2dfb7ca9",
+      "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.042Z",
+      "updatedAt": "2025-10-22T00:18:56.042Z",
+      "aluno": {
+        "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+        "Nome": "Lucas Rodrigues",
+        "Email": "lucas@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.788Z",
+        "updatedAt": "2025-10-22T00:18:55.788Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "fa595a3a-d8db-4e50-97f2-7d735c922302",
+      "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.052Z",
+      "updatedAt": "2025-10-22T00:18:56.052Z",
+      "aluno": {
+        "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+        "Nome": "Lucas Rodrigues",
+        "Email": "lucas@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.788Z",
+        "updatedAt": "2025-10-22T00:18:55.788Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "ba3eae84-926d-434b-b6dc-27dc1e1090c5",
+      "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.062Z",
+      "updatedAt": "2025-10-22T00:18:56.062Z",
+      "aluno": {
+        "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+        "Nome": "Lucas Rodrigues",
+        "Email": "lucas@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.788Z",
+        "updatedAt": "2025-10-22T00:18:55.788Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "812a4a0f-64fe-4686-a5a1-3817e2b155bf",
+      "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.071Z",
+      "updatedAt": "2025-10-22T00:18:56.071Z",
+      "aluno": {
+        "IDAluno": "38211a7e-1c3b-4448-b45c-42084dfaa730",
+        "Nome": "Lucas Rodrigues",
+        "Email": "lucas@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 5,
+        "createdAt": "2025-10-22T00:18:55.788Z",
+        "updatedAt": "2025-10-22T00:18:55.788Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "db1f0093-7174-48dc-aea2-fa55d6066a72",
+      "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+      "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.082Z",
+      "updatedAt": "2025-10-22T00:18:56.082Z",
+      "aluno": {
+        "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+        "Nome": "Fernanda Alves",
+        "Email": "fernanda@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.794Z",
+        "updatedAt": "2025-10-22T00:18:55.794Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "6fba9e06-ebee-4e88-8979-237c3419192b",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Algoritmos e Estruturas de Dados",
+        "CodigoDaDisciplina": "CC001",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.705Z",
+        "updatedAt": "2025-10-22T00:18:55.705Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "cea1ff1d-0127-4777-8f5a-fa28e9ffb50b",
+      "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+      "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.091Z",
+      "updatedAt": "2025-10-22T00:18:56.091Z",
+      "aluno": {
+        "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+        "Nome": "Fernanda Alves",
+        "Email": "fernanda@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.794Z",
+        "updatedAt": "2025-10-22T00:18:55.794Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f980451-8e3a-44a1-b205-1c117386a5ea",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Programação Orientada a Objetos",
+        "CodigoDaDisciplina": "CC002",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.715Z",
+        "updatedAt": "2025-10-22T00:18:55.715Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "ac442cf6-984a-497f-a169-f4f045e059f2",
+      "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+      "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.100Z",
+      "updatedAt": "2025-10-22T00:18:56.100Z",
+      "aluno": {
+        "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+        "Nome": "Fernanda Alves",
+        "Email": "fernanda@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.794Z",
+        "updatedAt": "2025-10-22T00:18:55.794Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "1f4e4e61-3ce7-4954-abde-9e3e94ac6565",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Banco de Dados",
+        "CodigoDaDisciplina": "CC003",
+        "Ativa": true,
+        "CargaHoraria": 60,
+        "createdAt": "2025-10-22T00:18:55.722Z",
+        "updatedAt": "2025-10-22T00:18:55.722Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    },
+    {
+      "IDMatricula": "8aa5a5dd-611c-4460-9f22-4510d1403e68",
+      "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+      "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+      "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+      "Status": "ENROLLED",
+      "Nota": null,
+      "createdAt": "2025-10-22T00:18:56.109Z",
+      "updatedAt": "2025-10-22T00:18:56.109Z",
+      "aluno": {
+        "IDAluno": "7513291c-0bc5-4b01-9564-b283e95c2b35",
+        "Nome": "Fernanda Alves",
+        "Email": "fernanda@test.com",
+        "Idade": null,
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "Semestre": 3,
+        "createdAt": "2025-10-22T00:18:55.794Z",
+        "updatedAt": "2025-10-22T00:18:55.794Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "disciplina": {
+        "IDDisciplina": "80b935c5-ad17-490c-9907-36bcdc6de4f1",
+        "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+        "NomeDaDisciplina": "Engenharia de Software",
+        "CodigoDaDisciplina": "CC004",
+        "Ativa": true,
+        "CargaHoraria": 80,
+        "createdAt": "2025-10-22T00:18:55.729Z",
+        "updatedAt": "2025-10-22T00:18:55.729Z",
+        "curso": {
+          "IDCurso": "b75a554a-bbc4-484b-a46e-daf1f0572220",
+          "NomeDoCurso": "Ciência da Computação"
+        },
+        "_count": {
+          "matriculas": 0
+        }
+      },
+      "periodo": {
+        "IDPeriodo": "f5956dd1-2cc5-4ad9-b143-a8bda8686973",
+        "Nome": "2024.1",
+        "DataInicio": "2024-01-01T00:00:00.000Z",
+        "DataFim": "2024-06-30T00:00:00.000Z"
+      }
+    }
+  ],
+  "predicoes": [
+    {
+      "matriculaId": "85a3525b-56d1-48ef-b3b0-1a3192c0e4ab",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "af41ac71-83c1-4ac2-a923-be9d7a7ec508",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "c1b029a3-6295-4906-bc05-e90acf9c27a9",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "fa295936-2ddd-417e-8680-355f78207575",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "7e81c2d0-42c9-4569-8d79-de715f224a7b",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "be4a3da4-9313-47a1-8587-bb78a102780f",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "0714038a-b7c1-49d7-98bb-36022c866433",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "3d8f01b4-2cae-43fc-9823-a6924f84704c",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "4e3b285f-d615-48a5-aebb-a1a0d52447ee",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "f42c3eef-e3c4-47a7-80f3-8946cd83fbb2",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "c546b69d-1412-43c2-a463-01e064c4e6ee",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "f4b363a4-0b52-4c6d-b5ed-f0e1727550ea",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "9c502fcc-fded-417b-a279-2a3188a396c1",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "fc0877ae-0bb7-4e80-99bd-277c1b85074d",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "8520e5ea-f469-4c1f-a39b-9731bdd29b98",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "0fec9ad0-108b-4f5b-a903-944e1413f660",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "811c593d-3cb7-433b-afdd-de85fc0e77c1",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "679a8f95-fe61-4d53-a260-af3a9c26c37d",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "27587ab5-7b4a-4cee-a23f-a5e862d5b49b",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "6cc17d27-d92a-4559-89bf-0c9c251c6e60",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "3b4fa37f-b381-4bba-bd80-32c231d96a30",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "c40607f4-60df-4b97-8ab4-07157fae4f3c",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "b140c0df-5a44-42ca-a3f3-e24ab1a1a8b3",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "0a2637cd-7bb2-4974-bc45-b32da8ea19f2",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "2c26cc21-7ed9-4340-999e-c25d2dfb7ca9",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "fa595a3a-d8db-4e50-97f2-7d735c922302",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "ba3eae84-926d-434b-b6dc-27dc1e1090c5",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "812a4a0f-64fe-4686-a5a1-3817e2b155bf",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "baixo",
+        "probabilidade": 0.2,
+        "explicacao": "Risco de evasão baixo baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "db1f0093-7174-48dc-aea2-fa55d6066a72",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "cea1ff1d-0127-4777-8f5a-fa28e9ffb50b",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "ac442cf6-984a-497f-a169-f4f045e059f2",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "médio",
+        "probabilidade": 0.5,
+        "explicacao": "Risco de evasão médio baseado em fatores comportamentais"
+      }
+    },
+    {
+      "matriculaId": "8aa5a5dd-611c-4460-9f22-4510d1403e68",
+      "desempenho": {
+        "classificacao": "ruim",
+        "probabilidade": 0.3,
+        "explicacao": "Aluno com nota null tem ruim desempenho"
+      },
+      "evasao": {
+        "classificacao": "alto",
+        "probabilidade": 0.8,
+        "explicacao": "Risco de evasão alto baseado em fatores comportamentais"
+      }
+    }
+  ]
+}
