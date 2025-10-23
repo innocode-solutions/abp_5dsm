@@ -20,3 +20,4 @@ router.get('/tipo/:tipo', PredictionController.getByTipo);
 
 export default router;
 
+

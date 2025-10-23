@@ -106,3 +106,4 @@ Write-Host "iwr 'http://localhost:3000/api/dashboard/professor/$userId' -Headers
 
 Write-Host "`n🎉 TESTE CONCLUÍDO!" -ForegroundColor Green
 
+
