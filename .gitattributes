@@ -1,0 +1,20 @@
+# Configurações de merge para evitar conflitos
+*.js merge=union
+*.ts merge=union
+*.json merge=union
+*.md merge=union
+*.yml merge=union
+*.yaml merge=union
+
+# Arquivos que devem ser tratados como binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Arquivos de configuração que podem ter conflitos
+package.json merge=union
+package-lock.json merge=union
+tsconfig.json merge=union
