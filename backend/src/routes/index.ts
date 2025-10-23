@@ -33,10 +33,10 @@ router.use('/alunos', AuthMiddleware.authenticateToken, alunoRoutes);
 router.use('/users', AuthMiddleware.authenticateToken, userRoutes);
 router.use('/periodos', AuthMiddleware.authenticateToken, periodoLetivoRoutes);
 router.use('/matriculas', AuthMiddleware.authenticateToken, matriculaRoutes);
-router.use('/predictions', predictionRoutes);
+router.use('/predictions', AuthMiddleware.authenticateToken, predictionRoutes);
 
 // ✅ Dashboards separados (IES e Professor)
-router.use('/dashboard/ies', dashboardRoutesIES); // Admin/IES
-router.use('/dashboard', dashboardRoutesProfessor); // Professor/Admin
+router.use('/dashboard/ies', AuthMiddleware.authenticateToken, dashboardRoutesIES); // Admin/IES
+router.use('/dashboard', AuthMiddleware.authenticateToken, dashboardRoutesProfessor); // Professor/Admin
 
 export default router;
