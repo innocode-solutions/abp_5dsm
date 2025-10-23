@@ -4,6 +4,9 @@ import { AuthMiddleware, UserRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
+// Aplicar autenticação em todas as rotas
+router.use(AuthMiddleware.authenticateToken);
+
 // GET /api/cursos - Get all courses (todos autenticados)
 router.get('/', CursoController.getAll);
 

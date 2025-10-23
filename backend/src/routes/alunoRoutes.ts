@@ -4,6 +4,9 @@ import { AuthMiddleware, UserRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
+// Aplicar autenticação em todas as rotas
+router.use(AuthMiddleware.authenticateToken);
+
 // GET /api/alunos - Get all students (TEACHER e ADMIN)
 router.get('/', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), AlunoController.getAll);
 

@@ -26,17 +26,17 @@ router.get('/health', (req, res) => {
 // ✅ Rotas públicas
 router.use('/auth', authRoutes);
 
-// ✅ Rotas protegidas
-router.use('/cursos', AuthMiddleware.authenticateToken, cursoRoutes);
-router.use('/disciplinas', AuthMiddleware.authenticateToken, disciplinaRoutes);
-router.use('/alunos', AuthMiddleware.authenticateToken, alunoRoutes);
-router.use('/users', AuthMiddleware.authenticateToken, userRoutes);
-router.use('/periodos', AuthMiddleware.authenticateToken, periodoLetivoRoutes);
-router.use('/matriculas', AuthMiddleware.authenticateToken, matriculaRoutes);
-router.use('/predictions', AuthMiddleware.authenticateToken, predictionRoutes);
+// ✅ Rotas protegidas (autenticação aplicada individualmente em cada rota)
+router.use('/cursos', cursoRoutes);
+router.use('/disciplinas', disciplinaRoutes);
+router.use('/alunos', alunoRoutes);
+router.use('/users', userRoutes);
+router.use('/periodos', periodoLetivoRoutes);
+router.use('/matriculas', matriculaRoutes);
+router.use('/predictions', predictionRoutes);
 
 // ✅ Dashboards separados (IES e Professor)
-router.use('/dashboard/ies', AuthMiddleware.authenticateToken, dashboardRoutesIES); // Admin/IES
-router.use('/dashboard', AuthMiddleware.authenticateToken, dashboardRoutesProfessor); // Professor/Admin
+router.use('/dashboard/ies', dashboardRoutesIES); // Admin/IES
+router.use('/dashboard', dashboardRoutesProfessor); // Professor/Admin
 
 export default router;
