@@ -1,11 +1,11 @@
-import request from 'supertest';
-import { app } from '../server';
-import jwt from 'jsonwebtoken';
+const request = require('supertest');
+const { app } = require('../server');
+const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 
 // Helper para criar tokens JWT
-const createToken = (userId: string, role: string, email: string) => {
+const createToken = (userId, role, email) => {
   return jwt.sign({ userId, role, email }, JWT_SECRET, { expiresIn: '1h' });
 };
 
