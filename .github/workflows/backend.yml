@@ -39,10 +39,10 @@ jobs:
         run: npm test
 
       # 7️⃣ Deploy automático no Railway
+      - name: Instalar Railway CLI
+        run: npm i -g @railway/cli
+
       - name: Deploy para Railway
-        if: success()
-        uses: railwayapp/action-deploy@v2
-        with:
-          service: backend
+        run: railway up --service backend --yes
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.railway_backend }}
