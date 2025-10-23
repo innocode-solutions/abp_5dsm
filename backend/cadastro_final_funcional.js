@@ -262,3 +262,4 @@ async function cadastroFinalFuncional() {
 }
 
 cadastroFinalFuncional();
+

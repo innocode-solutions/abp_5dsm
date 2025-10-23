@@ -105,3 +105,4 @@ Write-Host "`$headers = @{Authorization='Bearer $token'}"
 Write-Host "iwr 'http://localhost:3000/api/dashboard/professor/$userId' -Headers `$headers"
 
 Write-Host "`n🎉 TESTE CONCLUÍDO!" -ForegroundColor Green
+

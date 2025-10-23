@@ -324,3 +324,4 @@ async function cadastroCompletoZero() {
 }
 
 cadastroCompletoZero();
+

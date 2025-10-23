@@ -256,3 +256,4 @@ async function testarDashboard() {
 
 // Executar testes
 testarDashboard();
+
