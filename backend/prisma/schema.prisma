@@ -11,53 +11,53 @@ datasource db {
 }
 
 model Curso {
-  IDCurso      String      @id @default(uuid())
-  NomeDoCurso  String
-  Descricao    String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  
+  IDCurso     String   @id @default(uuid())
+  NomeDoCurso String
+  Descricao   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   // Relacionamentos
-  disciplinas  Disciplina[]
-  alunos       Aluno[]
-  
+  disciplinas Disciplina[]
+  alunos      Aluno[]
+
   @@map("cursos")
 }
 
 model Disciplina {
-  IDDisciplina        String    @id @default(uuid())
-  IDCurso             String
-  NomeDaDisciplina    String
-  CodigoDaDisciplina  String?
-  Ativa               Boolean   @default(true)
-  CargaHoraria        Int?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  
+  IDDisciplina       String   @id @default(uuid())
+  IDCurso            String
+  NomeDaDisciplina   String
+  CodigoDaDisciplina String?
+  Ativa              Boolean  @default(true)
+  CargaHoraria       Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
   // Relacionamentos
-  curso               Curso     @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
-  matriculas          Matricula[]
-  
+  curso      Curso       @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
+  matriculas Matricula[]
+
   // Índices e constraints
   @@unique([IDCurso, CodigoDaDisciplina])
   @@map("disciplinas")
 }
 
 model Aluno {
-  IDAluno   String    @id @default(uuid())
+  IDAluno   String   @id @default(uuid())
   Nome      String
-  Email     String    @unique
+  Email     String   @unique
   Idade     Int?
   IDCurso   String
   Semestre  Int?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relacionamentos
-  curso     Curso     @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
+  curso      Curso       @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
   matriculas Matricula[]
-  user      User?     // Relacionamento opcional com User
-  
+  user       User? // Relacionamento opcional com User
+
   @@map("alunos")
 }
 
@@ -68,33 +68,33 @@ enum UserRole {
 }
 
 model User {
-  IDUser       String    @id @default(uuid())
-  Email        String    @unique
+  IDUser       String   @id @default(uuid())
+  Email        String   @unique
   PasswordHash String
-  Role         UserRole  @default(STUDENT)
+  Role         UserRole @default(STUDENT)
   name         String?
-  studentId    String?   @unique // FK opcional para Aluno
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  
+  studentId    String?  @unique // FK opcional para Aluno
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   // Relacionamento opcional com Aluno
-  aluno        Aluno?    @relation(fields: [studentId], references: [IDAluno])
-  
+  aluno Aluno? @relation(fields: [studentId], references: [IDAluno])
+
   @@map("users")
 }
 
 model PeriodoLetivo {
-  IDPeriodo   String    @id @default(uuid())
-  Nome        String
-  DataInicio  DateTime
-  DataFim     DateTime
-  Ativo       Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  IDPeriodo  String   @id @default(uuid())
+  Nome       String
+  DataInicio DateTime
+  DataFim    DateTime
+  Ativo      Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
   // Relacionamentos
-  matriculas  Matricula[]
-  
+  matriculas Matricula[]
+
   @@map("periodos_letivos")
 }
 
@@ -105,21 +105,21 @@ enum StatusMatricula {
 }
 
 model Matricula {
-  IDMatricula   String          @id @default(uuid())
-  IDAluno       String
-  IDDisciplina  String
-  IDPeriodo     String
-  Status        StatusMatricula @default(ENROLLED)
-  Nota          Float?          // Nota do aluno na disciplina
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  
+  IDMatricula  String          @id @default(uuid())
+  IDAluno      String
+  IDDisciplina String
+  IDPeriodo    String
+  Status       StatusMatricula @default(ENROLLED)
+  Nota         Float? // Nota do aluno na disciplina
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
   // Relacionamentos
-  aluno         Aluno           @relation(fields: [IDAluno], references: [IDAluno], onDelete: Cascade)
-  disciplina    Disciplina      @relation(fields: [IDDisciplina], references: [IDDisciplina], onDelete: Cascade)
-  periodo       PeriodoLetivo   @relation(fields: [IDPeriodo], references: [IDPeriodo], onDelete: Cascade)
-  predictions   Prediction[]
-  
+  aluno       Aluno         @relation(fields: [IDAluno], references: [IDAluno], onDelete: Cascade)
+  disciplina  Disciplina    @relation(fields: [IDDisciplina], references: [IDDisciplina], onDelete: Cascade)
+  periodo     PeriodoLetivo @relation(fields: [IDPeriodo], references: [IDPeriodo], onDelete: Cascade)
+  predictions Prediction[]
+
   // Constraint única
   @@unique([IDAluno, IDDisciplina, IDPeriodo])
   @@map("matriculas")
@@ -131,18 +131,18 @@ enum TipoPredicao {
 }
 
 model Prediction {
-  IDPrediction    String        @id @default(uuid())
-  IDMatricula     String
-  TipoPredicao    TipoPredicao
-  Probabilidade   Float         // Probabilidade da predição (0-1)
-  Classificacao   String        // Classificação (ex: "baixo", "médio", "alto", "aprovado", "reprovado")
-  Explicacao      String?       // Explicação da predição
-  DadosEntrada    Json?         // Dados utilizados para a predição
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  IDPrediction  String       @id @default(uuid())
+  IDMatricula   String
+  TipoPredicao  TipoPredicao
+  Probabilidade Float // Probabilidade da predição (0-1)
+  Classificacao String // Classificação (ex: "baixo", "médio", "alto", "aprovado", "reprovado")
+  Explicacao    String? // Explicação da predição
+  DadosEntrada  Json? // Dados utilizados para a predição
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
   // Relacionamentos
-  matricula       Matricula     @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
-  
+  matricula Matricula @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
+
   @@map("predictions")
 }
