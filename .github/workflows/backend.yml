@@ -52,19 +52,10 @@ jobs:
           else
             echo "✅ Secrets Railway encontrados"
           fi
-        env:
-          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
-          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
 
-      # 8️⃣ Login no Railway (via env RAILWAY_TOKEN)
-      - name: Login Railway
-        run: railway login
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
-
-      # 9️⃣ Deploy para Railway
+      # 8️⃣ Deploy para Railway usando npx
       - name: Deploy para Railway
-        run: railway up --service backend -- --yes
+        run: npx railway up --service backend -- --yes
         working-directory: ./backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
