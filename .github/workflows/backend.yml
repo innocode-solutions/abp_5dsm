@@ -27,7 +27,7 @@ jobs:
         run: npm ci
         working-directory: ./backend
 
-      # 4️⃣ Lint (opcional)
+      # 4️⃣ Lint
       - name: Rodar Lint
         if: hashFiles('backend/**/.eslintrc*') != ''
         run: npm run lint || echo "⚠️ ESLint não configurado, ignorando etapa."
@@ -58,8 +58,12 @@ jobs:
 
       # 8️⃣ Deploy para Railway
       - name: Deploy para Railway
-        run: npx @railway/cli up --service backend -- --token $RAILWAY_BACKEND --project $RAILWAY_PROJECT
+        # 1. O comando 'run' foi simplificado.
+        # 2. O CLI vai ler as variáveis do 'env' automaticamente.
+        run: npx @railway/cli up --service backend
         working-directory: ./backend
         env:
-          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
+          # 3. Mapeia seu secret 'RAILWAY_BACKEND' para a variável 'RAILWAY_TOKEN'
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
+          # 4. Mapeia seu secret 'RAILWAY_PROJECT' para a variável 'RAILWAY_PROJECT_ID'
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
