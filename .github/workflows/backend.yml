@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout
-      - name: Checkout do repositório
+      # 1️⃣ Checkout do repositório
+      - name: Checkout
         uses: actions/checkout@v4
 
       # 2️⃣ Setup Node.js com cache
@@ -43,24 +43,15 @@ jobs:
         run: npm test
         working-directory: ./backend
 
-      # 7️⃣ Testar Secret Railway
-      - name: Testar Secret Railway
-        run: |
-          if [ -z "$RAILWAY_BACKEND" ]; then
-            echo "❌ Secret RAILWAY_BACKEND não encontrado"
-            exit 1
-          else
-            echo "✅ Secret RAILWAY_BACKEND encontrado"
-          fi
-        env:
-          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
-
-      # 8️⃣ Deploy automático no Railway
+      # 7️⃣ Deploy automático no Railway
       - name: Instalar Railway CLI
-        run: npm install -g @railway/cli
+        run: npm i -g @railway/cli
 
       - name: Deploy para Railway
-        run: npx railway up --service backend -- --yes
+        run: |
+          railway login --ci $RAILWAY_TOKEN
+          railway up --project $RAILWAY_PROJECT --service backend -- --yes
         working-directory: ./backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
