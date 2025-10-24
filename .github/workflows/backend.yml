@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout do repositório
+      # 1️⃣ Checkout
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
@@ -58,7 +58,7 @@ jobs:
 
       # 8️⃣ Deploy para Railway
       - name: Deploy para Railway
-        run: npx @railway/cli up --service backend --token $RAILWAY_BACKEND -- --project $RAILWAY_PROJECT
+        run: npx @railway/cli up --service backend -- --token $RAILWAY_BACKEND --project $RAILWAY_PROJECT
         working-directory: ./backend
         env:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
