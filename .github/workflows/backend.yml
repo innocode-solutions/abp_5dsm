@@ -58,5 +58,5 @@ jobs:
         run: npx railway up --service backend -- --yes
         working-directory: ./backend
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
