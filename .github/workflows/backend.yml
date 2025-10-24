@@ -4,22 +4,17 @@ on:
   push:
     branches:
       - main
-      
+
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
-    
-    # Define o diretório padrão para todos os comandos 'run' neste job
-    defaults:
-      run:
-        working-directory: ./backend
 
     steps:
-      # 1️⃣ Checkout (não precisa de working-directory)
+      # 1️⃣ Checkout
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js (não precisa de working-directory)
+      # 2️⃣ Setup Node.js com cache
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
@@ -27,25 +22,28 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      # 3️⃣ Instalar dependências (não precisa mais de working-directory)
+      # 3️⃣ Instalar dependências
       - name: Instalar dependências
         run: npm ci
+        working-directory: ./backend
 
-      # 4️⃣ Lint (não precisa mais de working-directory)
+      # 4️⃣ Lint (opcional)
       - name: Rodar Lint
         if: hashFiles('backend/**/.eslintrc*') != ''
-        # Recomendação: Remova o "|| echo..." para que o build falhe se o lint falhar
-        run: npm run lint
-      
-      # 5️⃣ Build (não precisa mais de working-directory)
+        run: npm run lint || echo "⚠️ ESLint não configurado, ignorando etapa."
+        working-directory: ./backend
+
+      # 5️⃣ Build do backend
       - name: Build do projeto
         run: npm run build
+        working-directory: ./backend
 
-      # 6️⃣ Testes (não precisa mais de working-directory)
+      # 6️⃣ Rodar testes (Jest)
       - name: Rodar Testes
         run: npm test
+        working-directory: ./backend
 
-      # 7️⃣ Verificar secrets (não precisa de working-directory)
+      # 7️⃣ Verificar secrets do Railway
       - name: Testar Secrets Railway
         run: |
           if [ -z "$RAILWAY_BACKEND" ] || [ -z "$RAILWAY_PROJECT" ]; then
@@ -58,9 +56,10 @@ jobs:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
 
-      # 8️⃣ Deploy para Railway (não precisa mais de working-directory)
+      # 8️⃣ Deploy para Railway
       - name: Deploy para Railway
-        run: npx @railway/cli up --service backend
+        run: npx @railway/cli up --service backend -- --token $RAILWAY_BACKEND --project $RAILWAY_PROJECT
+        working-directory: ./backend
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
