@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout
+      # 1️⃣ Checkout do repositório
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
@@ -56,14 +56,19 @@ jobs:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
 
-      # 8️⃣ Instalar Railway CLI oficial
-      - name: Instalar Railway CLI
-        run: npm install -g @railway/cli
-
-      # 9️⃣ Deploy para Railway
-      - name: Deploy para Railway
-        run: railway up --service backend --project $RAILWAY_PROJECT --token $RAILWAY_BACKEND
-        working-directory: ./backend
+      # 8️⃣ Login no Railway
+      - name: Login Railway
+        run: railway login --token $RAILWAY_BACKEND
         env:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
+
+      # 9️⃣ Linkar o projeto Railway
+      - name: Link para o projeto
+        run: railway link $RAILWAY_PROJECT
+        env:
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
+
+      # 🔟 Deploy para Railway
+      - name: Deploy para Railway
+        run: railway up --service backend
+        working-directory: ./backend
