@@ -51,4 +51,4 @@ jobs:
         run: railway up --service backend -- --yes
         working-directory: ./backend
         env:
-          RAILWAY_TOKEN: ${{ secrets.railway_backend }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
