@@ -43,11 +43,11 @@ jobs:
         run: npm test
         working-directory: ./backend
 
-      # 7️⃣ Testar se o secret Railway está chegando
-      - name: Testar secret Railway
+      # 7️⃣ Testar Secret Railway
+      - name: Testar Secret Railway
         run: |
           if [ -z "$RAILWAY_BACKEND" ]; then
-            echo "❌ Secret RAILWAY_BACKEND não definido"
+            echo "❌ Secret RAILWAY_BACKEND não encontrado"
             exit 1
           else
             echo "✅ Secret RAILWAY_BACKEND encontrado"
@@ -55,9 +55,12 @@ jobs:
         env:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
 
-      # 8️⃣ Deploy automático no Railway (não interativo)
+      # 8️⃣ Deploy automático no Railway
+      - name: Instalar Railway CLI
+        run: npm install -g @railway/cli
+
       - name: Deploy para Railway
-        run: railway run --detach "npm run start"
+        run: npx railway up --service backend -- --yes
         working-directory: ./backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
