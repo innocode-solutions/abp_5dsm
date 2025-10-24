@@ -43,14 +43,20 @@ jobs:
         run: npm test
         working-directory: ./backend
 
-      # 7️⃣ Login Railway
-      - name: Login Railway
-        run: railway login --token $RAILWAY_TOKEN
+      # 7️⃣ Verificar secrets do Railway
+      - name: Testar Secrets Railway
+        run: |
+          if [ -z "$RAILWAY_BACKEND" ] || [ -z "$RAILWAY_PROJECT" ]; then
+            echo "❌ Secrets RAILWAY_BACKEND ou RAILWAY_PROJECT não encontrados"
+            exit 1
+          else
+            echo "✅ Secrets Railway encontrados"
+          fi
 
-      # 8️⃣ Deploy para Railway
+      # 8️⃣ Deploy para Railway usando npx
       - name: Deploy para Railway
-        run: railway up --project $RAILWAY_PROJECT --service backend -- --yes
+        run: npx railway up --token $RAILWAY_BACKEND --project $RAILWAY_PROJECT --service backend -- --yes
         working-directory: ./backend
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
-          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
+          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
