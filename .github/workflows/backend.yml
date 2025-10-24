@@ -56,20 +56,16 @@ jobs:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
 
-      # 8️⃣ Instalar Railway CLI oficial
-      - name: Instalar Railway CLI
-        run: npm install -g @railway/cli
-
-      # 9️⃣ Login no Railway
+      # 8️⃣ Login no Railway (via env RAILWAY_TOKEN)
       - name: Login Railway
-        run: railway login --token $RAILWAY_BACKEND
+        run: railway login
         env:
-          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
 
-      # 🔟 Deploy para Railway
+      # 9️⃣ Deploy para Railway
       - name: Deploy para Railway
         run: railway up --service backend -- --yes
         working-directory: ./backend
         env:
-          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
