@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout do repositório
+      # 1️⃣ Checkout
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
@@ -56,19 +56,22 @@ jobs:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
 
-      # 8️⃣ Login no Railway
+      # 8️⃣ Login no Railway (usando npx)
       - name: Login Railway
-        run: railway login --token $RAILWAY_BACKEND
+        run: npx railway login --token $RAILWAY_BACKEND
         env:
           RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
 
-      # 9️⃣ Linkar o projeto Railway
-      - name: Link para o projeto
-        run: railway link $RAILWAY_PROJECT
+      # 9️⃣ Link para o projeto
+      - name: Link Railway Project
+        run: npx railway link $RAILWAY_PROJECT
         env:
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
 
       # 🔟 Deploy para Railway
       - name: Deploy para Railway
-        run: railway up --service backend
+        run: npx railway up --service backend -- --yes
         working-directory: ./backend
+        env:
+          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
