@@ -46,24 +46,29 @@ jobs:
       # 7️⃣ Verificar secrets do Railway
       - name: Testar Secrets Railway
         run: |
-          if [ -z "$RAILWAY_BACKEND" ] || [ -z "$RAILWAY_PROJECT" ]; then
-            echo "❌ Secrets RAILWAY_BACKEND ou RAILWAY_PROJECT não encontrados"
+          # Checa se as variáveis de ambiente essenciais (que serão usadas no passo 8) estão vazias
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "❌ O valor do Token Railway (RAILWAY_BACKEND) está vazio."
             exit 1
-          else
-            echo "✅ Secrets Railway encontrados"
           fi
+          if [ -z "$RAILWAY_PROJECT_ID" ]; then
+            echo "❌ O valor do ID do Projeto Railway (RAILWAY_PROJECT) está vazio."
+            exit 1
+          fi
+          echo "✅ Secrets Railway (Token e Project ID) carregados com sucesso para o ambiente."
         env:
-          RAILWAY_BACKEND: ${{ secrets.RAILWAY_BACKEND }}
-          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT }}
+          # Mapeamos secrets para os nomes de variáveis de ambiente que o CLI Railway espera
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
 
       # 8️⃣ Deploy para Railway
       - name: Deploy para Railway
         # 1. O comando 'run' foi simplificado.
-        # 2. O CLI vai ler as variáveis do 'env' automaticamente.
+        #    O CLI vai ler as variáveis do 'env' automaticamente.
         run: npx @railway/cli up --service backend
         working-directory: ./backend
         env:
-          # 3. Mapeia seu secret 'RAILWAY_BACKEND' para a variável 'RAILWAY_TOKEN'
+          # 2. Mapeia seu secret 'RAILWAY_BACKEND' para a variável 'RAILWAY_TOKEN'
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
-          # 4. Mapeia seu secret 'RAILWAY_PROJECT' para a variável 'RAILWAY_PROJECT_ID'
+          # 3. Mapeia seu secret 'RAILWAY_PROJECT' para a variável 'RAILWAY_PROJECT_ID'
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
