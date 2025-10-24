@@ -28,4 +28,7 @@ router.get('/curso/:cursoId', AuthMiddleware.requireAnyRole([UserRole.TEACHER, U
 // GET /api/alunos/:id/matriculas - Get student enrollments (próprio aluno, TEACHER ou ADMIN)
 router.get('/:id/matriculas', AuthMiddleware.requireStudentOwnership, AlunoController.getEnrollments);
 
+// GET /api/alunos/:id/disciplinas - Get disciplines, course and semester for a student (próprio aluno, TEACHER ou ADMIN)
+router.get('/:id/disciplinas', AuthMiddleware.requireStudentOwnership, AlunoController.getSubjectsByStudent);
+
 export default router;
