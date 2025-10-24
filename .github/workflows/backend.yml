@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout
+      # 1️⃣ Clonar o repositório
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js com cache
+      # 2️⃣ Configurar Node.js com cache
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
       # 3️⃣ Instalar dependências
@@ -27,13 +27,13 @@ jobs:
         run: npm ci
         working-directory: ./backend
 
-      # 4️⃣ Lint
+      # 4️⃣ Rodar Lint (opcional)
       - name: Rodar Lint
         if: hashFiles('backend/**/.eslintrc*') != ''
         run: npm run lint || echo "⚠️ ESLint não configurado, ignorando etapa."
         working-directory: ./backend
 
-      # 5️⃣ Build do backend
+      # 5️⃣ Build do projeto
       - name: Build do projeto
         run: npm run build
         working-directory: ./backend
@@ -43,32 +43,27 @@ jobs:
         run: npm test
         working-directory: ./backend
 
-      # 7️⃣ Verificar secrets do Railway
+      # 7️⃣ Verificar secrets Railway
       - name: Testar Secrets Railway
         run: |
-          # Checa se as variáveis de ambiente essenciais (que serão usadas no passo 8) estão vazias
           if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "❌ O valor do Token Railway (RAILWAY_BACKEND) está vazio."
+            echo "❌ O token do Railway não foi carregado (RAILWAY_BACKEND)."
             exit 1
           fi
           if [ -z "$RAILWAY_PROJECT_ID" ]; then
-            echo "❌ O valor do ID do Projeto Railway (RAILWAY_PROJECT) está vazio."
+            echo "❌ O ID do projeto Railway não foi carregado (RAILWAY_PROJECT)."
             exit 1
           fi
-          echo "✅ Secrets Railway (Token e Project ID) carregados com sucesso para o ambiente."
+          echo "✅ Secrets Railway encontrados com sucesso."
         env:
-          # Mapeamos secrets para os nomes de variáveis de ambiente que o CLI Railway espera
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
 
-      # 8️⃣ Deploy para Railway
-      - name: Deploy para Railway
-        # 1. O comando 'run' foi simplificado.
-        #    O CLI vai ler as variáveis do 'env' automaticamente.
-        run: npx @railway/cli up --service backend
+      # 8️⃣ Deploy para o Railway
+      - name: Deploy para o Railway 🚀
+        run: |
+          npx @railway/cli@latest up --service backend --ci
         working-directory: ./backend
         env:
-          # 2. Mapeia seu secret 'RAILWAY_BACKEND' para a variável 'RAILWAY_TOKEN'
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_BACKEND }}
-          # 3. Mapeia seu secret 'RAILWAY_PROJECT' para a variável 'RAILWAY_PROJECT_ID'
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
