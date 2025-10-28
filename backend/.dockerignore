@@ -134,9 +134,10 @@ jspm_packages/
 .env
 
 # Docker files
-Dockerfile*
+dockerfile*
 docker-compose*
 .dockerignore
+*.yml
 
 # Git
 .git
