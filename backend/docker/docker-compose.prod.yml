@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # ==========================
+  # 🐘 POSTGRES DATABASE
+  # ==========================
+  postgres:
+    image: postgres:15
+    container_name: abp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-academic_management}
+      POSTGRES_USER: ${POSTGRES_USER:-abp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-abp_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - abp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-abp_user} -d ${POSTGRES_DB:-academic_management}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================
+  # 🚀 BACKEND (Node.js + HTTPS interno)
+  # ==========================
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/dockerfile
+    container_name: abp_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      FRONTEND_URL: ${FRONTEND_URL:-https://${DOMAIN_NAME}}
+      JWT_SECRET: ${JWT_SECRET}
+      SSL_KEY_PATH: certs/server.key
+      SSL_CERT_PATH: certs/server.crt
+      HTTP_PORT: 8080
+      HTTPS_PORT: 8443
+    expose:
+      - "8443"
+    networks:
+      - abp_network
+    command: >
+      sh -c "
+        echo '🚀 Running Prisma migrations...' &&
+        npx prisma migrate deploy &&
+        npm start
+      "
+
+  # ==========================
+  # 🌐 NGINX REVERSE PROXY + LET'S ENCRYPT
+  # ==========================
+  nginx:
+    image: nginx:stable-alpine
+    container_name: abp_nginx
+    depends_on:
+      - backend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/www:/var/www/certbot
+    networks:
+      - abp_network
+
+  # ==========================
+  # 🔐 CERTBOT (Let's Encrypt)
+  # ==========================
+  certbot:
+    image: certbot/certbot
+    container_name: abp_certbot
+    restart: unless-stopped
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/www:/var/www/certbot
+    entrypoint: >
+      sh -c "trap exit TERM;
+      while :; do
+        certbot renew;
+        sleep 12h & wait $${!};
+      done"
+
+# ==========================
+# 🔗 NETWORKS & VOLUMES
+# ==========================
+networks:
+  abp_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
