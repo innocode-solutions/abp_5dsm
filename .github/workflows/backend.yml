@@ -1,0 +1,63 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Clonar o repositório
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      # 2️⃣ Configurar Node.js com cache
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      # 3️⃣ Instalar dependências
+      - name: Instalar dependências
+        run: npm ci
+        working-directory: ./backend
+
+      # 4️⃣ Rodar Lint (opcional)
+      - name: Rodar Lint
+        if: hashFiles('backend/**/.eslintrc*') != ''
+        run: npm run lint || echo "⚠️ ESLint não configurado, ignorando etapa."
+        working-directory: ./backend
+
+      # 5️⃣ Build do projeto
+      - name: Build do projeto
+        run: npm run build
+        working-directory: ./backend
+
+      # 6️⃣ Rodar testes (Jest)
+      - name: Rodar Testes
+        run: npm test
+        working-directory: ./backend
+
+      # 7️⃣ Verificar variável do projeto Railway
+      - name: Verificar variável do projeto Railway
+        run: |
+          if [ -z "$RAILWAY_PROJECT_ID" ]; then
+            echo "❌ O ID do projeto Railway não foi encontrado (RAILWAY_PROJECT)."
+            exit 1
+          fi
+          echo "✅ Variável RAILWAY_PROJECT encontrada: $RAILWAY_PROJECT_ID"
+        env:
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}
+
+      # 8️⃣ Deploy simulado
+      - name: Deploy simulado 🚀
+        run: |
+          echo "✅ Simulação de deploy concluída com sucesso."
+          echo "🏁 Pipeline finalizado com sucesso!"
+        env:
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT }}

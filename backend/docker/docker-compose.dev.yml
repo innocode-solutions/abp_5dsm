@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # ==========================
+  # 🚀 BACKEND API (modo desenvolvimento)
+  # ==========================
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/dockerfile
+    container_name: abp_backend_dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT:-3000}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://abp_user:abp_password@postgres:5432/academic_management}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+    ports:
+      - "3000:3000"   # Porta local padrão para dev
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./node_modules
+    networks:
+      - abp_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo '🚀 Running Prisma migrations...' &&
+        npx prisma migrate deploy &&
+        echo '✅ Starting backend in development mode...' &&
+        npm run dev
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==========================
+  # 🐘 POSTGRES DATABASE
+  # ==========================
+  postgres:
+    image: postgres:15
+    container_name: abp_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-academic_management}
+      POSTGRES_USER: ${POSTGRES_USER:-abp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-abp_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - abp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-abp_user} -d ${POSTGRES_DB:-academic_management}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================
+  # 🧭 PGADMIN (interface web)
+  # ==========================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: abp_pgadmin_dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    networks:
+      - abp_network
+    profiles:
+      - tools
+
+# ==========================
+# 🔗 NETWORKS & VOLUMES
+# ==========================
+networks:
+  abp_network:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:

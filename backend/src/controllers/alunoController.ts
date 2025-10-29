@@ -324,4 +324,44 @@ export class AlunoController {
       res.status(500).json({ error: 'Internal server error' });
     }
   }
+
+  // GET /alunos/:id/disciplinas - Get subjects by student
+static async getSubjectsByStudent(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    // Busca o aluno e suas matrículas (com disciplina e período)
+    const aluno = await prisma.aluno.findUnique({
+      where: { IDAluno: id },
+      include: {
+        matriculas: {
+          where: {
+            periodo: { Ativo: true }, // apenas período letivo ativo
+          },
+          include: {
+            disciplina: true,
+            periodo: true,
+          },
+        },
+      },
+    });
+
+    if (!aluno) {
+      return res.status(404).json({ error: 'Aluno não encontrado.' });
+    }
+
+    // Monta a resposta padronizada
+    const subjects = aluno.matriculas.map((matricula: { disciplina: { NomeDaDisciplina: any; }; periodo: { Nome: any; }; }) => ({
+      IDAluno: aluno.IDAluno,
+      Nome: aluno.Nome,
+      NomeDaDisciplina: matricula.disciplina.NomeDaDisciplina,
+      PeriodoLetivo: matricula.periodo.Nome,
+    }));
+
+    return res.json(subjects);
+  } catch (error) {
+    console.error('Erro ao buscar disciplinas do aluno:', error);
+    return res.status(500).json({ error: 'Erro interno ao buscar disciplinas.' });
+  }
+ }
 }

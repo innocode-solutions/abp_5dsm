@@ -1,6 +1,9 @@
 version: '3.8'
 
 services:
+  # ==========================
+  # 🚀 BACKEND API (Node.js com HTTPS interno)
+  # ==========================
   backend:
     build:
       context: ..
@@ -10,33 +13,41 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${PORT:-3000}
-      # Point this at your Railway connection string (set it in .env)
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      HTTPS_PORT: ${HTTPS_PORT:-8443}
       DATABASE_URL: ${DATABASE_URL}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      SSL_KEY_PATH: ${SSL_KEY_PATH:-certs/server.key}
+      SSL_CERT_PATH: ${SSL_CERT_PATH:-certs/server.cert}
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "3000:3000"   # HTTP (fallback ou debug local)
+      - "8080:8080"   # Redirecionamento HTTP
+      - "8443:8443"   # HTTPS principal
     volumes:
-      # Keep for hot-reload dev workflow; remove in production
       - ../src:/app/src:ro
       - ../prisma:/app/prisma:ro
+      - ../certs:/app/certs:ro
     networks:
       - abp_network
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider https://localhost:8443/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     command: >
       sh -c "
-        echo 'Running Prisma migrations...' &&
+        echo '🚀 Running Prisma migrations...' &&
         npx prisma migrate deploy &&
-        echo 'Database migrations completed' &&
+        echo '✅ Database migrations completed' &&
         npm start
       "
 
+  # ==========================
+  # 🧭 PGADMIN (interface web)
+  # ==========================
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: abp_pgadmin
@@ -46,12 +57,11 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
+      - "5050:80"
     networks:
       - abp_network
     profiles:
       - tools
-    # Configure pgAdmin to connect to your Railway DB manually inside the UI.
 
 networks:
   abp_network:

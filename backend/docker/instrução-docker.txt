@@ -1,0 +1,112 @@
+1) Suba os serviços base (Postgres, Backend, Nginx)
+
+Com o arquivo docker/docker-compose.prod.yml já no lugar:
+
+cd backend/docker
+docker compose -f docker-compose.prod.yml up -d postgres backend nginx
+
+
+Isso sobe Postgres, depois Backend, e o Nginx já ligado na porta 80/443 (ainda sem certificado).
+
+Garanta que as portas 80 e 443 estão liberadas no firewall do servidor.
+
+
+
+
+
+2) Gere o certificado Let’s Encrypt (uma vez)
+
+Execute o certbot em modo webroot (vai usar nginx/www):
+
+docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+  --webroot \
+  --webroot-path=/var/www/certbot \
+  -d "$DOMAIN_NAME" \
+  --email "$EMAIL_ADMIN" \
+  --agree-tos \
+  --no-eff-email
+
+Após emitir, os arquivos ficarão em:
+
+backend/docker/nginx/ssl/live/<SEU_DOMÍNIO>/
+  ├─ fullchain.pem
+  └─ privkey.pem
+
+
+
+
+
+3) Reinicie o Nginx para carregar o certificado
+docker compose -f docker-compose.prod.yml restart nginx
+
+
+
+
+
+4) Teste
+# Deve retornar 200
+curl -I https://$DOMAIN_NAME/health
+
+# Ver página raiz (se houver)
+curl -I https://$DOMAIN_NAME/
+
+Abra no navegador:
+
+https://<seu-dominio>/
+https://<seu-dominio>/health
+
+
+
+
+
+5) Renovação automática do certificado
+
+No docker-compose.prod.yml já deixamos um serviço certbot que roda renew a cada 12h.
+Quando ele renovar, basta reiniciar o Nginx para aplicar:
+
+docker compose -f docker-compose.prod.yml restart nginx
+
+
+Se preferir cron (alternativa):
+
+# a cada madrugada às 3h
+0 3 * * * cd /caminho/para/backend/docker && \
+docker compose -f docker-compose.prod.yml run --rm certbot renew && \
+docker compose -f docker-compose.prod.yml restart nginx
+
+
+
+
+
+6) (Opcional) Script único de inicialização
+
+Você pode usar o nginx-init.sh que já gerei anteriormente para:
+
+subir os serviços básicos,
+
+emitir o certificado,
+
+e reiniciar Nginx.
+
+Executa assim:
+
+cd backend/docker
+export DOMAIN_NAME=api.seu-dominio.com
+export EMAIL_ADMIN=seu-email@dominio.com
+chmod +x nginx-init.sh
+./nginx-init.sh
+
+
+
+
+
+7) Dicas rápidas de troubleshooting
+
+Erro challenge failed no certbot: verifique se o DNS do domínio já aponta para o IP do servidor e se a porta 80 está aberta/publicada.
+
+Nginx sobe mas HTTPS não funciona: confirme os caminhos dos arquivos:
+/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem e privkey.pem existem dentro do container nginx.
+
+Backend não responde: docker logs -f abp_backend e confira se o health em https://abp_backend:8443/health funciona (internamente o Nginx proxy_pass usa esse alvo).
+
+Permissões: as pastas nginx/ssl e nginx/www são montadas via volume. Evite root write fora do Docker nessas pastas enquanto containers estão rodando.

@@ -17,3 +17,5 @@ router.get('/matricula/:matriculaId', PredictionController.getByMatricula);
 router.get('/tipo/:tipo', PredictionController.getByTipo);
 
 export default router;
+
+

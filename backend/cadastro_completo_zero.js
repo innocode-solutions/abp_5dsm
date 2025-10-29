@@ -13,45 +13,63 @@ async function cadastroCompletoZero() {
     
     let adminResponse;
     try {
-      adminResponse = await axios.post(`${BASE_URL}/auth/register`, {
+      // Tentar fazer login primeiro
+      const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
         Email: 'admin@dashboard.com',
+        password: '123456'
+      });
+      adminResponse = { data: loginResponse.data.user };
+      console.log('✅ Login realizado com sucesso!');
+      console.log(`   ID: ${adminResponse.data.IDUser}`);
+      console.log(`   Role: ${adminResponse.data.Role}`);
+      
+      // Se o role não for ADMIN, vamos criar um novo usuário
+      if (adminResponse.data.Role !== 'ADMIN') {
+        console.log('⚠️ Usuário não é ADMIN, criando novo...');
+        adminResponse = await axios.post(`${BASE_URL}/auth/register`, {
+          Email: 'admin2@dashboard.com',
+          password: '123456',
+          name: 'Administrador Dashboard 2',
+          Role: 'ADMIN'
+        });
+        console.log('✅ Novo usuário ADMIN criado!');
+        console.log(`   ID: ${adminResponse.data.IDUser}`);
+        console.log(`   Email: ${adminResponse.data.Email}`);
+        console.log(`   Role: ${adminResponse.data.Role}`);
+      }
+    } catch (error) {
+      // Se não conseguir fazer login, criar novo usuário
+      console.log('⚠️ Usuário não existe, criando novo...');
+      adminResponse = await axios.post(`${BASE_URL}/auth/register`, {
+        Email: 'admin3@dashboard.com',
         password: '123456',
-        name: 'Administrador Dashboard',
+        name: 'Administrador Dashboard 3',
         Role: 'ADMIN'
       });
       console.log('✅ Usuário ADMIN criado com sucesso!');
       console.log(`   ID: ${adminResponse.data.IDUser}`);
       console.log(`   Email: ${adminResponse.data.Email}`);
       console.log(`   Role: ${adminResponse.data.Role}`);
-    } catch (error) {
-      if (error.response?.data?.error === 'Usuário já existe com este email') {
-        console.log('⚠️ Usuário já existe, fazendo login...');
-        const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
-          Email: 'admin@dashboard.com',
-          password: '123456'
-        });
-        adminResponse = { data: loginResponse.data.user };
-        console.log('✅ Login realizado com sucesso!');
-        console.log(`   ID: ${adminResponse.data.IDUser}`);
-      } else {
-        throw error;
-      }
     }
 
     // 2. FAZER LOGIN E OBTER TOKEN
     console.log('\n2️⃣ FAZENDO LOGIN...');
     console.log('-'.repeat(40));
     
+    // Usar o email correto baseado no que foi criado
+    const email = adminResponse.data.Email;
     const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
-      Email: 'admin@dashboard.com',
+      Email: email,
       password: '123456'
     });
     
     const token = loginResponse.data.token;
     const userId = loginResponse.data.user.IDUser;
+    const userRole = loginResponse.data.user.Role;
     console.log('✅ Login realizado com sucesso!');
     console.log(`   Token: ${token.substring(0, 50)}...`);
     console.log(`   User ID: ${userId}`);
+    console.log(`   Role: ${userRole}`);
 
     // 3. CRIAR CURSO
     console.log('\n3️⃣ CRIANDO CURSO...');
@@ -324,3 +342,5 @@ async function cadastroCompletoZero() {
 }
 
 cadastroCompletoZero();
+
+
