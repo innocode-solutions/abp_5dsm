@@ -1,12 +1,10 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TipoPredicao } from '@prisma/client';
+import { callMLService, savePrediction, MLPredictionResponse } from '../service/predictionService';
 
 const prisma = new PrismaClient();
 
 export class PredictionController {
-  /**
-   * Buscar todas as predições
-   */
   static async getAll(req: Request, res: Response) {
     try {
       const predictions = await prisma.prediction.findMany({
@@ -28,9 +26,6 @@ export class PredictionController {
     }
   }
 
-  /**
-   * Buscar predição por ID
-   */
   static async getById(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -59,14 +54,10 @@ export class PredictionController {
     }
   }
 
-  /**
-   * Criar nova predição
-   */
   static async create(req: Request, res: Response) {
     try {
       const { IDMatricula, TipoPredicao, Probabilidade, Classificacao, Explicacao, DadosEntrada } = req.body;
 
-      // Verificar se a matrícula existe
       const matricula = await prisma.matricula.findUnique({
         where: { IDMatricula }
       });
@@ -102,9 +93,74 @@ export class PredictionController {
     }
   }
 
-  /**
-   * Atualizar predição
-   */
+  static async createPrediction(req: Request, res: Response) {
+    try {
+      const { IDMatricula, TipoPredicao, dados } = req.body;
+
+      if (!IDMatricula || !TipoPredicao || !dados) {
+        return res.status(400).json({ 
+          error: 'Campos obrigatórios: IDMatricula, TipoPredicao e dados' 
+        });
+      }
+
+      if (TipoPredicao !== 'EVASAO' && TipoPredicao !== 'DESEMPENHO') {
+        return res.status(400).json({ 
+          error: 'TipoPredicao deve ser "EVASAO" ou "DESEMPENHO"' 
+        });
+      }
+
+      const matricula = await prisma.matricula.findUnique({
+        where: { IDMatricula }
+      });
+
+      if (!matricula) {
+        return res.status(404).json({ error: 'Matrícula não encontrada' });
+      }
+
+      let mlResponse: MLPredictionResponse;
+
+      try {
+        mlResponse = await callMLService(TipoPredicao, dados);
+      } catch (error: any) {
+        if (error.message === 'Serviço de ML indisponível') {
+          return res.status(503).json({ 
+            error: 'Serviço de predição temporariamente indisponível' 
+          });
+        }
+        if (error.message === 'Timeout ao conectar com o serviço de ML') {
+          return res.status(504).json({ 
+            error: 'Timeout ao processar predição' 
+          });
+        }
+        throw error;
+      }
+
+      const prediction = await savePrediction(
+        IDMatricula,
+        TipoPredicao as TipoPredicao,
+        mlResponse,
+        dados
+      );
+
+      res.status(201).json({
+        success: true,
+        message: 'Predição gerada e salva com sucesso',
+        data: {
+          IDPrediction: prediction.IDPrediction,
+          IDMatricula: prediction.IDMatricula,
+          TipoPredicao: prediction.TipoPredicao,
+          Probabilidade: prediction.Probabilidade,
+          Classificacao: prediction.Classificacao,
+          Explicacao: prediction.Explicacao,
+          createdAt: prediction.createdAt
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao criar predição com ML:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  }
+
   static async update(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -137,9 +193,6 @@ export class PredictionController {
     }
   }
 
-  /**
-   * Deletar predição
-   */
   static async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -155,9 +208,6 @@ export class PredictionController {
     }
   }
 
-  /**
-   * Buscar predições por matrícula
-   */
   static async getByMatricula(req: Request, res: Response) {
     try {
       const { matriculaId } = req.params;
@@ -182,9 +232,6 @@ export class PredictionController {
     }
   }
 
-  /**
-   * Buscar predições por tipo
-   */
   static async getByTipo(req: Request, res: Response) {
     try {
       const { tipo } = req.params;
