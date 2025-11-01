@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import https from 'https';
+import { sanitizeRequest } from './src/middleware/sanitizeMiddleware';
 
 dotenv.config();
 const app = express();
@@ -57,6 +58,9 @@ app.use(cors({
 // ======== Body parsing ========
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ======== Global input sanitization ========
+app.use(sanitizeRequest);
 
 // ======== Request timeout ========
 app.use((req, res, next) => {
