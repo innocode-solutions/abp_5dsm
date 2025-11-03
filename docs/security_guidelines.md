@@ -1,7 +1,7 @@
 # Security Guidelines – Backend
 _Projeto: ABP 5 DSM • Mentora_
 
-> **Escopo**: Este documento descreve as práticas de segurança encontradas no backend entregue (código em `backend/src/**`) e recomendações para hardening. Abrange: autenticação, criptografia, autorização, HTTPS, sanitização/validação, e logs/observability.
+> **Escopo**: Este documento descreve as práticas de segurança encontradas no backend do projeto e recomendações para hardening. Abrange: autenticação, criptografia, autorização, HTTPS, sanitização/validação, e logs/observability.
 
 ---
 
