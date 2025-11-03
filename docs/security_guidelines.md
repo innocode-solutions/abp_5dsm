@@ -1,5 +1,7 @@
-# Security Guidelines
-_Projeto: ABP 5 DSM • Mentora
+# Security Guidelines – Backend
+_Projeto: ABP 5 DSM • Mentora_
+
+> **Escopo**: Este documento descreve as práticas de segurança encontradas no backend entregue (código em `backend/src/**`) e recomendações para hardening. Abrange: autenticação, criptografia, autorização, HTTPS, sanitização/validação, e logs/observability.
 
 ---
 
@@ -11,10 +13,10 @@ _Projeto: ABP 5 DSM • Mentora
   - `PUT /auth/:id/password` para troca de senha (hash aplicado em middleware).
 - **JWT**: emissão em `AuthController.login` com `jsonwebtoken`, _exp_ **1h** e _payload_ `{ userId, role, email }`.
 - **Extração/validação de token** em `AuthMiddleware.authenticateToken` e `optionalAuth`.
-- **Segredo**: `process.env.JWT_SECRET` com _fallback_ inseguro de desenvolvimento (`your-super-secret-jwt-key-change-this-in-production`).
+- **Segredo**: `process.env.JWT_SECRET` com _fallback_ de desenvolvimento (`your-super-secret-jwt-key-change-this-in-production`).
 
 **Recomendações**
-- **Obrigatório em produção**: definir `JWT_SECRET` forte (≥ 32 bytes) e **sem fallback**.
+- **Produção**: definir `JWT_SECRET` forte (≥ 32 bytes) e **sem fallback**.
 - Rotacionar segredo via _env_ e invalidar sessões antigas quando necessário.
 - Considerar **refresh tokens** com _rotation_ e _reuse detection_ se o produto exigir long‑lived sessions.
 
@@ -22,12 +24,12 @@ _Projeto: ABP 5 DSM • Mentora
 
 ## 2) Criptografia
 **O que existe**
-- **Hash de senha com bcrypt**: `passwordMiddleware.ts` usa `bcrypt.hash` com `saltRounds = 12` (>=10 recomendado). `comparePasswords` usado no login.
+- **Hash de senha com bcrypt**: `passwordMiddleware.ts` usa `bcrypt.hash` com `saltRounds = 12`. `comparePasswords` usado no login.
 - **JWT (HMAC-SHA)**: assinatura simétrica via `jsonwebtoken` (chave em `JWT_SECRET`).
 
 **Recomendações**
 - Manter `saltRounds` ≥ 12; avaliar **argon2id** em projetos de maior criticidade.
-- Não armazenar **senhas em texto** (ok no código atual).
+- Não armazenar **senhas em texto** (conforme o código atual).
 - Se houver PII sensível além de senha, considerar **criptografia em repouso** (campo‑a‑campo) e **colunas mascaradas**.
 
 ---
@@ -42,7 +44,7 @@ _Projeto: ABP 5 DSM • Mentora
 - **Aplicação nas rotas** (exemplos em `userRoutes.ts`):
   - `GET /api/users` e `DELETE /api/users/:id` → `requireRole(ADMIN)`.
   - `GET/PUT /api/users/:id` → `requireOwnershipOrAdmin`.
-- **Prisma** usado para consultas com _where_ tipado, reduzindo chance de injeção SQL.
+- **Prisma** usado para consultas parametrizadas e _where_ tipado (mitiga SQL Injection).
 
 **Recomendações**
 - Cobrir **todas** as rotas sensíveis com RBAC/ownership explícito (auditar novas rotas ao serem criadas).
@@ -51,37 +53,24 @@ _Projeto: ABP 5 DSM • Mentora
 ---
 
 ## 4) HTTPS / Transporte Seguro
-**O que existe**
-- O repositório declara dependências `helmet`, `cors`, `express-rate-limit` no `package.json`.
-- O arquivo `server.ts` não está presente no pacote entregue, então **não foi possível verificar** a aplicação efetiva de:
-  - **TLS/HTTPS termination** (geralmente no gateway ou reverse proxy).
-  - **Helmet/CORS/Rate Limit** na cadeia Express.
-  - **Redirect HTTP→HTTPS** e `app.set('trust proxy', 1)` quando atrás de proxy.
+**O que existe (server.ts)**  
+- **TLS opcional**: carrega `SSL_KEY_PATH`/`SSL_CERT_PATH` via `fs`/`path` e **sobe HTTPS** quando os arquivos existem; caso contrário, inicia **HTTP** com _warning_.  
+- **Redirect HTTP→HTTPS**: quando HTTPS está ativo, cria servidor HTTP que redireciona 301 para HTTPS (mesmo host e porta configurada).  
+- **Helmet**: habilitado com **Content-Security-Policy (CSP)** restritiva (`defaultSrc 'self'`, `scriptSrc 'self'`, `imgSrc 'self' data: https:` etc.).  
+- **CORS**: origem lida via `FRONTEND_URL` (fallback `http://localhost:3000`), `credentials: true`, métodos e cabeçalhos explicitamente permitidos.  
+- **Body limits**: `express.json`/`urlencoded` com limite `10mb`.  
+- **Timeout**: `res.setTimeout(30000)` com retorno **408** para requisições lentas.  
+- **Health endpoints**: `/health` e `/health/db` via `HealthService`.  
+- **Roteamento**: API em `/api`.  
+- **404 handler**: resposta JSON com método, URL e timestamp.  
+- **Error handler global**: loga erro e **omite stack em produção** (`NODE_ENV !== 'development'`).  
+- **Graceful shutdown**: `HealthService.setupShutdownHandlers()`.
 
-**Recomendações (aplicar no servidor HTTP ou gateway)**  
-_Exemplo de hardening em Express (server.ts):_
-```ts
-import express from 'express'
-import helmet from 'helmet'
-import rateLimit from 'express-rate-limit'
-import cors from 'cors'
-
-const app = express()
-app.set('trust proxy', 1) // se atrás de proxy/load balancer
-
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' }}))
-app.use(cors({ origin: ['https://seu-front.app'], credentials: true }))
-app.use(rateLimit({ windowMs: 15*60*1000, max: 300 }))
-
-// redirect HTTP→HTTPS quando necessário (se não houver terminação no proxy)
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
-    return res.redirect(301, 'https://' + req.headers.host + req.url)
-  }
-  next()
-})
-```
-- Garantir que **todas** as comunicações externas usem **HTTPS** e HSTS (no gateway).
+**Recomendações**
+- Garantir **certificados válidos** em produção (cadeia completa) e renovar automaticamente (ex.: ACME/Let’s Encrypt).
+- Ativar **HSTS** (pode ser via proxy/gateway) e revisar diretivas **CSP** conforme necessidades do front.
+- Se estiver atrás de proxy, definir `app.set('trust proxy', 1)` para preservar `X-Forwarded-*` com segurança.
+- Adicionar **rate limiting** (p. ex. `express-rate-limit`) se ainda não aplicado a nível de gateway.
 
 ---
 
@@ -90,35 +79,36 @@ app.use((req, res, next) => {
 - **Zod** com _schemas_ e middleware de validação:
   - `validationMiddleware.ts` (`validateBody/Query/Params`) → retorna **400** com lista de issues.
   - `authSchemas.ts`, `predictionSchemas.ts` (tipos, limites e coerções).
-- **Hash de senha** no middleware remove o campo `password` em claro após processar (`delete req.body.password`).
-- **Testes E2E de inputs maliciosos**: `tests/e2e_security_inputs.test.js` simula **XSS** e espera **400** na validação.
+- **Sanitização global**: `sanitizeRequest` aplicado **antes** das rotas (`app.use(sanitizeRequest)`).
+- **Hash de senha** no middleware remove o campo em claro após processar (`delete req.body.password`).
 - **Prisma**: consultas parametrizadas (mitiga **SQL Injection**).
+- **Testes E2E** cobrindo inputs maliciosos (XSS) retornando **400**.
 
 **Recomendações**
-- Aplicar schemas Zod para **todas** as rotas novas (body, query e params).
-- Quando necessário, normalizar/escapar campos de texto livres antes de renderização no front (mitiga XSS refletido no cliente).
+- Garantir schemas Zod para **todas** as rotas novas (body, query e params).
+- Normalizar/escapar campos de texto livres antes de renderização no front (mitiga XSS refletido).
 - Em uploads/CSV, validar formato, tamanho e conteúdo permitido.
 
 ---
 
 ## 6) Logs & Observabilidade
 **O que existe**
-- **PrismaClient** configurado com `log: ['query','error','warn']` em `src/config/database.ts`.
-- Uso de `console.error` em exceções de controllers/serviços.
-- _Deps_ indicam intenção de observar requisições (`morgan`/`pino`), porém não há _wiring_ no servidor no pacote entregue.
+- **PrismaClient** com `log: ['query','error','warn']` em `src/config/database.ts`.
+- **Error handler** controla **vazamento de stack** (mostra em `development`, oculta em produção).
+- Uso de `console.error` para exceções (padrão Node).
 
 **Recomendações**
-- Adotar **logger estruturado** (ex.: `pino`) com correlação (`requestId`), nível por ambiente e _redaction_ de PII/senhas.
-- **Não** logar `PasswordHash`/tokens/PII. Revisar _selects_ que incluem `PasswordHash` apenas quando estritamente necessário.
-- Expor `/health` e `/health/db` (já existem em `HealthService`) para _probes_ de orquestradores.
-- Prever **retention** e _centralization_ (ELK/Datadog/Grafana) e alarmes (erros 5xx, picos 401/403 etc.).
+- Adotar **logger estruturado** (ex.: `pino`) com `requestId`, nível por ambiente e _redaction_ de PII/senhas/tokens.
+- **Não** logar `PasswordHash`/tokens/PII. Revisar _selects_ que incluem `PasswordHash`.
+- Expor métricas (ex.: `/metrics` Prometheus) e centralizar logs (ELK/Datadog/Grafana).
+- Alarmes para erros 5xx, picos 401/403, latência, tempo de DB, _timeouts_.
 
 ---
 
 ## 7) Configuração & Segredos
 **O que existe**
-- `.env.example` presente; uso de variáveis de ambiente para **JWT_SECRET** e configuração do Prisma.
-- `JWT_SECRET` tem _fallback_ apenas para desenvolvimento.
+- `.env.example` presente; uso de variáveis de ambiente para **JWT_SECRET**, **HTTP_PORT/HTTPS_PORT**, **FRONTEND_URL** e caminhos de certificados.
+- `JWT_SECRET` com _fallback_ apenas para desenvolvimento.
 
 **Recomendações**
 - Armazenar segredos em **vault** (Doppler/Secrets Manager/KMS).  
@@ -130,21 +120,24 @@ app.use((req, res, next) => {
 Marque antes do _merge/release_ desta sprint:
 
 - [ ] **JWT_SECRET** de produção definido e sem fallback.
-- [ ] **Helmet/CORS/Rate Limit** habilitados no `server.ts` ou no gateway.
-- [ ] **Schemas Zod** aplicados em **todas** as rotas alteradas/novas.
-- [ ] **RBAC/ownership** revisado para todas as rotas sensíveis.
-- [ ] **Logs estruturados** (ou, temporariamente, Prisma + `console.*` com redaction).
-- [ ] Revisão de **.env** e segredos feita.
-- [ ] **Testes**: autenticação, autorização negativa, inputs maliciosos (XSS/SQLi), trocas de senha.
+- [ ] **HTTPS** com certificados válidos e **redirect HTTP→HTTPS** verificado.
+- [ ] **Helmet (CSP)**, **CORS** e **Body limits** aplicados.
+- [ ] **Sanitização global** + **Schemas Zod** em todas as rotas impactadas.
+- [ ] **RBAC/ownership** revisado para rotas sensíveis.
+- [ ] **Logger estruturado** adotado ou plano de adoção definido.
+- [ ] **Testes**: autenticação, autorização negativa, inputs maliciosos (XSS/SQLi), timeouts.
+- [ ] **HSTS/trust proxy/rate limit** configurados no gateway/servidor conforme topologia.
 
 Quando todos os itens acima estiverem marcados por **100% da equipe**, considerar “documentação validada” e “nenhum ponto pendente da sprint”.
 
 ---
 
 ## 9) Apêndice – Arquivos Relevantes
+- `server.ts` – HTTPS, Helmet (CSP), CORS, body limits, sanitização global, timeouts, health, roteamento, 404, error handler, redirect HTTP→HTTPS, graceful shutdown.
 - `src/controllers/authController.ts` – registro/login/me/senha + emissão de JWT.
 - `src/middleware/authMiddleware.ts` – `authenticateToken`, `requireRole`, `requireOwnershipOrAdmin`, `requireStudentOwnership`, `optionalAuth`.
 - `src/middleware/passwordMiddleware.ts` – `bcrypt.hash` (saltRounds=12) e `comparePasswords`.
+- `src/middleware/sanitizeMiddleware.ts` – sanitização global de inputs.
 - `src/validation/authSchemas.ts`, `src/validation/predictionSchemas.ts` – _schemas_ Zod.
 - `src/middleware/validationMiddleware.ts` – _middleware_ genérico de validação.
 - `src/routes/userRoutes.ts`, `src/routes/authRoutes.ts`, `src/routes/index.ts` – aplicação de RBAC/ownership.
@@ -153,8 +146,8 @@ Quando todos os itens acima estiverem marcados por **100% da equipe**, considera
 
 ---
 
-## 10) Próximos Passos Sugeridos (se o time optar por ir além nesta sprint)
-- Implementar `server.ts` (ou revisar) para **helmet/cors/rate-limit** e redirecionamento HTTPS.
-- Adotar **Pino** com `pino-http` e `requestId` (traçabilidade).
+## 10) Próximos Passos Sugeridos
+- **HSTS** e cabeçalhos adicionais via Helmet: `frameguard`, `noSniff`, `referrerPolicy` (conforme necessidade).
+- **Rate limiting** por rota/scope (login, APIs públicas) se não coberto no gateway.
+- **Pino** com `pino-http` e `requestId` (traçabilidade).
 - **Refresh tokens** e _logout_ baseado em _denylist_ (se aplicável).
-- _Security headers_ adicionais via Helmet: `frameguard`, `noSniff`, `referrerPolicy`, `hsts` (no proxy).
