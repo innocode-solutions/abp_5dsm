@@ -3,12 +3,14 @@ import { AuthController } from '../controllers/authController'
 import { UserController } from '../controllers/userController'
 import { hashPassword } from '../middleware/passwordMiddleware'
 import { AuthMiddleware } from '../middleware/authMiddleware'
+import { validateBody } from '../middleware/validationMiddleware'
+import { authLoginSchema, authRegisterSchema } from '../validation/authSchemas'
 
 const router = Router()
 
 // Auth routes públicas
-router.post('/register', hashPassword, AuthController.register)
-router.post('/login', AuthController.login)
+router.post('/register', validateBody(authRegisterSchema), hashPassword, AuthController.register)
+router.post('/login', validateBody(authLoginSchema), AuthController.login)
 
 // Auth routes protegidas
 router.get('/me', AuthMiddleware.authenticateToken, AuthController.me)
