@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, ListRenderItemInfo, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ListRenderItemInfo, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from '@react-navigation/native';
 import Card from '../components/Card';
@@ -42,6 +42,8 @@ const MOCK = {
 };
 
 export default function DashboardScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
   const navigation = useNavigation();
 
   const students = MOCK.risco;
@@ -50,7 +52,10 @@ export default function DashboardScreen() {
     () => (
       <View style={{ gap: 20 }}>
         <Section title="Visão Geral dos Alunos">
-          <View style={styles.grid}>
+          <View style={[
+            styles.grid,
+            isDesktop ? styles.gridRow : styles.gridColumn,
+          ]}>
             <Card>
               <Text style={styles.cardLabel}>Ativos</Text>
               <Text style={styles.cardValue}>{MOCK.overview.ativos}</Text>
@@ -115,7 +120,10 @@ export default function DashboardScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          isDesktop ? styles.containerDesktop : null,
+        ]}
         initialNumToRender={8}
         windowSize={10}
         removeClippedSubviews
@@ -127,7 +135,10 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   container: { padding: 16, paddingBottom: 40 },
-  grid: { flexDirection: 'row', gap: 12 },
+  containerDesktop: { width: '100%', maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 24 },
+  grid: { gap: 12 },
+  gridRow: { flexDirection: 'row' },
+  gridColumn: { flexDirection: 'column' },
   cardLabel: { color: colors.muted, fontSize: 13, marginBottom: 6 },
   cardValue: { color: colors.text, fontSize: 20, fontWeight: '600' },
   totalValue: { color: colors.text, fontSize: 28, fontWeight: '700' },
