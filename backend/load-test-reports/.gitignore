@@ -1,0 +1,8 @@
+# Ignorar todos os relatórios gerados pelos testes de carga
+*.json
+*.html
+*.txt
+*.csv
+
+# Manter o diretório no git
+!.gitignore
