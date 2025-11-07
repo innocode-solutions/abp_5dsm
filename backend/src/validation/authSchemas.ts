@@ -22,4 +22,11 @@ export const authLoginSchema = z.object({
     .max(128, 'Senha muito longa')
 }).passthrough()
 
+export const forgotPasswordSchema = z.object({
+  email: z.string()
+    .trim()
+    .email('Email inválido')
+    .max(255, 'Email muito longo')
+}).strict()
+
 

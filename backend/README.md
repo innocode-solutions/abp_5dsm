@@ -59,6 +59,7 @@ backend/
 ### Authentication
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login with email and password (returns JWT token)
+- `POST /api/auth/password/forgot` - Solicita código OTP para redefinição de senha (6 dígitos, expira em 15 min, limite 3 req/h)
 - `GET /api/auth/me` - Get current user info (requires authentication)
 - `PUT /api/auth/:id/password` - Update user password (requires authentication)
 
@@ -162,6 +163,12 @@ backend/
 
 The server will start on `http://localhost:3000` (or the port specified in your `.env` file).
 
+### Envio de e-mails para OTP
+
+- Em desenvolvimento, você pode usar ferramentas gratuitas como [MailHog](https://github.com/mailhog/MailHog) ou [Mailpit](https://github.com/axllent/mailpit). Basta rodar o servidor SMTP local (porta padrão 1025) e abrir o painel web para visualizar os e-mails.
+- Para provedores gratuitos (ex.: Gmail), gere uma senha de app e configure as variáveis `SMTP_USER`/`SMTP_PASS`.
+- Se nenhuma variável de SMTP for configurada, o serviço loga o conteúdo do e-mail no console para validação manual.
+
 ## Authentication & Authorization
 
 The API uses JWT (JSON Web Tokens) for authentication. Here's how it works:
@@ -170,6 +177,18 @@ The API uses JWT (JSON Web Tokens) for authentication. Here's how it works:
 1. Send POST request to `/api/auth/login` with email and password
 2. Receive JWT token with user information
 3. Include token in subsequent requests: `Authorization: Bearer <token>`
+
+### Solicitação de redefinição de senha (PD-014)
+- Endpoint: `POST /api/auth/password/forgot`
+- Body:
+  ```json
+  {
+    "email": "user@dominio.com"
+  }
+  ```
+- Resposta sempre retorna `200` com `{ "message": "Código enviado se o e-mail for válido" }` quando o usuário existe; se não existir retorna `404`.
+- Limite de 3 requisições por hora por email/IP (`429`).
+- O código OTP possui 6 dígitos e expira em 15 minutos.
 
 ### Token Structure
 ```json
@@ -202,6 +221,12 @@ FRONTEND_URL=http://localhost:3000
 JWT_SECRET=your-super-secret-jwt-key-here
 JWT_EXPIRES_IN=1h
 BCRYPT_ROUNDS=12
+OTP_EMAIL_FROM=Academic Monitoring <no-reply@example.com>
+SMTP_HOST=localhost
+SMTP_PORT=1025
+# SMTP_USER=user
+# SMTP_PASS=pass
+# SMTP_SECURE=false
 ```
 
 ## Database Schema
@@ -229,6 +254,8 @@ The application uses the following main entities:
 
 ### Security
 - Password hashing using bcrypt
+- OTP de redefinição de senha com hash e expiração de 15 minutos
+- Rate limit aplicado nas solicitações de redefinição (3 por hora por email/IP)
 - CORS configuration
 - Helmet for security headers
 - Request timeout handling
