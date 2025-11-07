@@ -3,6 +3,8 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../config/database'
 import { UserRole } from '@prisma/client'
+import { PasswordResetService } from '../service/passwordResetService'
+import { sendPasswordResetEmail } from '../service/emailService'
 
 export class AuthController {
   // POST /auth/register
@@ -100,6 +102,45 @@ export class AuthController {
     } catch (err) {
       console.error('Erro ao realizar login:', err)
       res.status(500).json({ error: 'Erro interno ao realizar login' })
+    }
+  }
+
+  // POST /auth/password/forgot
+  static async forgotPassword(req: Request, res: Response) {
+    try {
+      const email = req.body?.email?.trim()
+
+      if (!email) {
+        return res.status(400).json({ error: 'Email é obrigatório' })
+      }
+
+      const generationResult = await PasswordResetService.generateAndStoreOtp(email, req.ip)
+
+      if (!generationResult) {
+        return res.status(404).json({ error: 'E-mail não encontrado' })
+      }
+
+      const { user, otp, expiresAt } = generationResult
+
+      try {
+        await sendPasswordResetEmail({
+          to: user.Email,
+          name: user.name,
+          otp,
+          expiresAt
+        })
+      } catch (mailError) {
+        console.error('Falha ao enviar e-mail de redefinição:', mailError)
+      }
+
+      res.json({ message: 'Código enviado se o e-mail for válido' })
+    } catch (err) {
+      if (err instanceof Error && err.message === 'RATE_LIMITED') {
+        return res.status(429).json({ error: 'Limite de solicitações excedido. Tente novamente mais tarde.' })
+      }
+
+      console.error('Erro ao solicitar redefinição de senha:', err)
+      res.status(500).json({ error: 'Erro interno ao solicitar redefinição de senha' })
     }
   }
 

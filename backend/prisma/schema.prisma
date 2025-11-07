@@ -67,6 +67,12 @@ enum UserRole {
   ADMIN
 }
 
+enum PasswordResetStatus {
+  PENDING
+  USED
+  EXPIRED
+}
+
 model User {
   IDUser       String   @id @default(uuid())
   Email        String   @unique
@@ -79,8 +85,27 @@ model User {
 
   // Relacionamento opcional com Aluno
   aluno Aluno? @relation(fields: [studentId], references: [IDAluno])
+  passwordResetRequests PasswordResetRequest[]
 
   @@map("users")
+}
+
+model PasswordResetRequest {
+  id          String               @id @default(uuid())
+  userId      String
+  otpHash     String
+  expiresAt   DateTime
+  attempts    Int                  @default(0)
+  status      PasswordResetStatus  @default(PENDING)
+  requestedAt DateTime             @default(now())
+  ipAddress   String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  user User @relation(fields: [userId], references: [IDUser], onDelete: Cascade)
+
+  @@index([userId, requestedAt])
+  @@map("password_reset_requests")
 }
 
 model PeriodoLetivo {
