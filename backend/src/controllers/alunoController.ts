@@ -364,4 +364,123 @@ static async getSubjectsByStudent(req: Request, res: Response) {
     return res.status(500).json({ error: 'Erro interno ao buscar disciplinas.' });
   }
  }
+
+  // GET /alunos/class/:subjectId - Get students by class and their predictions
+ static async getStudentsByClassSubject(req: Request, res: Response) {
+    try {
+      const { subjectId } = req.params;
+      const { periodoId, activeOnly = 'true' } = req.query as {
+        periodoId?: string;
+        activeOnly?: 'true' | 'false';
+      };
+
+      // 1) valida disciplina
+      const disciplina = await prisma.disciplina.findUnique({
+        where: { IDDisciplina: subjectId },
+        select: { IDDisciplina: true, NomeDaDisciplina: true }
+      });
+
+      if (!disciplina) {
+        return res.status(404).json({ error: 'Disciplina não encontrada' });
+      }
+
+      // 2) monta filtro de matrículas
+      const whereMatricula: Prisma.MatriculaWhereInput = {
+        IDDisciplina: subjectId
+      };
+
+      if (periodoId) {
+        whereMatricula.IDPeriodo = String(periodoId);
+      } else if (activeOnly !== 'false') {
+        // se não foi passado periodoId, e activeOnly !== false, filtra pelo período ativo
+        whereMatricula.periodo = { Ativo: true };
+      }
+
+      // 3) busca matrículas + aluno
+      const matriculas = await prisma.matricula.findMany({
+        where: whereMatricula,
+        include: {
+          aluno: {
+            select: { IDAluno: true, Nome: true, Email: true }
+          },
+          periodo: {
+            select: { IDPeriodo: true, Nome: true, Ativo: true }
+          }
+        },
+        orderBy: {
+          aluno: { Nome: 'asc' }
+        }
+      });
+
+      if (matriculas.length === 0) {
+        return res.json([]);
+      }
+
+      // 4) busca predições em lote (últimas por matrícula/tipo)
+      const matriculaIds = matriculas.map(m => m.IDMatricula);
+
+      const predictions = await prisma.prediction.findMany({
+        where: {
+          IDMatricula: { in: matriculaIds },
+          TipoPredicao: { in: ['DESEMPENHO', 'EVASAO'] as any }
+        },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          IDMatricula: true,
+          TipoPredicao: true,
+          Probabilidade: true,
+          Classificacao: true,
+          createdAt: true
+        }
+      });
+
+      // 5) reduz para "última por tipo" por matrícula
+      type LastByType = { desempenho?: typeof predictions[number]; evasao?: typeof predictions[number] };
+      const lastByMatricula: Record<string, LastByType> = {};
+
+      for (const p of predictions) {
+        const bucket = lastByMatricula[p.IDMatricula] || (lastByMatricula[p.IDMatricula] = {});
+        if (p.TipoPredicao === 'DESEMPENHO' && !bucket.desempenho) bucket.desempenho = p;
+        if (p.TipoPredicao === 'EVASAO' && !bucket.evasao) bucket.evasao = p;
+      }
+
+      // 6) monta resposta
+      const result = matriculas.map(m => {
+        const last = lastByMatricula[m.IDMatricula] || {};
+        const perf = last.desempenho;
+        const drop = last.evasao;
+
+        // performance_score: prob (0-1) -> 0-100 com 1 casa
+        const performance_score =
+          typeof perf?.Probabilidade === 'number'
+            ? Math.round(perf.Probabilidade * 1000) / 10
+            : null;
+
+        // dropout_risk: usa Classificacao; se não houver, thresholds pela probabilidade
+        let dropout_risk: 'baixo' | 'médio' | 'alto' | null = null;
+        if (drop?.Classificacao) {
+          const c = drop.Classificacao.toLowerCase();
+          if (c === 'medio') dropout_risk = 'médio';
+          else if (['baixo', 'médio', 'alto'].includes(c)) dropout_risk = c as any;
+        } 
+        if (!dropout_risk && typeof drop?.Probabilidade === 'number') {
+          const p = drop.Probabilidade;
+          dropout_risk = p < 0.33 ? 'baixo' : p < 0.66 ? 'médio' : 'alto';
+        }
+
+        return {
+          id: m.aluno.IDAluno,
+          name: m.aluno.Nome,
+          email: m.aluno.Email,
+          performance_score,
+          dropout_risk
+        };
+      });
+
+      return res.json(result);
+    } catch (error) {
+      console.error('Erro ao listar alunos por disciplina:', error);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  }
 }
