@@ -31,4 +31,7 @@ router.get('/:id/matriculas', AuthMiddleware.requireStudentOwnership, AlunoContr
 // GET /api/alunos/:id/disciplinas - Get disciplines, course and semester for a student (próprio aluno, TEACHER ou ADMIN)
 router.get('/:id/disciplinas', AuthMiddleware.requireStudentOwnership, AlunoController.getSubjectsByStudent);
 
+//Get /api/alunos/:id/predicoes - Get predictions and dropout risk of students by course (TEACHER ou ADMIN)
+router.get('/students/class/:subjectId', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), AlunoController.getStudentsByClassSubject);
+
 export default router;

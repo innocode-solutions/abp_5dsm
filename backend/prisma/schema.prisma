@@ -120,6 +120,7 @@ model PeriodoLetivo {
   // Relacionamentos
   matriculas Matricula[]
 
+  @@index([Ativo], name: "idx_periodos_letivos_ativo")
   @@map("periodos_letivos")
 }
 
@@ -147,6 +148,9 @@ model Matricula {
 
   // Constraint única
   @@unique([IDAluno, IDDisciplina, IDPeriodo])
+  // Índices para acelerar “alunos por disciplina/período”
+  @@index([IDDisciplina, IDPeriodo], name: "idx_matriculas_disciplina_periodo")
+  @@index([IDAluno], name: "idx_matriculas_aluno")
   @@map("matriculas")
 }
 
@@ -168,6 +172,7 @@ model Prediction {
 
   // Relacionamentos
   matricula Matricula @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
-
+  // Índice para pegar “a última predição por matrícula e tipo”
+  @@index([IDMatricula, TipoPredicao, createdAt], name: "idx_predictions_matricula_tipo_created")
   @@map("predictions")
 }
