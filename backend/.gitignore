@@ -1,4 +1,5 @@
 .env
+.env.example
 .env.load-test
 node_modules
 /src/generated/prisma
