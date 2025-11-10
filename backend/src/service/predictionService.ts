@@ -32,6 +32,19 @@ interface MLPerformanceResponse {
   saved: boolean;
 }
 
+type AxiosErrorWithCode = {
+  isAxiosError: true
+  code?: string
+  response?: {
+    status?: number
+    data?: unknown
+  }
+}
+
+function isAxiosError(error: unknown): error is AxiosErrorWithCode {
+  return typeof error === 'object' && error !== null && 'isAxiosError' in error && Boolean((error as any).isAxiosError)
+}
+
 async function callDropoutService(data: any): Promise<MLPredictionResponse> {
   try {
     const response = await axios.post<MLDropoutResponse>(
@@ -54,7 +67,7 @@ async function callDropoutService(data: any): Promise<MLPredictionResponse> {
       explanation: response.data.explain
     };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
         throw new Error('Timeout ao conectar com o serviço de ML');
       }
@@ -97,11 +110,12 @@ async function callPerformanceService(data: any): Promise<MLPredictionResponse> 
       explanation: explanation
     };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       // Log the validation errors from ML service
+      const responseData = error.response?.data
       if (error.response?.status === 422) {
-        console.error('ML Service Validation Error:', JSON.stringify(error.response.data, null, 2));
-        throw new Error(`Dados inválidos para o serviço de ML: ${JSON.stringify(error.response.data)}`);
+        console.error('ML Service Validation Error:', JSON.stringify(responseData, null, 2));
+        throw new Error(`Dados inválidos para o serviço de ML: ${JSON.stringify(responseData)}`);
       }
       if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
         throw new Error('Timeout ao conectar com o serviço de ML');
@@ -110,7 +124,10 @@ async function callPerformanceService(data: any): Promise<MLPredictionResponse> 
         throw new Error('Serviço de ML indisponível');
       }
     }
-    throw error;
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Erro desconhecido ao chamar serviço de ML');
   }
 }
 
