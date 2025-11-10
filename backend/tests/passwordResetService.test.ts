@@ -1,6 +1,5 @@
 import crypto from 'crypto'
 import { PasswordResetService } from '../src/service/passwordResetService'
-import { PasswordResetStatus } from '@prisma/client'
 
 jest.mock('../src/config/database', () => {
   const mockPrisma = {
@@ -10,7 +9,9 @@ jest.mock('../src/config/database', () => {
     passwordResetRequest: {
       count: jest.fn(),
       updateMany: jest.fn(),
-      create: jest.fn()
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn()
     }
   }
 
@@ -20,11 +21,17 @@ jest.mock('../src/config/database', () => {
 })
 
 jest.mock('bcrypt', () => ({
-  hash: jest.fn(async () => 'hashed-otp')
+  hash: jest.fn(async () => 'hashed-otp'),
+  compare: jest.fn()
 }))
 
 const { prisma } = require('../src/config/database')
 const bcrypt = require('bcrypt')
+const PasswordResetStatus = {
+  PENDING: 'PENDING',
+  USED: 'USED',
+  EXPIRED: 'EXPIRED'
+} as const
 
 describe('PasswordResetService.generateAndStoreOtp', () => {
   const user = {
@@ -41,7 +48,10 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
     prisma.passwordResetRequest.count.mockReset()
     prisma.passwordResetRequest.updateMany.mockReset()
     prisma.passwordResetRequest.create.mockReset()
+    prisma.passwordResetRequest.findFirst.mockReset()
+    prisma.passwordResetRequest.update.mockReset()
     bcrypt.hash.mockClear()
+    bcrypt.compare.mockReset()
   })
 
   afterEach(() => {
@@ -102,4 +112,128 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
     })
   })
 })
+
+describe('PasswordResetService.verifyOtp', () => {
+  const user = {
+    IDUser: 'user-123',
+    Email: 'user@example.com'
+  }
+  const requestBase = {
+    id: 'req-1',
+    userId: user.IDUser,
+    otpHash: 'hashed-otp',
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    attempts: 0,
+    status: PasswordResetStatus.PENDING,
+    requestedAt: new Date()
+  }
+
+  beforeEach(() => {
+    prisma.user.findUnique.mockResolvedValue(user)
+  })
+
+  it('lança erro quando usuário não existe', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce(null)
+
+    await expect(
+      PasswordResetService.verifyOtp('missing@example.com', '123456')
+    ).rejects.toThrow('INVALID_OR_EXPIRED')
+
+    expect(prisma.passwordResetRequest.findFirst).not.toHaveBeenCalled()
+  })
+
+  it('lança erro quando não há requisição pendente', async () => {
+    prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(null)
+
+    await expect(
+      PasswordResetService.verifyOtp(user.Email, '123456')
+    ).rejects.toThrow('INVALID_OR_EXPIRED')
+  })
+
+  it('falha se código expirado', async () => {
+    const expiredRequest = {
+      ...requestBase,
+      expiresAt: new Date(Date.now() - 60 * 1000),
+      attempts: 2
+    }
+    prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(expiredRequest)
+
+    await expect(
+      PasswordResetService.verifyOtp(user.Email, '123456')
+    ).rejects.toThrow('INVALID_OR_EXPIRED')
+
+    expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
+      where: { id: expiredRequest.id },
+      data: expect.objectContaining({
+        attempts: expiredRequest.attempts + 1,
+        status: PasswordResetStatus.EXPIRED
+      })
+    })
+  })
+
+  it('falha se código incorreto e incrementa tentativas', async () => {
+    const request = {
+      ...requestBase,
+      attempts: 1
+    }
+    prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(request)
+    bcrypt.compare.mockResolvedValueOnce(false)
+
+    await expect(
+      PasswordResetService.verifyOtp(user.Email, '000000')
+    ).rejects.toThrow('INVALID_OR_EXPIRED')
+
+    expect(bcrypt.compare).toHaveBeenCalledWith('000000', request.otpHash)
+    expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
+      where: { id: request.id },
+      data: expect.objectContaining({
+        attempts: request.attempts + 1,
+        status: PasswordResetStatus.PENDING
+      })
+    })
+  })
+
+  it('falha e bloqueia após 5 tentativas', async () => {
+    const request = {
+      ...requestBase,
+      attempts: 5
+    }
+    prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(request)
+
+    await expect(
+      PasswordResetService.verifyOtp(user.Email, '123456')
+    ).rejects.toThrow('INVALID_OR_EXPIRED')
+
+    expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
+      where: { id: request.id },
+      data: { status: PasswordResetStatus.EXPIRED }
+    })
+  })
+
+  it('retorna dados ao validar código corretamente', async () => {
+    const request = {
+      ...requestBase,
+      attempts: 2
+    }
+    prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(request)
+    bcrypt.compare.mockResolvedValueOnce(true)
+
+    const result = await PasswordResetService.verifyOtp(user.Email, '123456')
+
+    expect(result).toEqual({
+      userId: user.IDUser,
+      email: user.Email,
+      requestId: request.id
+    })
+
+    expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
+      where: { id: request.id },
+      data: {
+        attempts: request.attempts + 1,
+        status: PasswordResetStatus.USED
+      }
+    })
+  })
+})
+
 
