@@ -29,4 +29,14 @@ export const forgotPasswordSchema = z.object({
     .max(255, 'Email muito longo')
 }).strict()
 
+export const verifyResetCodeSchema = z.object({
+  email: z.string()
+    .trim()
+    .email('Email inválido')
+    .max(255, 'Email muito longo'),
+  code: z.string()
+    .trim()
+    .regex(/^\d{6}$/, 'Código deve conter 6 dígitos')
+}).strict()
+
 

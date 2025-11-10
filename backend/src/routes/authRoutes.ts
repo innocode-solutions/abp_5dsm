@@ -4,7 +4,12 @@ import { UserController } from '../controllers/userController'
 import { hashPassword } from '../middleware/passwordMiddleware'
 import { AuthMiddleware } from '../middleware/authMiddleware'
 import { validateBody } from '../middleware/validationMiddleware'
-import { authLoginSchema, authRegisterSchema, forgotPasswordSchema } from '../validation/authSchemas'
+import {
+  authLoginSchema,
+  authRegisterSchema,
+  forgotPasswordSchema,
+  verifyResetCodeSchema
+} from '../validation/authSchemas'
 import { passwordResetLimiter } from '../middleware/rateLimitMiddleware'
 
 const router = Router()
@@ -17,6 +22,11 @@ router.post(
   validateBody(forgotPasswordSchema),
   passwordResetLimiter,
   AuthController.forgotPassword
+)
+router.post(
+  '/password/verify-code',
+  validateBody(verifyResetCodeSchema),
+  AuthController.verifyResetCode
 )
 
 // Auth routes protegidas

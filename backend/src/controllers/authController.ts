@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../config/database'
 import { UserRole } from '@prisma/client'
-import { PasswordResetService } from '../service/passwordResetService'
+import { PasswordResetInvalidError, PasswordResetService } from '../service/passwordResetService'
 import { sendPasswordResetEmail } from '../service/emailService'
 
 export class AuthController {
@@ -141,6 +141,50 @@ export class AuthController {
 
       console.error('Erro ao solicitar redefinição de senha:', err)
       res.status(500).json({ error: 'Erro interno ao solicitar redefinição de senha' })
+    }
+  }
+
+  // POST /auth/password/verify-code
+  static async verifyResetCode(req: Request, res: Response) {
+    try {
+      const email =
+        typeof req.body?.email === 'string'
+          ? req.body.email.trim()
+          : ''
+      const code =
+        typeof req.body?.code === 'string'
+          ? req.body.code.trim()
+          : ''
+
+      if (!email || !code) {
+        return res.status(400).json({ error: 'Email e código são obrigatórios' })
+      }
+
+      const verification = await PasswordResetService.verifyOtp(email, code)
+
+      const resetSecret =
+        process.env.JWT_RESET_SECRET ||
+        process.env.JWT_SECRET ||
+        'your-super-secret-jwt-key-change-this-in-production'
+
+      const resetToken = jwt.sign(
+        {
+          userId: verification.userId,
+          email: verification.email,
+          type: 'password_reset'
+        },
+        resetSecret,
+        { expiresIn: '15m' }
+      )
+
+      res.json({ reset_token: resetToken })
+    } catch (err) {
+      if (err instanceof PasswordResetInvalidError) {
+        return res.status(400).json({ error: 'Código inválido ou expirado' })
+      }
+
+      console.error('Erro ao verificar código de redefinição:', err)
+      res.status(500).json({ error: 'Erro interno ao verificar código' })
     }
   }
 
