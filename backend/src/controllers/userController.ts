@@ -15,7 +15,6 @@ interface CreateUserData {
   PasswordHash: string
   Role: UserRole
   name: string
-  studentId?: string
   alunoData?: {
     Nome: string
     Email?: string
@@ -28,7 +27,6 @@ interface UpdateUserData {
   Email?: string
   Role?: UserRole
   name?: string
-  studentId?: string
   alunoData?: {
     Nome?: string
     Email?: string
@@ -46,10 +44,9 @@ export class UserController {
     Email: true,
     Role: true,
     name: true,
-    studentId: true,
     createdAt: true,
     updatedAt: true,
-    aluno: {
+    alunos: {
       select: {
         IDAluno: true,
         Nome: true,
@@ -159,7 +156,7 @@ export class UserController {
   // POST /users - Create new user
   static async create(req: Request, res: Response) {
     try {
-      const { Email, PasswordHash, Role, name, studentId, alunoData }: CreateUserData = req.body
+      const { Email, PasswordHash, Role, name, alunoData }: CreateUserData = req.body
 
       // Validate required fields
       if (!Email || !PasswordHash || !Role || !name) {
@@ -183,18 +180,10 @@ export class UserController {
 
       // Validate student-specific requirements
       if (Role === UserRole.STUDENT) {
-        if (!studentId || !alunoData) {
+        if (!alunoData) {
           return res.status(400).json({
-            error: 'studentId e alunoData são obrigatórios para estudantes'
+            error: 'alunoData é obrigatório para estudantes'
           })
-        }
-
-        const existingStudent = await prisma.aluno.findUnique({
-          where: { IDAluno: studentId }
-        })
-
-        if (existingStudent) {
-          return res.status(409).json({ error: 'Estudante já existe com este ID' })
         }
       }
 
@@ -205,20 +194,18 @@ export class UserController {
             Email,
             PasswordHash,
             Role,
-            name,
-            studentId: Role === UserRole.STUDENT ? studentId : null
+            name
           }
         })
 
-        if (Role === UserRole.STUDENT && alunoData && studentId) {
+        if (Role === UserRole.STUDENT && alunoData) {
           await tx.aluno.create({
             data: {
-              IDAluno: studentId,
               Nome: alunoData.Nome,
               Email: alunoData.Email || Email,
               Semestre: alunoData.Semestre,
               IDCurso: alunoData.IDCurso,
-              user: { connect: { IDUser: user.IDUser } }
+              IDUser: user.IDUser
             }
           })
         }
@@ -237,12 +224,12 @@ export class UserController {
   static async update(req: Request, res: Response) {
     try {
       const { id } = req.params
-      const { Email, Role, name, studentId, alunoData }: UpdateUserData = req.body
+      const { Email, Role, name, alunoData }: UpdateUserData = req.body
 
       // Check if user exists
       const existingUser = await prisma.user.findUnique({
         where: { IDUser: id },
-        include: { aluno: true }
+        include: { alunos: true }
       })
 
       if (!existingUser) {
@@ -271,16 +258,16 @@ export class UserController {
           data: {
             ...(Email && { Email }),
             ...(Role && { Role }),
-            ...(name && { name }),
-            ...(studentId !== undefined && { studentId })
+            ...(name && { name })
           }
         })
 
         // Handle student data updates
         if ((Role === UserRole.STUDENT || existingUser.Role === UserRole.STUDENT) && alunoData) {
-          if (existingUser.aluno) {
+          const existingAluno = existingUser.alunos[0] // Get first student record if exists
+          if (existingAluno) {
             await tx.aluno.update({
-              where: { IDAluno: existingUser.aluno.IDAluno },
+              where: { IDAluno: existingAluno.IDAluno },
               data: {
                 ...(alunoData.Nome && { Nome: alunoData.Nome }),
                 ...(alunoData.Email && { Email: alunoData.Email }),
@@ -288,15 +275,15 @@ export class UserController {
                 ...(alunoData.IDCurso && { IDCurso: alunoData.IDCurso })
               }
             })
-          } else if (studentId) {
+          } else {
+            // Create new aluno if doesn't exist
             await tx.aluno.create({
               data: {
-                IDAluno: studentId,
                 Nome: alunoData.Nome || '',
                 Email: alunoData.Email || Email || existingUser.Email,
                 Semestre: alunoData.Semestre || 1,
                 IDCurso: alunoData.IDCurso || '',
-                user: { connect: { IDUser: id } }
+                IDUser: id
               }
             })
           }
@@ -351,9 +338,8 @@ export class UserController {
           Email: true,
           Role: true,
           name: true,
-          studentId: true,
           createdAt: true,
-          aluno: {
+          alunos: {
             select: {
               IDAluno: true,
               Nome: true,

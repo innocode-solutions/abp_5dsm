@@ -49,6 +49,7 @@ model Aluno {
   Email     String   @unique
   Idade     Int?
   IDCurso   String
+  IDUser    String   @unique // Campo obrigatório para referenciar User
   Semestre  Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,7 +57,7 @@ model Aluno {
   // Relacionamentos
   curso      Curso       @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
   matriculas Matricula[]
-  user       User? // Relacionamento opcional com User
+  user       User        @relation(fields: [IDUser], references: [IDUser], onDelete: Cascade)
 
   @@map("alunos")
 }
@@ -79,13 +80,11 @@ model User {
   PasswordHash String
   Role         UserRole @default(STUDENT)
   name         String?
-  studentId    String?  @unique // FK opcional para Aluno
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relacionamento opcional com Aluno
-  aluno Aluno? @relation(fields: [studentId], references: [IDAluno])
-  passwordResetRequests PasswordResetRequest[]
+  // Relacionamento um-para-muitos com Aluno
+  alunos Aluno[]
 
   @@map("users")
 }

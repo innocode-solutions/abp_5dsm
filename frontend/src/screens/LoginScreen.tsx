@@ -9,10 +9,12 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import colors from '../theme/colors';
 import { RootStackParamList } from '../navigation';
+import { useAuth } from '../context/AuthContext';
 import { useAuth } from '../context/AuthContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
@@ -25,16 +27,15 @@ export default function LoginScreen({ navigation }: Props) {
 
   const onEnter = useCallback(async () => {
     if (!email || !senha) {
-      Alert.alert('Erro', 'Por favor, preencha email e senha');
+      Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
 
     setLoading(true);
     try {
       await login(email, senha);
-      // Navegação será feita pelo RootNavigator baseado na role
     } catch (error: any) {
-      Alert.alert('Erro no Login', error.message || 'Credenciais inválidas');
+      Alert.alert('Erro', error?.response?.data?.error || error?.message || 'Falha ao fazer login');
     } finally {
       setLoading(false);
     }
@@ -75,14 +76,12 @@ export default function LoginScreen({ navigation }: Props) {
               style={[styles.input, { marginTop: 12 }]}
             />
 
-            <TouchableOpacity 
-              onPress={onEnter} 
-              style={[styles.button, loading && styles.buttonDisabled]}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? 'Entrando...' : 'Entrar'}
-              </Text>
+            <TouchableOpacity onPress={onEnter} style={styles.button} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Entrar</Text>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => {}} style={styles.linkWrap}>

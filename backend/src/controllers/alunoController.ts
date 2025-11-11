@@ -125,10 +125,10 @@ export class AlunoController {
   // POST /alunos - Create new student
   static async create(req: Request, res: Response) {
     try {
-      const { Nome, Email, Idade, IDCurso, Semestre } = req.body;
+      const { Nome, Email, Idade, IDCurso, IDUser, Semestre } = req.body;
 
-      if (!Nome || !Email || !IDCurso) {
-        return res.status(400).json({ error: 'Name, email, and course ID are required' });
+      if (!Nome || !Email || !IDCurso || !IDUser) {
+        return res.status(400).json({ error: 'Name, email, course ID, and user ID are required' });
       }
 
       // Verify course exists
@@ -140,12 +140,22 @@ export class AlunoController {
         return res.status(404).json({ error: 'Course not found' });
       }
 
+      // Verify user exists
+      const user = await prisma.user.findUnique({
+        where: { IDUser }
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
       const aluno = await prisma.aluno.create({
         data: {
           Nome,
           Email,
           Idade,
           IDCurso,
+          IDUser,
           Semestre
         },
         include: {
@@ -153,6 +163,13 @@ export class AlunoController {
             select: {
               IDCurso: true,
               NomeDoCurso: true
+            }
+          },
+          user: {
+            select: {
+              IDUser: true,
+              Email: true,
+              Role: true
             }
           },
           _count: {
@@ -166,8 +183,13 @@ export class AlunoController {
       res.status(201).json(aluno);
     } catch (error) {
       console.error('Error creating student:', error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-            return res.status(409).json({ error: 'Email already exists' });
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          return res.status(409).json({ error: 'Email or user ID already exists' });
+        }
+        if (error.code === 'P2003') {
+          return res.status(400).json({ error: 'Invalid user ID' });
+        }
       }
       res.status(500).json({ error: 'Internal server error' });
     }

@@ -1,13 +1,12 @@
 import type { Request, Response, NextFunction } from 'express'
 import bcrypt from 'bcrypt'
 
-export const hashPassword = async (req: Request, res: Response, next: NextFunction) => {
+export async function hashPassword(req: Request, res: Response, next: NextFunction) {
   try {
     if (req.body.password) {
-      const saltRounds = 12 // >= 10
+      const saltRounds = 12
       const hashedPassword = await bcrypt.hash(req.body.password, saltRounds)
 
-      // O Prisma espera o campo "PasswordHash" (igual ao schema.prisma)
       req.body.PasswordHash = hashedPassword
       delete req.body.password
     }
@@ -19,7 +18,6 @@ export const hashPassword = async (req: Request, res: Response, next: NextFuncti
   }
 }
 
-// Função auxiliar para login
-export const comparePasswords = async (password: string, hash: string): Promise<boolean> => {
+export async function comparePasswords(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash)
 }

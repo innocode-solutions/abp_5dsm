@@ -81,7 +81,7 @@ export class AuthController {
       }
 
       // Gera token JWT
-      const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production'
+      const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production' // retirar ao fazer deploy
       const token = jwt.sign(
         {
           userId: user.IDUser,
@@ -203,7 +203,7 @@ export class AuthController {
           Role: true,
           name: true,
           createdAt: true,
-          aluno: {
+          alunos: {
             select: {
               IDAluno: true,
               Nome: true,
