@@ -22,13 +22,13 @@ const useHttps = fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH);
 
 let sslOptions: { key?: Buffer; cert?: Buffer } = {};
 if (useHttps) {
-  sslOptions = {
-    key: fs.readFileSync(SSL_KEY_PATH),
-    cert: fs.readFileSync(SSL_CERT_PATH),
-  };
-  console.log('✅ Certificados SSL carregados com sucesso.');
+ sslOptions = {
+  key: fs.readFileSync(SSL_KEY_PATH),
+  cert: fs.readFileSync(SSL_CERT_PATH),
+ };
+ console.log('✅ Certificados SSL carregados com sucesso.');
 } else {
-  console.warn('⚠️  Certificados SSL não encontrados. O servidor rodará em HTTP apenas.');
+ console.warn('⚠️ Certificados SSL não encontrados. O servidor rodará em HTTP apenas.');
 }
 
 // Ports
@@ -37,22 +37,40 @@ const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 8443;
 
 // ======== Security middleware ========
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
+ contentSecurityPolicy: {
+  directives: {
+   defaultSrc: ["'self'"],
+   styleSrc: ["'self'", "'unsafe-inline'"],
+   scriptSrc: ["'self'"],
+   imgSrc: ["'self'", "data:", "https:"],
   },
+ },
 }));
 
-// ======== CORS configuration ========
+// ======== CORS configuration (CORRIGIDO) ========
+const FRONTEND_URL_FROM_ENV = process.env.FRONTEND_URL || 'http://localhost:3000';
+// Lista de todas as origens permitidas para o frontend
+const allowedOrigins = [
+    FRONTEND_URL_FROM_ENV, // Valor padrão ou do .env (ex: http://localhost:3000)
+    'http://localhost:8081', // Frontend React Native Web/Metro
+    'http://10.0.2.2:8081', // Frontend no Emulador Android
+    'http://192.168.x.x:8081' // Caso use seu IP local no dispositivo físico (opcional)
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+ // Usamos uma função para checar se a origem está na nossa lista de permitidos
+ origin: (origin, callback) => {
+        // Permite requisições sem 'origin' (ex: Postman) ou se estiver na lista
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            // Bloqueia se a origem não for permitida
+            callback(new Error(`Not allowed by CORS: ${origin}`));
+        }
+    },
+ credentials: true,
+ methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+ allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 // ======== Body parsing ========
@@ -64,10 +82,10 @@ app.use(sanitizeRequest);
 
 // ======== Request timeout ========
 app.use((req, res, next) => {
-  res.setTimeout(30000, () => {
-    res.status(408).json({ error: 'Request timeout' });
-  });
-  next();
+ res.setTimeout(30000, () => {
+  res.status(408).json({ error: 'Request timeout' });
+ });
+ next();
 });
 
 // ======== Health check endpoints ========
@@ -79,25 +97,25 @@ app.use('/api', routes);
 
 // ======== 404 handler ========
 app.use((req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    message: `The requested route ${req.method} ${req.originalUrl} does not exist`,
-    timestamp: new Date().toISOString(),
-  });
+ res.status(404).json({
+  error: 'Route not found',
+  message: `The requested route ${req.method} ${req.originalUrl} does not exist`,
+  timestamp: new Date().toISOString(),
+ });
 });
 
 // ======== Global error handler ========
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled error:', error);
+ console.error('Unhandled error:', error);
 
-  const isDevelopment = process.env.NODE_ENV === 'development';
+ const isDevelopment = process.env.NODE_ENV === 'development';
 
-  res.status(error.status || 500).json({
-    error: 'Internal server error',
-    message: isDevelopment ? error.message : 'Something went wrong',
-    ...(isDevelopment && { stack: error.stack }),
-    timestamp: new Date().toISOString(),
-  });
+ res.status(error.status || 500).json({
+  error: 'Internal server error',
+  message: isDevelopment ? error.message : 'Something went wrong',
+  ...(isDevelopment && { stack: error.stack }),
+  timestamp: new Date().toISOString(),
+ });
 });
 
 // ======== Graceful shutdown ========
@@ -106,25 +124,25 @@ HealthService.setupShutdownHandlers();
 // ======== Start HTTPS and HTTP redirect ========
 
 if (useHttps) {
-  https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
-    console.log(`✅ HTTPS ativo em https://localhost:${HTTPS_PORT}`);
-    console.log(`🌎 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📊 Health: https://localhost:${HTTPS_PORT}/health`);
-    console.log(`🗄️  DB Health: https://localhost:${HTTPS_PORT}/health/db`);
-    console.log(`📚 API: https://localhost:${HTTPS_PORT}/api`);
-  });
+ https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
+  console.log(`✅ HTTPS ativo em https://localhost:${HTTPS_PORT}`);
+  console.log(`🌎 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Health: https://localhost:${HTTPS_PORT}/health`);
+  console.log(`🗄️ DB Health: https://localhost:${HTTPS_PORT}/health/db`);
+  console.log(`📚 API: https://localhost:${HTTPS_PORT}/api`);
+ });
 
-  http.createServer((req, res) => {
-    const host = req.headers.host?.replace(/:\d+$/, '');
-    res.writeHead(301, { Location: `https://${host}:${HTTPS_PORT}${req.url}` });
-    res.end();
-  }).listen(HTTP_PORT, () => {
-    console.log(`🟡 HTTP redirecionando → HTTPS na porta ${HTTP_PORT}`);
-  });
+ http.createServer((req, res) => {
+  const host = req.headers.host?.replace(/:\d+$/, '');
+  res.writeHead(301, { Location: `https://${host}:${HTTPS_PORT}${req.url}` });
+  res.end();
+ }).listen(HTTP_PORT, () => {
+  console.log(`🟡 HTTP redirecionando → HTTPS na porta ${HTTP_PORT}`);
+ });
 } else {
-  app.listen(HTTP_PORT, () => {
-    console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
-  });
+ app.listen(HTTP_PORT, () => {
+  console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
+ });
 }
 
 export default app;
