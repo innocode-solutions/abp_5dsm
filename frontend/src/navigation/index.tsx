@@ -9,6 +9,7 @@ import CoursesScreen from '../screens/CoursesScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
+import HabitsScreen from '../screens/HabitScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   StudentCard: undefined;
   ClassPerformance: undefined;
+  Habits:undefined;
 };
 
 export type RootTabParamList = {
@@ -63,7 +65,6 @@ function MainTabs({ navigation: parentNavigation }: any) {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: { borderTopWidth: 0, elevation: 0 },
-        headerRight: () => <LogoutButton onPress={handleLogout} />,
         headerRight: () => <LogoutButton onPress={handleLogout} />,
       })}
     >
@@ -136,6 +137,11 @@ export default function RootNavigator() {
           <Stack.Screen
             name="MainTabs"
             component={MainTabs}
+          />
+          <Stack.Screen
+            name="Habits"
+            component={HabitsScreen}
+            options={{ headerTitle: 'Hábitos de Estudo' }}
           />
           <Stack.Screen
             name="ClassPerformance"

@@ -11,6 +11,7 @@ import dashboardRoutesProfessor from './dashboardRoutes'; // dashboard do profes
 import dashboardRoutesIES from './dashboardIESRoutes'; // dashboard da IES (admin)
 
 import { AuthMiddleware } from '../middleware/authMiddleware';
+import alunoHabitoRoutes from './alunoHabitoRoutes';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.use('/auth', authRoutes);
 router.use('/cursos', cursoRoutes);
 router.use('/disciplinas', disciplinaRoutes);
 router.use('/alunos', alunoRoutes);
+router.use('/aluno-habitos', alunoHabitoRoutes);
 router.use('/users', userRoutes);
 router.use('/periodos', periodoLetivoRoutes);
 router.use('/matriculas', matriculaRoutes);

@@ -1,9 +1,19 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import StudentCard from "./StudentCard";
 import { useAuth } from "../context/AuthContext";
+import { RootStackParamList } from "../navigation";
+type Props = NativeStackScreenProps<RootStackParamList, "StudentCard">;
 
-export default function StudentCardScreen() {
+// O componente agora recebe 'navigation' nas props
+export default function StudentCardScreen({ navigation }: Props) {
   const { user } = useAuth();
 
   // Mock data - replace with actual API call
@@ -13,13 +23,29 @@ export default function StudentCardScreen() {
     { nome: "Pedro Costa", risco: "Risco Alto", media: 4.1 },
   ];
 
+  const goToHabits = () => {
+    // Navega para a tela de hábitos. O nome 'Habits' deve ser o nome da rota.
+    navigation.navigate("Habits");
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.welcomeText}>Bem-vindo, {user?.name || "Usuário"}!</Text>
+        <Text style={styles.welcomeText}>
+          Bem-vindo, {user?.name || "Usuário"}!
+        </Text>
         <Text style={styles.subtitle}>Lista de Estudantes</Text>
       </View>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+
+      {/* NOVO BOTÃO DE ACESSO AOS HÁBITOS */}
+      <TouchableOpacity style={styles.button} onPress={goToHabits}>
+        <Text style={styles.buttonText}>Acessar Meus Hábitos</Text>
+      </TouchableOpacity>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+      >
         {mockStudents.map((student, index) => (
           <StudentCard key={index} student={student} />
         ))}
@@ -55,5 +81,22 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
+  // NOVOS ESTILOS PARA O BOTÃO
+  button: {
+    backgroundColor: "#4A90E2", // Cor de destaque
+    padding: 12,
+    margin: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+  },
 });
-
