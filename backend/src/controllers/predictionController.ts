@@ -255,5 +255,123 @@ export class PredictionController {
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
+
+  static async createPredictionForStudent(req: Request, res: Response) {
+    try {
+      const { IDMatricula, dados } = req.body;
+      const user = req.user;
+
+      if (!user) {
+        return res.status(401).json({ error: 'Usuário não autenticado' });
+      }
+
+      if (user.role !== 'STUDENT') {
+        return res.status(403).json({ error: 'Acesso negado. Apenas alunos podem usar este endpoint.' });
+      }
+
+      if (!IDMatricula || !dados) {
+        return res.status(400).json({ 
+          error: 'Campos obrigatórios: IDMatricula e dados' 
+        });
+      }
+
+      // Buscar matrícula e validar ownership
+      const matricula = await prisma.matricula.findUnique({
+        where: { IDMatricula },
+        include: {
+          aluno: true,
+          disciplina: true,
+          periodo: true
+        }
+      });
+
+      if (!matricula) {
+        return res.status(404).json({ error: 'Matrícula não encontrada' });
+      }
+
+      // Validar se a matrícula pertence ao aluno autenticado
+      // user.studentId contém o IDAluno do usuário autenticado
+      if (!user.studentId) {
+        return res.status(403).json({ 
+          error: 'Acesso negado. Usuário não está associado a um aluno.' 
+        });
+      }
+
+      if (matricula.IDAluno !== user.studentId) {
+        return res.status(403).json({ 
+          error: 'Acesso negado. Você só pode fazer predições para suas próprias matrículas.' 
+        });
+      }
+
+      // Validar se matrícula está ativa
+      if (matricula.Status !== 'ENROLLED') {
+        return res.status(400).json({ 
+          error: 'Matrícula não está ativa. Apenas matrículas ativas podem fazer predições.' 
+        });
+      }
+
+      // Chamar serviço ML para predição de desempenho
+      let mlResponse: MLPredictionResponse;
+
+      try {
+        mlResponse = await callMLService('DESEMPENHO', dados);
+      } catch (error: any) {
+        if (error.message === 'Serviço de ML indisponível') {
+          return res.status(503).json({ 
+            error: 'Serviço de predição temporariamente indisponível' 
+          });
+        }
+        if (error.message === 'Timeout ao conectar com o serviço de ML') {
+          return res.status(504).json({ 
+            error: 'Timeout ao processar predição' 
+          });
+        }
+        if (error.message.includes('Dados inválidos')) {
+          return res.status(400).json({ 
+            error: error.message 
+          });
+        }
+        throw error;
+      }
+
+      // Salvar predição no banco
+      const prediction = await savePrediction(
+        IDMatricula,
+        'DESEMPENHO' as TipoPredicao,
+        mlResponse,
+        dados
+      );
+
+      // Retornar resposta com predicted_score (0-100)
+      res.status(201).json({
+        success: true,
+        message: 'Predição gerada e salva com sucesso',
+        data: {
+          IDPrediction: prediction.IDPrediction,
+          IDMatricula: prediction.IDMatricula,
+          TipoPredicao: prediction.TipoPredicao,
+          predicted_score: mlResponse.predicted_score || (mlResponse.probability * 100), // 0-100
+          Probabilidade: prediction.Probabilidade, // 0-1
+          Classificacao: prediction.Classificacao,
+          approval_status: mlResponse.approval_status || prediction.Classificacao,
+          grade_category: mlResponse.grade_category || 'N/A',
+          Explicacao: prediction.Explicacao,
+          disciplina: {
+            IDDisciplina: matricula.disciplina.IDDisciplina,
+            NomeDaDisciplina: matricula.disciplina.NomeDaDisciplina,
+            CodigoDaDisciplina: matricula.disciplina.CodigoDaDisciplina
+          },
+          periodo: {
+            IDPeriodo: matricula.periodo.IDPeriodo,
+            Nome: matricula.periodo.Nome
+          },
+          createdAt: prediction.createdAt
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao criar predição para aluno:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  }
 }
 
