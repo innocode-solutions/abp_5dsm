@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient, TipoPredicao } from '@prisma/client';
 import { callMLService, savePrediction, MLPredictionResponse } from '../service/predictionService';
+import { emitPredictionCreated } from '../service/socketService';
 
 const prisma = new PrismaClient();
 
@@ -141,6 +142,17 @@ export class PredictionController {
         mlResponse,
         dados
       );
+
+      // Emitir evento WebSocket para atualização em tempo real
+      if (prediction.matricula?.disciplina) {
+        emitPredictionCreated({
+          IDMatricula: prediction.IDMatricula,
+          IDDisciplina: prediction.matricula.disciplina.IDDisciplina,
+          TipoPredicao: prediction.TipoPredicao as 'DESEMPENHO' | 'EVASAO',
+          IDPrediction: prediction.IDPrediction,
+          createdAt: prediction.createdAt,
+        });
+      }
 
       res.status(201).json({
         success: true,
@@ -341,6 +353,17 @@ export class PredictionController {
         mlResponse,
         dados
       );
+
+      // Emitir evento WebSocket para atualização em tempo real
+      if (prediction.matricula?.disciplina) {
+        emitPredictionCreated({
+          IDMatricula: prediction.IDMatricula,
+          IDDisciplina: prediction.matricula.disciplina.IDDisciplina,
+          TipoPredicao: 'DESEMPENHO',
+          IDPrediction: prediction.IDPrediction,
+          createdAt: prediction.createdAt,
+        });
+      }
 
       // Retornar resposta com predicted_score (0-100)
       res.status(201).json({

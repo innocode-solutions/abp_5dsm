@@ -12,6 +12,7 @@ import DashboardIESScreen from '../screens/DashboardIESScreen';
 import SimulationResultScreen from '../screens/SimulationResultScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
 import HabitsScreen from '../screens/HabitScreen';
+import ClassStudentsScreen from '../screens/ClassStudentsScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -24,6 +25,10 @@ export type RootStackParamList = {
   DashboardIES: undefined;
   StudentCard: undefined;
   ClassPerformance: undefined;
+  ClassStudents: {
+    subjectId: string;
+    subjectName?: string;
+  };
   Habits: undefined;
   SimulationResult: {
     predicted_score: number;
@@ -177,6 +182,11 @@ export default function RootNavigator() {
             name="ClassPerformance"
             component={ClassPerformance}
             options={{ headerShown: true, headerTitle: 'Performance da Turma' }}
+          />
+          <Stack.Screen
+            name="ClassStudents"
+            component={ClassStudentsScreen}
+            options={{ headerShown: true, headerTitle: 'Alunos da Turma' }}
           />
           <Stack.Screen
             name="SimulationResult"
