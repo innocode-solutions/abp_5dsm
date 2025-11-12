@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import routes from './src/routes';
 import { HealthService } from './src/service/healthService';
+import { initializeSocket } from './src/service/socketService';
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
@@ -106,12 +107,18 @@ HealthService.setupShutdownHandlers();
 // ======== Start HTTPS and HTTP redirect ========
 
 if (useHttps) {
-  https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
+  const httpsServer = https.createServer(sslOptions, app);
+  
+  // Inicializa Socket.io com o servidor HTTPS
+  initializeSocket(httpsServer);
+  
+  httpsServer.listen(HTTPS_PORT, () => {
     console.log(`✅ HTTPS ativo em https://localhost:${HTTPS_PORT}`);
     console.log(`🌎 Ambiente: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📊 Health: https://localhost:${HTTPS_PORT}/health`);
     console.log(`🗄️  DB Health: https://localhost:${HTTPS_PORT}/health/db`);
     console.log(`📚 API: https://localhost:${HTTPS_PORT}/api`);
+    console.log(`🔌 WebSocket ativo na porta ${HTTPS_PORT}`);
   });
 
   http.createServer((req, res) => {
@@ -122,8 +129,14 @@ if (useHttps) {
     console.log(`🟡 HTTP redirecionando → HTTPS na porta ${HTTP_PORT}`);
   });
 } else {
-  app.listen(HTTP_PORT, () => {
+  const httpServer = http.createServer(app);
+  
+  // Inicializa Socket.io com o servidor HTTP
+  initializeSocket(httpServer);
+  
+  httpServer.listen(HTTP_PORT, () => {
     console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
+    console.log(`🔌 WebSocket ativo na porta ${HTTP_PORT}`);
   });
 }
 
