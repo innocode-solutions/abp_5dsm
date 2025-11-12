@@ -49,16 +49,33 @@ model Aluno {
   Email     String   @unique
   Idade     Int?
   IDCurso   String
+  IDUser    String   @unique // Campo obrigatório para referenciar User
   Semestre  Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  curso      Curso       @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
+  curso      Curso         @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
   matriculas Matricula[]
-  user       User? // Relacionamento opcional com User
+  user       User          @relation(fields: [IDUser], references: [IDUser], onDelete: Cascade)
+  habitos AlunoHabito[]
 
   @@map("alunos")
+}
+
+model AlunoHabito {
+  IDHabito    String   @id @default(uuid())
+  IDAluno     String
+  horasEstudo Int
+  sono        Int
+  motivacao   Int
+  frequencia  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  aluno Aluno @relation(fields: [IDAluno], references: [IDAluno], onDelete: Cascade)
+
+  @@map("aluno_habitos")
 }
 
 enum UserRole {
@@ -79,28 +96,27 @@ model User {
   PasswordHash String
   Role         UserRole @default(STUDENT)
   name         String?
-  studentId    String?  @unique // FK opcional para Aluno
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relacionamento opcional com Aluno
-  aluno Aluno? @relation(fields: [studentId], references: [IDAluno])
-  passwordResetRequests PasswordResetRequest[]
+  // Relacionamento um-para-muitos com Aluno
+  alunos        Aluno[]
+  resetRequests PasswordResetRequest[]
 
   @@map("users")
 }
 
 model PasswordResetRequest {
-  id          String               @id @default(uuid())
+  id          String              @id @default(uuid())
   userId      String
   otpHash     String
   expiresAt   DateTime
-  attempts    Int                  @default(0)
-  status      PasswordResetStatus  @default(PENDING)
-  requestedAt DateTime             @default(now())
+  attempts    Int                 @default(0)
+  status      PasswordResetStatus @default(PENDING)
+  requestedAt DateTime            @default(now())
   ipAddress   String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   user User @relation(fields: [userId], references: [IDUser], onDelete: Cascade)
 
@@ -172,6 +188,7 @@ model Prediction {
 
   // Relacionamentos
   matricula Matricula @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
+
   // Índice para pegar “a última predição por matrícula e tipo”
   @@index([IDMatricula, TipoPredicao, createdAt], name: "idx_predictions_matricula_tipo_created")
   @@map("predictions")

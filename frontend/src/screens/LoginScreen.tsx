@@ -1,5 +1,5 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useState } from 'react';
+import { LinearGradient } from "expo-linear-gradient";
+import { useCallback, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,47 +9,66 @@ import {
   TouchableOpacity,
   View,
   Alert,
-} from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import colors from '../theme/colors';
-import { RootStackParamList } from '../navigation';
-import { useAuth } from '../context/AuthContext';
+  ActivityIndicator,
+} from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import colors from "../theme/colors";
+import { RootStackParamList } from "../navigation";
+import { useAuth } from "../context/AuthContext";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
   const onEnter = useCallback(async () => {
-    if (!email || !senha) {
-      Alert.alert('Erro', 'Por favor, preencha email e senha');
+    // Adicione um log para garantir que a função está sendo chamada
+    console.log("Tentativa de Login iniciada.");
+
+    // CORREÇÃO 2: Validação usa 'password'
+    if (!email || !password) {
+      Alert.alert("Erro", "Preencha todos os campos");
       return;
     }
 
     setLoading(true);
     try {
-      await login(email, senha);
-      // Navegação será feita pelo RootNavigator baseado na role
+      // CORREÇÃO 3: Chamada da função login usa 'password'
+      await login(email, password);
+
+      // Se for bem-sucedido, o AuthContext deve atualizar o user e a navegação deve acontecer
+      // Se não houver navegação automática pelo AuthContext, você precisará adicionar aqui:
+      // navigation.replace('Home' ou sua tela inicial após login)
     } catch (error: any) {
-      Alert.alert('Erro no Login', error.message || 'Credenciais inválidas');
+      // Log detalhado para o console do Metro Bundler
+      console.log(
+        "Erro de Login Detalhado:",
+        error.response?.data || error.message
+      );
+
+      Alert.alert(
+        "Erro",
+        error?.response?.data?.error || error?.message || "Falha ao fazer login"
+      );
     } finally {
       setLoading(false);
     }
-  }, [email, senha, login]);
+    // CORREÇÃO 4: Dependências do useCallback corretas
+  }, [email, password, login]);
 
   return (
     <LinearGradient
       style={styles.flex}
-      colors={['#1D2640', '#242E50', '#4A90E2']}
+      colors={["#1D2640", "#242E50", "#4A90E2"]}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
       locations={[0, 0.5, 1]}
     >
       <KeyboardAvoidingView
-        behavior={Platform.select({ ios: 'padding', android: undefined })}
+        behavior={Platform.select({ ios: "padding", android: undefined })}
         style={styles.flex}
       >
         <View style={styles.center}>
@@ -67,22 +86,26 @@ export default function LoginScreen({ navigation }: Props) {
             />
 
             <TextInput
-              value={senha}
-              onChangeText={setSenha}
+              // CORREÇÃO 5: Usar 'password' para o valor
+              value={password}
+              // CORREÇÃO 6: Usar 'setPassword' para a função de atualização
+              onChangeText={setPassword}
               placeholder="Senha"
               placeholderTextColor={colors.muted}
               secureTextEntry
               style={[styles.input, { marginTop: 12 }]}
             />
 
-            <TouchableOpacity 
-              onPress={onEnter} 
-              style={[styles.button, loading && styles.buttonDisabled]}
+            <TouchableOpacity
+              onPress={onEnter}
+              style={styles.button}
               disabled={loading}
             >
-              <Text style={styles.buttonText}>
-                {loading ? 'Entrando...' : 'Entrar'}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Entrar</Text>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => {}} style={styles.linkWrap}>
@@ -99,37 +122,37 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 24,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 18,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 10,
     elevation: 4,
   },
   title: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
     marginBottom: 12,
   },
   input: {
     height: 44,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F3F4F6',
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F3F4F6",
     paddingHorizontal: 12,
     fontSize: 14,
     color: colors.text,
@@ -137,20 +160,20 @@ const styles = StyleSheet.create({
   button: {
     height: 44,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 14,
-    backgroundColor: '#4A90E2',
+    backgroundColor: "#4A90E2",
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '700',
+    color: "#fff",
+    fontWeight: "700",
     fontSize: 16,
   },
   buttonDisabled: {
-    backgroundColor: '#A0AEC0',
+    backgroundColor: "#A0AEC0",
     opacity: 0.7,
   },
-  linkWrap: { marginTop: 10, alignItems: 'center' },
-  link: { color: '#111827', fontSize: 12 },
+  linkWrap: { marginTop: 10, alignItems: "center" },
+  link: { color: "#111827", fontSize: 12 },
 });

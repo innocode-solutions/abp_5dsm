@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { TouchableOpacity, View, Text } from 'react-native';
+import { TouchableOpacity, ActivityIndicator, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 import DashboardScreen from '../screens/DashboardScreen';
@@ -10,30 +10,21 @@ import SettingsScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardIESScreen from '../screens/DashboardIESScreen';
 import SimulationResultScreen from '../screens/SimulationResultScreen';
+import StudentCardScreen from '../screens/StudentCardScreen';
+import HabitsScreen from '../screens/HabitScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
 import ClassPerformance from '~/screens/ClassPerformance';
 import { useAuth } from '../context/AuthContext';
 
-function LogoutButton({ onPress }: { onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{ marginRight: 16 }}
-      accessibilityRole="button"
-      accessibilityLabel="Sair"
-    >
-      <Feather name="log-out" size={20} color={colors.text} />
-    </TouchableOpacity>
-  );
-}
-
 export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
   DashboardIES: undefined;
+  StudentCard: undefined;
   ClassPerformance: undefined;
+  Habits: undefined;
   SimulationResult: {
     predicted_score: number;
     approval_status: string;
@@ -63,11 +54,26 @@ export type RootTabParamList = {
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Logout button component
+function LogoutButton({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{ marginRight: 16 }}
+      accessibilityRole="button"
+      accessibilityLabel="Sair"
+    >
+      <Feather name="log-out" size={20} color={colors.text} />
+    </TouchableOpacity>
+  );
+}
+
 function MainTabs({ navigation: parentNavigation }: any) {
   const { logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
+    parentNavigation.replace('Login');
   };
 
   return (
@@ -129,18 +135,17 @@ export default function RootNavigator() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Carregando...</Text>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!isAuthenticated ? (
         <Stack.Screen
           name="Login"
           component={LoginScreen}
-          options={{ headerShown: false }}
         />
       ) : user?.Role === 'ADMIN' ? (
         <Stack.Screen
@@ -148,26 +153,38 @@ export default function RootNavigator() {
           component={DashboardIESScreen}
           options={{
             headerTitle: 'Dashboard IES',
+            headerShown: true,
             headerRight: () => <LogoutButton onPress={async () => await logout()} />,
           }}
         />
       ) : (
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabs}
-          options={{ headerShown: false }}
-        />
+        <>
+          <Stack.Screen
+            name="MainTabs"
+            component={MainTabs}
+          />
+          <Stack.Screen
+            name="StudentCard"
+            component={StudentCardScreen}
+            options={{ headerShown: true, headerTitle: 'Estudantes' }}
+          />
+          <Stack.Screen
+            name="Habits"
+            component={HabitsScreen}
+            options={{ headerShown: true, headerTitle: 'Hábitos de Estudo' }}
+          />
+          <Stack.Screen
+            name="ClassPerformance"
+            component={ClassPerformance}
+            options={{ headerShown: true, headerTitle: 'Performance da Turma' }}
+          />
+          <Stack.Screen
+            name="SimulationResult"
+            component={SimulationResultScreen}
+            options={{ headerShown: true, headerTitle: 'Resultado da Simulação' }}
+          />
+        </>
       )}
-      <Stack.Screen
-        name="ClassPerformance"
-        component={ClassPerformance}
-        options={{ headerTitle: 'Performance da Turma' }}
-      />
-      <Stack.Screen
-        name="SimulationResult"
-        component={SimulationResultScreen}
-        options={{ headerTitle: 'Resultado da Simulação' }}
-      />
     </Stack.Navigator>
   );
 }

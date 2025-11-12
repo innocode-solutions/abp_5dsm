@@ -9,6 +9,12 @@ from enum import Enum
 from pathlib import Path
 import pandas as pd
 
+
+def _model_to_dict(model: BaseModel) -> dict:
+    if hasattr(model, "model_dump"):
+        return model.model_dump()
+    return model.dict()
+
 # Serviços de ML
 from src.models.dropout_service import DropoutService
 from src.models.preview import PredictionService
@@ -215,7 +221,7 @@ def predict_dropout(data: DropoutData):
 
     try:
         # Converte o objeto Pydantic em dicionário limpo para o modelo
-        student_data_dict = data.dict()
+        student_data_dict = _model_to_dict(data)
 
         # Realiza a predição
         prediction = dropout_service.predict_dropout(student_data_dict)
@@ -240,7 +246,7 @@ def get_dropout_prediction(data: DropoutData):
         )
 
     try:
-        student_data_dict = data.dict()
+        student_data_dict = _model_to_dict(data)
         prediction = dropout_service.predict_dropout(student_data_dict)
         return prediction
 
@@ -262,7 +268,7 @@ def update_dropout_prediction(data: DropoutData):
         )
     
     try:
-        student_data_dict = data.dict()
+        student_data_dict = _model_to_dict(data)
         prediction = dropout_service.predict_dropout(student_data_dict)
         
         return {
@@ -284,7 +290,7 @@ def delete_dropout_prediction(data: DropoutData):
     try:
         return {
             "message": "Dados de predição de evasão removidos com sucesso",
-            "data": data.dict()
+            "data": _model_to_dict(data)
         }
     
     except Exception as e:
@@ -305,10 +311,9 @@ def predict(student_data: StudentData):
         )
 
     try:
-        # student_data.dict() converte o modelo (incluindo os enums)
-        # em um dicionário de strings e números, pronto para ser usado
-        # pelo seu pipeline de pré-processamento.
-        student_data_dict = student_data.dict()
+        # Converte o modelo (incluindo enums) em dicionário de strings/números
+        # pronto para o pipeline de pré-processamento.
+        student_data_dict = _model_to_dict(student_data)
         
         report = prediction_service.generate_report(student_data_dict)
         report["saved"] = False  # Por padrão, não salva
@@ -392,7 +397,7 @@ def update_performance_prediction(student_data: StudentData):
         )
     
     try:
-        student_data_dict = student_data.dict()
+        student_data_dict = _model_to_dict(student_data)
         report = prediction_service.generate_report(student_data_dict)
         
         return {
@@ -414,7 +419,7 @@ def delete_performance_prediction(student_data: StudentData):
     try:
         return {
             "message": "Dados de relatório de desempenho removidos com sucesso",
-            "data": student_data.dict()
+            "data": _model_to_dict(student_data)
         }
     
     except Exception as e:
