@@ -302,14 +302,19 @@ export class PredictionController {
       }
 
       // Validar se a matrícula pertence ao aluno autenticado
-      // user.studentId contém o IDAluno do usuário autenticado
-      if (!user.studentId) {
+      // Buscar o Aluno associado ao usuário autenticado (Aluno.IDUser é o campo que referencia User.IDUser)
+      const alunoRecord = await prisma.aluno.findFirst({
+        where: { IDUser: user.userId },
+        select: { IDAluno: true }
+      });
+
+      if (!alunoRecord?.IDAluno) {
         return res.status(403).json({ 
           error: 'Acesso negado. Usuário não está associado a um aluno.' 
         });
       }
 
-      if (matricula.IDAluno !== user.studentId) {
+      if (matricula.IDAluno !== alunoRecord.IDAluno) {
         return res.status(403).json({ 
           error: 'Acesso negado. Você só pode fazer predições para suas próprias matrículas.' 
         });
