@@ -68,6 +68,12 @@ async function callDropoutService(data: any): Promise<MLPredictionResponse> {
     };
   } catch (error) {
     if (isAxiosError(error)) {
+      const responseData = error.response?.data
+   if (error.response?.status === 422) {
+    console.error('ML Service Validation Error:', JSON.stringify(responseData, null, 2));
+    // Lança o erro para o controller/teste
+    throw new Error(`Dados inválidos para o serviço de ML: ${JSON.stringify(responseData)}`);
+   }
       if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
         throw new Error('Timeout ao conectar com o serviço de ML');
       }

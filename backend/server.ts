@@ -106,24 +106,27 @@ HealthService.setupShutdownHandlers();
 // ======== Start HTTPS and HTTP redirect ========
 
 if (useHttps) {
-  https.createServer(sslOptions, app).listen(HTTPS_PORT, () => {
-    console.log(`✅ HTTPS ativo em https://localhost:${HTTPS_PORT}`);
+  https.createServer(sslOptions, app).listen(HTTPS_PORT, '0.0.0.0', () => {
+    console.log(`✅ HTTPS ativo em https://0.0.0.0:${HTTPS_PORT}`);
     console.log(`🌎 Ambiente: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📊 Health: https://localhost:${HTTPS_PORT}/health`);
     console.log(`🗄️  DB Health: https://localhost:${HTTPS_PORT}/health/db`);
     console.log(`📚 API: https://localhost:${HTTPS_PORT}/api`);
+    console.log(`📱 Acessível na rede local via IP da máquina`);
   });
 
   http.createServer((req, res) => {
     const host = req.headers.host?.replace(/:\d+$/, '');
     res.writeHead(301, { Location: `https://${host}:${HTTPS_PORT}${req.url}` });
     res.end();
-  }).listen(HTTP_PORT, () => {
+  }).listen(HTTP_PORT, '0.0.0.0', () => {
     console.log(`🟡 HTTP redirecionando → HTTPS na porta ${HTTP_PORT}`);
   });
 } else {
-  app.listen(HTTP_PORT, () => {
-    console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
+  app.listen(HTTP_PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor HTTP rodando em http://0.0.0.0:${HTTP_PORT}`);
+    console.log(`📱 Acessível na rede local via IP da máquina`);
+    console.log(`💡 Para usar no celular, configure o IP em: frontend/src/config/api.ts`);
   });
 }
 

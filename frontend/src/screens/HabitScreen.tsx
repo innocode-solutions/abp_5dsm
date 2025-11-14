@@ -1,5 +1,3 @@
-// HabitScreen.tsx
-
 import React, { useState, useEffect } from "react";
 import {
   Alert,
@@ -12,23 +10,55 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { HabitService } from "../service/HabitService";
+import { PredictionService } from "../service/PredictionService";
+import { useHabit } from "../context/HabitContext";
+import { useAuth } from "../context/AuthContext";
+import colors from "../theme/colors";
 
-// ⚠️ ATENÇÃO: Esta interface DEVE ser importada do seu HabitService.ts
-// Foi incluída aqui temporariamente para fins de demonstração/correção.
 export interface HabitData {
   sono: number;
   horasEstudo: number;
   motivacao: number;
   frequencia: number;
+  Previous_Scores?: number;
+  Distance_from_Home?: string;
+  Gender?: string;
+  Parental_Education_Level?: string;
+  Parental_Involvement?: string;
+  School_Type?: string;
+  Peer_Influence?: string;
+  Extracurricular_Activities?: string;
+  Learning_Disabilities?: string;
+  Internet_Access?: string;
+  Access_to_Resources?: string;
+  Teacher_Quality?: string;
+  Family_Income?: string;
+  Motivation_Level?: string;
+  Tutoring_Sessions?: string;
+  Physical_Activity?: string;
   IDHabito?: string;
   IDAluno?: string;
   createdAt?: string;
-  updatedAt?: string; // Incluído para corrigir o erro 'updatedAt'
+  updatedAt?: string;
 }
 
-import { HabitService } from "../service/HabitService"; // Importe apenas o Service
-import { useHabit } from "../context/HabitContext";
-import { useAuth } from "../context/AuthContext";
+const PICKER_OPTIONS = {
+  distance: [{ label: "Perto", value: "Near" }, { label: "Longe", value: "Far" }],
+  gender: [{ label: "Masculino", value: "Male" }, { label: "Feminino", value: "Female" }],
+  education: [
+    { label: "Nenhum", value: "None" },
+    { label: "Ensino Médio", value: "High School" },
+    { label: "Algum Ensino Superior", value: "Some College" },
+    { label: "Bacharelado", value: "Bachelor's" },
+    { label: "Mestrado", value: "Master's" },
+  ],
+  level: [{ label: "Baixo", value: "Low" }, { label: "Médio", value: "Medium" }, { label: "Alto", value: "High" }],
+  school: [{ label: "Pública", value: "Public" }, { label: "Privada", value: "Private" }],
+  peer: [{ label: "Positiva", value: "Positive" }, { label: "Negativa", value: "Negative" }, { label: "Neutra", value: "Neutral" }],
+  yesNo: [{ label: "Sim", value: "Yes" }, { label: "Não", value: "No" }],
+  resources: [{ label: "Ruim", value: "Poor" }, { label: "Médio", value: "Average" }, { label: "Bom", value: "Good" }],
+};
 
 const HabitScreen: React.FC = () => {
   const { submitHabits, loading } = useHabit();
@@ -38,249 +68,342 @@ const HabitScreen: React.FC = () => {
   const [horasSono, setHorasSono] = useState("");
   const [motivacao, setMotivacao] = useState("");
   const [frequencia, setFrequencia] = useState("");
+  const [previousScores, setPreviousScores] = useState("");
+  const [distanceFromHome, setDistanceFromHome] = useState("");
+  const [gender, setGender] = useState("");
+  const [parentalEducationLevel, setParentalEducationLevel] = useState("");
+  const [parentalInvolvement, setParentalInvolvement] = useState("");
+  const [schoolType, setSchoolType] = useState("");
+  const [peerInfluence, setPeerInfluence] = useState("");
+  const [extracurricularActivities, setExtracurricularActivities] = useState("");
+  const [learningDisabilities, setLearningDisabilities] = useState("");
+  const [internetAccess, setInternetAccess] = useState("");
+  const [accessToResources, setAccessToResources] = useState("");
+  const [teacherQuality, setTeacherQuality] = useState("");
+  const [familyIncome, setFamilyIncome] = useState("");
+  const [tutoringSessions, setTutoringSessions] = useState("");
+  const [physicalActivity, setPhysicalActivity] = useState("");
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionResult, setPredictionResult] = useState<any>(null);
+  const [predictionError, setPredictionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [currentSection, setCurrentSection] = useState<'basic' | 'additional'>('basic');
 
-  // 🚀 FUNÇÃO REVISADA: Tipada para retornar HabitData ou null
-  const loadHabits = async (): Promise<HabitData | null> => {
-    if (!user || !user.IDUser) return null;
+  const loadHabits = async () => {
+    if (!user?.IDUser) return;
     try {
       const data: HabitData = await HabitService.getHabits();
-
-      // Preenche os states com os dados lidos do backend
-      if (data && data.horasEstudo !== undefined) {
+      if (data) {
         setHorasEstudo(data.horasEstudo?.toString() || "");
         setHorasSono(data.sono?.toString() || "");
         setMotivacao(data.motivacao?.toString() || "");
         setFrequencia(data.frequencia?.toString() || "");
+        setPreviousScores(data.Previous_Scores?.toString() || "");
+        setDistanceFromHome(data.Distance_from_Home || "");
+        setGender(data.Gender || "");
+        setParentalEducationLevel(data.Parental_Education_Level || "");
+        setParentalInvolvement(data.Parental_Involvement || "");
+        setSchoolType(data.School_Type || "");
+        setPeerInfluence(data.Peer_Influence || "");
+        setExtracurricularActivities(data.Extracurricular_Activities || "");
+        setLearningDisabilities(data.Learning_Disabilities || "");
+        setInternetAccess(data.Internet_Access || "");
+        setAccessToResources(data.Access_to_Resources || "");
+        setTeacherQuality(data.Teacher_Quality || "");
+        setFamilyIncome(data.Family_Income || "");
+        setTutoringSessions(data.Tutoring_Sessions || "");
+        setPhysicalActivity(data.Physical_Activity || "");
       }
-      return data;
     } catch (err: any) {
       console.log("Erro ao carregar hábitos:", err.message || err);
-      // Limpa os campos se houver erro (como 404 No Data)
-      setHorasEstudo("");
-      setHorasSono("");
-      setMotivacao("");
-      setFrequencia("");
-      return null;
     }
   };
 
-  // Chama a função ao carregar a tela (após o login)
-  useEffect(() => {
-    loadHabits().catch((err) =>
-      console.log("Erro ao carregar hábitos (inicial):", err.message || err)
-    );
-  }, [user]);
+  useEffect(() => { loadHabits().catch(console.error); }, [user]);
 
-  const validate = (): boolean => {
-    // ... (Restante da validação) ...
-    if (!horasEstudo || !horasSono || !motivacao || !frequencia) {
-      setValidationError("Todos os campos são obrigatórios.");
-      return false;
-    }
-    if (+horasEstudo < 0 || +horasEstudo > 12) {
-      setValidationError("Horas de estudo devem estar entre 0 e 12.");
-      return false;
-    }
-    if (+horasSono < 0 || +horasSono > 12) {
-      setValidationError("Horas de sono devem estar entre 0 e 12.");
-      return false;
-    }
-    if (+motivacao < 0 || +motivacao > 10) {
-      setValidationError("Motivação deve estar entre 0 e 10.");
-      return false;
-    }
-    if (+frequencia < 0 || +frequencia > 100) {
-      setValidationError("Frequência deve estar entre 0 e 100%.");
-      return false;
-    }
+  const validateBasic = (): boolean => {
+    const num = (v: string, min: number, max: number) => {
+      const n = Number(v);
+      return !v || isNaN(n) || n < min || n > max;
+    };
+    if (num(horasEstudo, 0, 12)) { setValidationError("Horas de estudo devem estar entre 0 e 12."); return false; }
+    if (num(horasSono, 0, 12)) { setValidationError("Horas de sono devem estar entre 0 e 12."); return false; }
+    if (num(motivacao, 0, 10)) { setValidationError("Motivação deve estar entre 0 e 10."); return false; }
+    if (num(frequencia, 0, 100)) { setValidationError("Frequência deve estar entre 0 e 100%."); return false; }
+    return true;
+  };
+
+  const validateAll = (): boolean => {
+    if (!validateBasic()) return false;
+    const required = [
+      { v: previousScores, n: "Notas Anteriores" },
+      { v: distanceFromHome, n: "Distância de Casa" },
+      { v: gender, n: "Gênero" },
+      { v: parentalEducationLevel, n: "Nível Educacional dos Pais" },
+      { v: parentalInvolvement, n: "Envolvimento dos Pais" },
+      { v: schoolType, n: "Tipo de Escola" },
+      { v: peerInfluence, n: "Influência dos Colegas" },
+      { v: extracurricularActivities, n: "Atividades Extracurriculares" },
+      { v: learningDisabilities, n: "Deficiências de Aprendizagem" },
+      { v: internetAccess, n: "Acesso à Internet" },
+      { v: accessToResources, n: "Acesso a Recursos" },
+      { v: teacherQuality, n: "Qualidade do Professor" },
+      { v: familyIncome, n: "Renda Familiar" },
+      { v: tutoringSessions, n: "Sessões de Tutoria" },
+      { v: physicalActivity, n: "Atividade Física" },
+    ];
+    const missing = required.filter(f => !f.v).map(f => f.n);
+    if (missing.length) { setValidationError(`Campos obrigatórios: ${missing.join(", ")}`); return false; }
+    if (Number(previousScores) < 0 || Number(previousScores) > 100) { setValidationError("Notas anteriores devem estar entre 0 e 100."); return false; }
     setValidationError(null);
     return true;
   };
 
   const handleSubmit = async () => {
-    if (!validate() || !user || !user.IDUser) return;
-
+    if (!validateBasic() || !user?.IDUser) return;
     try {
-      await submitHabits({
-        horasEstudo: Number(horasEstudo),
-        sono: Number(horasSono),
-        motivacao: Number(motivacao),
-        frequencia: Number(frequencia),
-      });
-
-      setSuccessMessage("Hábitos salvos com sucesso!");
+      await submitHabits({ horasEstudo: Number(horasEstudo), sono: Number(horasSono), motivacao: Number(motivacao), frequencia: Number(frequencia) });
+      setSuccessMessage("Hábitos básicos salvos com sucesso!");
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      console.log("Erro ao enviar hábitos:", err);
       Alert.alert("Erro", "Erro ao enviar hábitos.");
     }
+  };
+
+  const handleSaveAll = async () => {
+    if (!validateAll() || !user?.IDUser) return;
+    try {
+      await submitHabits({
+        horasEstudo: Number(horasEstudo), sono: Number(horasSono), motivacao: Number(motivacao), frequencia: Number(frequencia),
+        Previous_Scores: Number(previousScores), Distance_from_Home: distanceFromHome, Gender: gender,
+        Parental_Education_Level: parentalEducationLevel, Parental_Involvement: parentalInvolvement, School_Type: schoolType,
+        Peer_Influence: peerInfluence, Extracurricular_Activities: extracurricularActivities, Learning_Disabilities: learningDisabilities,
+        Internet_Access: internetAccess, Access_to_Resources: accessToResources, Teacher_Quality: teacherQuality,
+        Family_Income: familyIncome, Tutoring_Sessions: tutoringSessions, Physical_Activity: physicalActivity,
+      } as any);
+      setSuccessMessage("Todos os dados foram salvos com sucesso!");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      Alert.alert("Erro", "Erro ao salvar dados.");
+    }
+  };
+
+  const handlePredictPerformance = async () => {
+    if (!validateAll() || !user?.IDUser) {
+      Alert.alert("Atenção", "Por favor, preencha todos os campos para obter uma predição precisa.");
+      return;
+    }
+    setPredictionLoading(true);
+    setPredictionError(null);
+    setPredictionResult(null);
+    try {
+      const result = await PredictionService.predictPerformance({
+        horasEstudo: Number(horasEstudo), sono: Number(horasSono), motivacao: Number(motivacao), frequencia: Number(frequencia),
+        Previous_Scores: Number(previousScores), Distance_from_Home: distanceFromHome, Gender: gender,
+        Parental_Education_Level: parentalEducationLevel, Parental_Involvement: parentalInvolvement, School_Type: schoolType,
+        Peer_Influence: peerInfluence, Extracurricular_Activities: extracurricularActivities, Learning_Disabilities: learningDisabilities,
+        Internet_Access: internetAccess, Access_to_Resources: accessToResources, Teacher_Quality: teacherQuality,
+        Family_Income: familyIncome, Tutoring_Sessions: tutoringSessions, Physical_Activity: physicalActivity,
+      });
+      setPredictionResult(result);
+    } catch (err: any) {
+      setPredictionError(err.message || "Erro ao gerar predição de desempenho.");
+      Alert.alert("Erro", err.message || "Erro ao gerar predição de desempenho.");
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
+
+  const renderPicker = (value: string, onChange: (v: string) => void, options: typeof PICKER_OPTIONS.distance, placeholder: string) => (
+    <View style={styles.pickerContainer}>
+      {!value && <Text style={styles.pickerPlaceholder}>{placeholder}</Text>}
+      <View style={styles.pickerOptions}>
+        {options.map((item) => (
+          <TouchableOpacity key={item.value} style={[styles.pickerOption, value === item.value && styles.pickerOptionSelected]} onPress={() => onChange(item.value)}>
+            <Text style={[styles.pickerOptionText, value === item.value && styles.pickerOptionTextSelected]}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  const getCategoryInfo = (classificacao: string) => {
+    const map: Record<string, { label: string; description: string; color: string; showTips: boolean }> = {
+      'INSUFICIENTE': { label: 'Abaixo do Esperado', description: 'Sua nota está abaixo de 60 pontos. Isso significa que você precisa melhorar em algumas áreas. Não desanime! Use essa informação para focar nos pontos que precisam de mais atenção.', color: '#F44336', showTips: true },
+      'REGULAR': { label: 'Regular', description: 'Desempenho regular. Você está entre 60 e 69 pontos. Continue se esforçando!', color: '#FF9800', showTips: false },
+      'BOM': { label: 'Bom', description: 'Desempenho bom! Você está entre 70 e 79 pontos.', color: '#FFC107', showTips: false },
+      'MUITO BOM': { label: 'Muito Bom', description: 'Desempenho muito bom! Você está entre 80 e 89 pontos.', color: '#8BC34A', showTips: false },
+      'EXCELENTE': { label: 'Excelente', description: 'Desempenho excepcional! Você está acima de 90 pontos.', color: '#4CAF50', showTips: false },
+    };
+    return map[classificacao] || { label: classificacao, description: '', color: '#666', showTips: false };
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Hábitos de Estudo</Text>
+        <Text style={styles.title}>Hábitos de Estudo e Dados Pessoais</Text>
+        <Text style={styles.subtitle}>Preencha todos os campos para obter predições mais precisas</Text>
 
-        <Text style={styles.label}>Horas de Estudo Diárias (0-12):</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={horasEstudo}
-          onChangeText={setHorasEstudo}
-          placeholder="Ex: 4"
-        />
+        <View style={styles.sectionTabs}>
+          <TouchableOpacity style={[styles.tab, currentSection === 'basic' && styles.tabActive]} onPress={() => setCurrentSection('basic')}>
+            <Text style={[styles.tabText, currentSection === 'basic' && styles.tabTextActive]}>Campos Básicos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.tab, currentSection === 'additional' && styles.tabActive]} onPress={() => setCurrentSection('additional')}>
+            <Text style={[styles.tabText, currentSection === 'additional' && styles.tabTextActive]}>Dados Adicionais</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Text style={styles.label}>Horas de Sono (0-12):</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={horasSono}
-          onChangeText={setHorasSono}
-          placeholder="Ex: 8"
-        />
-
-        <Text style={styles.label}>Nível de Motivação (0-10):</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={motivacao}
-          onChangeText={setMotivacao}
-          placeholder="Ex: 9"
-        />
-
-        <Text style={styles.label}>Frequência às Aulas (%):</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={frequencia}
-          onChangeText={setFrequencia}
-          placeholder="Ex: 90"
-        />
-
-        {validationError && (
-          <Text style={styles.errorText}>{validationError}</Text>
-        )}
-        {successMessage && (
-          <Text style={styles.successText}>{successMessage}</Text>
+        {currentSection === 'basic' && (
+          <View>
+            <Text style={styles.sectionTitle}>Hábitos Básicos</Text>
+            <Text style={styles.label}>Horas de Estudo Diárias (0-12):</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={horasEstudo} onChangeText={setHorasEstudo} placeholder="Ex: 6" />
+            <Text style={styles.label}>Horas de Sono (0-12):</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={horasSono} onChangeText={setHorasSono} placeholder="Ex: 8" />
+            <Text style={styles.label}>Nível de Motivação (0-10):</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={motivacao} onChangeText={setMotivacao} placeholder="Ex: 7" />
+            <Text style={styles.label}>Frequência às Aulas (%):</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={frequencia} onChangeText={setFrequencia} placeholder="Ex: 85" />
+            <TouchableOpacity style={[styles.button, loading && { opacity: 0.6 }]} onPress={handleSubmit} disabled={loading}>
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Salvar Hábitos Básicos</Text>}
+            </TouchableOpacity>
+          </View>
         )}
 
-        <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.6 }]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Salvar Hábitos</Text>
-          )}
+        {currentSection === 'additional' && (
+          <View>
+            <Text style={styles.sectionTitle}>Dados Adicionais para Predição</Text>
+            <Text style={styles.label}>Notas Anteriores (0-100):</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={previousScores} onChangeText={setPreviousScores} placeholder="Ex: 80" />
+            <Text style={styles.label}>Distância de Casa:</Text>
+            {renderPicker(distanceFromHome, setDistanceFromHome, PICKER_OPTIONS.distance, "Selecione a distância")}
+            <Text style={styles.label}>Gênero:</Text>
+            {renderPicker(gender, setGender, PICKER_OPTIONS.gender, "Selecione o gênero")}
+            <Text style={styles.label}>Nível Educacional dos Pais:</Text>
+            {renderPicker(parentalEducationLevel, setParentalEducationLevel, PICKER_OPTIONS.education, "Selecione o nível educacional")}
+            <Text style={styles.label}>Envolvimento dos Pais:</Text>
+            {renderPicker(parentalInvolvement, setParentalInvolvement, PICKER_OPTIONS.level, "Selecione o nível de envolvimento")}
+            <Text style={styles.label}>Tipo de Escola:</Text>
+            {renderPicker(schoolType, setSchoolType, PICKER_OPTIONS.school, "Selecione o tipo de escola")}
+            <Text style={styles.label}>Influência dos Colegas:</Text>
+            <Text style={styles.description}>Como seus colegas de classe influenciam seu comportamento e desempenho escolar.</Text>
+            {renderPicker(peerInfluence, setPeerInfluence, PICKER_OPTIONS.peer, "Selecione a influência")}
+            <Text style={styles.label}>Atividades Extracurriculares:</Text>
+            {renderPicker(extracurricularActivities, setExtracurricularActivities, PICKER_OPTIONS.yesNo, "Selecione")}
+            <Text style={styles.label}>Deficiências de Aprendizagem:</Text>
+            {renderPicker(learningDisabilities, setLearningDisabilities, PICKER_OPTIONS.yesNo, "Selecione")}
+            <Text style={styles.label}>Acesso à Internet:</Text>
+            {renderPicker(internetAccess, setInternetAccess, PICKER_OPTIONS.yesNo, "Selecione")}
+            <Text style={styles.label}>Acesso a Recursos:</Text>
+            {renderPicker(accessToResources, setAccessToResources, PICKER_OPTIONS.resources, "Selecione o acesso")}
+            <Text style={styles.label}>Qualidade do Professor:</Text>
+            {renderPicker(teacherQuality, setTeacherQuality, PICKER_OPTIONS.resources, "Selecione a qualidade")}
+            <Text style={styles.label}>Renda Familiar:</Text>
+            {renderPicker(familyIncome, setFamilyIncome, PICKER_OPTIONS.level, "Selecione a renda")}
+            <Text style={styles.label}>Sessões de Tutoria:</Text>
+            {renderPicker(tutoringSessions, setTutoringSessions, PICKER_OPTIONS.yesNo, "Selecione")}
+            <Text style={styles.label}>Atividade Física:</Text>
+            {renderPicker(physicalActivity, setPhysicalActivity, PICKER_OPTIONS.level, "Selecione o nível")}
+            <TouchableOpacity style={[styles.button, loading && { opacity: 0.6 }]} onPress={handleSaveAll} disabled={loading}>
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Salvar Todos os Dados</Text>}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {validationError && <Text style={styles.errorText}>{validationError}</Text>}
+        {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
+
+        <TouchableOpacity style={[styles.predictButton, (predictionLoading || loading) && { opacity: 0.6 }]} onPress={handlePredictPerformance} disabled={predictionLoading || loading}>
+          {predictionLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Prever Desempenho</Text>}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.verifyButton}
-          onPress={async () => {
-            try {
-              const data = await loadHabits(); // data é HabitData ou null
+        {predictionError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorTitle}>Erro ao processar predição</Text>
+            <Text style={styles.errorText}>{predictionError}</Text>
+          </View>
+        )}
 
-              // ✅ CORREÇÃO: Checa se data existe E se updatedAt existe
-              if (data && data.updatedAt) {
-                const habitsString = `
-                    Horas de Estudo: ${data.horasEstudo}
-                    Horas de Sono: ${data.sono}
-                    Motivação: ${data.motivacao}/10
-                    Frequência: ${data.frequencia}%
-                    Última atualização: ${new Date(
-                      data.updatedAt
-                    ).toLocaleDateString("pt-BR")}
-                  `.trim();
-
-                Alert.alert("Seus Hábitos Salvos", habitsString);
-              } else {
-                Alert.alert(
-                  "Aviso",
-                  "Nenhum hábito salvo encontrado para este usuário ou dados incompletos."
-                );
-              }
-            } catch (err: any) {
-              // 🚨 EXIBE O ERRO REAL AQUI
-              Alert.alert(
-                "Erro de Busca",
-                `Não foi possível carregar hábitos. Detalhe: ${err.message}`
-              );
-              console.log("Erro completo do botão:", err);
-            }
-          }}
-        >
-          <Text style={styles.verifyButtonText}>Verificar Hábitos Salvos</Text>
-        </TouchableOpacity>
+        {predictionResult?.success && (() => {
+          const cat = getCategoryInfo(predictionResult.prediction?.classificacao || '');
+          return (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultTitle}>Resultado da Predição</Text>
+              <View style={styles.scoreCard}>
+                <Text style={styles.scoreLabel}>Nota Prevista</Text>
+                <Text style={styles.scoreValue}>{(predictionResult.prediction?.notaPrevista || 0).toFixed(1)}</Text>
+              </View>
+              <View style={[styles.infoCard, { borderLeftWidth: 4, borderLeftColor: cat.color }]}>
+                <Text style={styles.infoLabel}>Classificação:</Text>
+                <Text style={[styles.infoValue, { color: cat.color, fontWeight: 'bold' }]}>{cat.label}</Text>
+                {cat.description ? <Text style={[styles.description, { marginTop: 8 }]}>{cat.description}</Text> : null}
+                {cat.showTips && (
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={[styles.infoLabel, { marginBottom: 8 }]}>Dicas para melhorar:</Text>
+                    <Text style={styles.description}>• Aumente suas horas de estudo</Text>
+                    <Text style={styles.description}>• Melhore sua frequência nas aulas</Text>
+                    <Text style={styles.description}>• Participe mais ativamente das aulas</Text>
+                    <Text style={styles.description}>• Peça ajuda aos professores quando necessário</Text>
+                    <Text style={styles.description}>• Considere fazer reforço escolar</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>Confiança:</Text>
+                <Text style={styles.infoValue}>{predictionResult.prediction?.probabilidade || 0}%</Text>
+              </View>
+              {predictionResult.prediction?.explicacao && (
+                <View style={styles.infoCard}>
+                  <Text style={styles.infoLabel}>Explicação:</Text>
+                  <Text style={styles.infoValue}>{predictionResult.prediction.explicacao}</Text>
+                </View>
+              )}
+            </View>
+          );
+        })()}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default HabitScreen;
-
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
-  container: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 15,
-    marginBottom: 5,
-    color: "#333",
-  },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    backgroundColor: "#fff",
-  },
-  errorText: {
-    color: "red",
-    marginTop: 10,
-    textAlign: "center",
-  },
-  successText: {
-    color: "green",
-    marginTop: 10,
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-  button: {
-    backgroundColor: "#4A90E2",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  verifyButton: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: "#007bff",
-    borderRadius: 8,
-  },
-  verifyButtonText: {
-    color: "#fff",
-    textAlign: "center",
-  },
+  safe: { flex: 1, backgroundColor: colors.bg || "#f5f5f5" },
+  container: { padding: 20 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 8, textAlign: "center", color: colors.text || "#333" },
+  subtitle: { fontSize: 14, color: colors.muted || "#666", marginBottom: 20, textAlign: "center" },
+  sectionTabs: { flexDirection: "row", marginBottom: 20, backgroundColor: "#fff", borderRadius: 8, padding: 4 },
+  tab: { flex: 1, padding: 12, borderRadius: 6, alignItems: "center" },
+  tabActive: { backgroundColor: colors.primary || "#4A90E2" },
+  tabText: { fontSize: 14, color: colors.text || "#333", fontWeight: "600" },
+  tabTextActive: { color: "#fff" },
+  sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 16, color: colors.text || "#333" },
+  label: { fontSize: 16, fontWeight: "600", marginTop: 15, marginBottom: 5, color: colors.text || "#333" },
+  description: { fontSize: 13, color: colors.muted || "#666", marginBottom: 8, fontStyle: "italic" },
+  input: { height: 40, borderColor: "#ccc", borderWidth: 1, borderRadius: 5, paddingHorizontal: 10, backgroundColor: "#fff", marginBottom: 8 },
+  pickerContainer: { marginBottom: 8 },
+  pickerPlaceholder: { fontSize: 14, color: colors.muted || "#999", marginBottom: 8 },
+  pickerOptions: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -4 },
+  pickerOption: { flex: 1, minWidth: "30%", backgroundColor: "#fff", borderWidth: 2, borderColor: "#E5E7EB", borderRadius: 8, padding: 12, alignItems: "center", margin: 4 },
+  pickerOptionSelected: { borderColor: colors.primary || "#4A90E2", backgroundColor: "#E3F2FD" },
+  pickerOptionText: { fontSize: 14, color: colors.text || "#333" },
+  pickerOptionTextSelected: { color: colors.primary || "#4A90E2", fontWeight: "600" },
+  button: { backgroundColor: colors.primary || "#4A90E2", padding: 15, borderRadius: 8, alignItems: "center", marginTop: 20 },
+  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  predictButton: { backgroundColor: "#28a745", padding: 15, borderRadius: 8, alignItems: "center", marginTop: 12 },
+  errorText: { color: "red", marginTop: 10, textAlign: "center" },
+  successText: { color: "green", marginTop: 10, textAlign: "center", fontWeight: "bold" },
+  errorContainer: { backgroundColor: "#FFEBEE", borderWidth: 1, borderColor: "#E53935", borderRadius: 8, padding: 12, marginTop: 12, marginBottom: 12 },
+  errorTitle: { color: "#E53935", fontSize: 16, fontWeight: "600", marginBottom: 4 },
+  resultContainer: { marginTop: 20, marginBottom: 12 },
+  resultTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 16, color: colors.text || "#333" },
+  scoreCard: { backgroundColor: colors.primary || "#4A90E2", borderRadius: 12, padding: 24, alignItems: "center", marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  scoreLabel: { fontSize: 16, color: "#fff", marginBottom: 8 },
+  scoreValue: { fontSize: 48, fontWeight: "bold", color: "#fff" },
+  infoCard: { backgroundColor: "#fff", borderRadius: 8, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+  infoLabel: { fontSize: 14, color: colors.muted || "#666", marginBottom: 4 },
+  infoValue: { fontSize: 16, color: colors.text || "#333" },
 });
+
+export default HabitScreen;

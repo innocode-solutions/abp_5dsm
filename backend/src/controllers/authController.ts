@@ -80,13 +80,26 @@ export class AuthController {
         return res.status(401).json({ error: 'Credenciais inválidas' })
       }
 
+      // Busca o aluno associado ao usuário (se houver)
+      let studentId: string | undefined = undefined
+      if (user.Role === 'STUDENT') {
+        const aluno = await prisma.aluno.findFirst({
+          where: { IDUser: user.IDUser },
+          select: { IDAluno: true }
+        })
+        if (aluno) {
+          studentId = aluno.IDAluno
+        }
+      }
+
       // Gera token JWT
       const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production' // retirar ao fazer deploy
       const token = jwt.sign(
         {
           userId: user.IDUser,
           role: user.Role,
-          email: user.Email
+          email: user.Email,
+          studentId: studentId
         },
         jwtSecret,
         { expiresIn: '1h' } // Token válido por 1 hora

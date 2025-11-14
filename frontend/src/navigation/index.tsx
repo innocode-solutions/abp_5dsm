@@ -10,6 +10,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
 import HabitsScreen from '../screens/HabitScreen';
+import EngagementScreen from '../screens/EngagementScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -21,7 +22,8 @@ export type RootStackParamList = {
   MainTabs: undefined;
   StudentCard: undefined;
   ClassPerformance: undefined;
-  Habits:undefined;
+  Habits: undefined;
+  Engagement: undefined;
 };
 
 export type RootTabParamList = {
@@ -147,6 +149,11 @@ export default function RootNavigator() {
             name="ClassPerformance"
             component={ClassPerformance}
             options={{ headerShown: true, headerTitle: 'Performance da Turma' }}
+          />
+          <Stack.Screen
+            name="Engagement"
+            component={EngagementScreen}
+            options={{ headerShown: true, headerTitle: 'Predição de Evasão' }}
           />
         </>
       )}

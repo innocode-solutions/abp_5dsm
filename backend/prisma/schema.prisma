@@ -66,12 +66,41 @@ model Aluno {
 model AlunoHabito {
   IDHabito    String   @id @default(uuid())
   IDAluno     String
-  horasEstudo Int
-  sono        Int
-  motivacao   Int
-  frequencia  Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Campos básicos de hábitos (mantidos para compatibilidade)
+  horasEstudo Float?  // Horas de estudo por dia (0-12)
+  sono        Float?  // Horas de sono por dia (0-12)
+  motivacao   Int?    // Nível de motivação (0-10) - mantido como Int para compatibilidade
+  frequencia  Float?  // Frequência/Attendance em percentual (0-100)
+
+  // Campos para predição de EVASÃO
+  raisedhands            Int?    // Quantidade de vezes que levantou a mão
+  VisITedResources       Int?    // Quantidade de recursos visitados
+  AnnouncementsView      Int?   // Quantidade de anúncios visualizados
+  Discussion             Int?    // Participações em discussões
+  ParentAnsweringSurvey  String? // Pais responderam pesquisa: "Yes" ou "No"
+  ParentschoolSatisfaction String? // Satisfação dos pais: "Good" ou "Bad"
+  StudentAbsenceDays     String? // Faltas: "Under-7" ou "Above-7"
+
+  // Campos para predição de DESEMPENHO
+  Previous_Scores        Float?  // Notas anteriores
+  Distance_from_Home     String? // Distância de casa: "Near" ou "Far"
+  Gender                 String? // Gênero: "Male" ou "Female"
+  Parental_Education_Level String? // Nível educacional dos pais: "None", "High School", "Some College", "Bachelor's", "Master's"
+  Parental_Involvement   String? // Envolvimento dos pais: "Low", "Medium", "High"
+  School_Type            String? // Tipo de escola: "Public" ou "Private"
+  Peer_Influence         String? // Influência dos pares: "Positive", "Negative", "Neutral"
+  Extracurricular_Activities String? // Atividades extracurriculares: "Yes" ou "No"
+  Learning_Disabilities  String? // Deficiências de aprendizagem: "Yes" ou "No"
+  Internet_Access        String? // Acesso à internet: "Yes" ou "No"
+  Access_to_Resources    String? // Acesso a recursos: "Poor", "Average", "Good"
+  Teacher_Quality        String? // Qualidade do professor: "Poor", "Average", "Good"
+  Family_Income           String? // Renda familiar: "Low", "Medium", "High"
+  Motivation_Level       String? // Nível de motivação: "Low", "Medium", "High"
+  Tutoring_Sessions      String? // Sessões de tutoria: "Yes" ou "No"
+  Physical_Activity      String? // Atividade física: "Low", "Medium", "High"
 
   aluno Aluno @relation(fields: [IDAluno], references: [IDAluno], onDelete: Cascade)
 

@@ -10,5 +10,7 @@ router.use(AuthMiddleware.requireRole(UserRole.STUDENT))
 
 router.get('/', AlunoHabitoController.getOwnHabitos)
 router.post('/', AlunoHabitoController.createOrUpdateOwnHabitos)
+router.post('/predict/dropout', AlunoHabitoController.predictDropout)
+router.post('/predict/performance', AlunoHabitoController.predictPerformance)
 
 export default router
