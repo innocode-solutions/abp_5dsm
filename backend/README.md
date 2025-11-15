@@ -169,6 +169,27 @@ The server will start on `http://localhost:3000` (or the port specified in your 
 - Para provedores gratuitos (ex.: Gmail), gere uma senha de app e configure as variáveis `SMTP_USER`/`SMTP_PASS`.
 - Se nenhuma variável de SMTP for configurada, o serviço loga o conteúdo do e-mail no console para validação manual.
 
+## 📧 Configuração de SMTP
+
+Para habilitar o envio de e-mails de recuperação de senha, configure as variáveis SMTP no `.env`:
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=seu-email@gmail.com
+SMTP_PASS=sua-app-password
+OTP_EMAIL_FROM=seu-email@gmail.com
+```
+
+**Opções disponíveis:**
+- **Gmail** (Recomendado): Gratuito, ilimitado
+- **Brevo**: Gratuito, 9.000 e-mails/mês
+- **SendGrid**: Gratuito, 100 e-mails/dia
+- **Mailgun**: Gratuito, 5.000 e-mails/mês
+
+Veja **SMTP_SETUP.md** para instruções detalhadas de configuração.
+
 ## Authentication & Authorization
 
 The API uses JWT (JSON Web Tokens) for authentication. Here's how it works:

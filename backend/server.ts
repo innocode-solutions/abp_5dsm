@@ -49,12 +49,17 @@ app.use(helmet({
 }));
 
 // ======== CORS configuration ========
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+// Para React Native, permitir todas as origens em desenvolvimento
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? (process.env.FRONTEND_URL || 'http://localhost:3000')
+    : true, // Permite todas as origens em desenvolvimento (necessário para React Native)
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
+};
+
+app.use(cors(corsOptions));
 
 // ======== Body parsing ========
 app.use(express.json({ limit: '10mb' }));

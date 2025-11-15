@@ -35,9 +35,17 @@ interface RegisterResponse {
 
 export const authService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiConnection.post<LoginResponse>("/auth/login", data);
-    await setToken(response.data.token);
-    return response.data;
+    try {
+      const response = await apiConnection.post<LoginResponse>("/auth/login", data);
+      
+      if (response.data.token) {
+        await setToken(response.data.token);
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
   },
 
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {

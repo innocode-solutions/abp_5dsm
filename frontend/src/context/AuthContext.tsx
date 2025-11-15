@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (Email: string, password: string) => {
     try {
       const response = await authService.login({ Email, password });
-      // Map backend response to frontend User interface
+      
       setUser({
         IDUser: response.user.IDUser,
         Email: response.user.Email,

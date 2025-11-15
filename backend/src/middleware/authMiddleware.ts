@@ -192,4 +192,47 @@ export class AuthMiddleware {
       next()
     })
   }
+
+  /**
+   * Middleware para validar reset token (JWT com type: "password_reset")
+   */
+  static authenticateResetToken(req: Request, res: Response, next: NextFunction) {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ error: 'Token de redefinição requerido' })
+    }
+
+    const resetSecret = 
+      process.env.JWT_RESET_SECRET || 
+      process.env.JWT_SECRET || 
+      'your-super-secret-jwt-key-change-this-in-production'
+
+    jwt.verify(token, resetSecret, (err: any, decoded: any) => {
+      if (err) {
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({ error: 'Token de redefinição expirado' })
+        }
+        if (err.name === 'JsonWebTokenError') {
+          return res.status(401).json({ error: 'Token de redefinição inválido' })
+        }
+        return res.status(403).json({ error: 'Token não autorizado' })
+      }
+
+      // Verifica se o token é do tipo password_reset
+      if (decoded.type !== 'password_reset') {
+        return res.status(403).json({ error: 'Token inválido para redefinição de senha' })
+      }
+
+      // Adiciona informações do usuário ao request
+      req.user = {
+        userId: decoded.userId,
+        email: decoded.email,
+        role: UserRole.STUDENT, // Valor padrão, não usado neste contexto
+      } as UserInfo
+
+      next()
+    })
+  }
 }
