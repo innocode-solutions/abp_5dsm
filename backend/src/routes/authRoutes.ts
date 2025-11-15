@@ -10,7 +10,7 @@ import {
   forgotPasswordSchema,
   verifyResetCodeSchema
 } from '../validation/authSchemas'
-import { passwordResetLimiter } from '../middleware/rateLimitMiddleware'
+// import { passwordResetLimiter } from '../middleware/rateLimitMiddleware'  // Comentado para desenvolvimento
 
 const router = Router()
 
@@ -20,7 +20,7 @@ router.post('/login', validateBody(authLoginSchema), AuthController.login)
 router.post(
   '/password/forgot',
   validateBody(forgotPasswordSchema),
-  passwordResetLimiter,
+  // passwordResetLimiter,  // Comentado para desenvolvimento
   AuthController.forgotPassword
 )
 router.post(
