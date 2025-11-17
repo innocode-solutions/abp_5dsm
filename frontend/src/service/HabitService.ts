@@ -1,24 +1,41 @@
 // src/services/HabitService.ts (CORRIGIDO)
 
 import axios from 'axios';
-import { getToken } from '../service/tokenStore'; 
-
-const API_URL = 'http://localhost:8080/api'; // Certifique-se de que esta URL está correta (use 10.0.2.2 se for emulador Android)
+import { getToken } from '../service/tokenStore';
+import { API_URL } from '../config/api';
 
 // No arquivo src/service/HabitService.ts (ou onde sua interface HabitData está definida)
 
 export interface HabitData {
-    // Campos que você envia/recebe:
+    // Campos básicos
     sono: number;
     horasEstudo: number;
     motivacao: number;
     frequencia: number;
     
-    // Campos que o backend RETORNA (e causam o erro de tipagem):
-    IDHabito?: string;  // Opcional, se você não envise, mas recebe
-    IDAluno?: string;   // Opcional
-    createdAt?: string; // Data formatada como string
-    updatedAt?: string; // Data formatada como string
+    // Campos adicionais para desempenho
+    Previous_Scores?: number;
+    Distance_from_Home?: string;
+    Gender?: string;
+    Parental_Education_Level?: string;
+    Parental_Involvement?: string;
+    School_Type?: string;
+    Peer_Influence?: string;
+    Extracurricular_Activities?: string;
+    Learning_Disabilities?: string;
+    Internet_Access?: string;
+    Access_to_Resources?: string;
+    Teacher_Quality?: string;
+    Family_Income?: string;
+    Motivation_Level?: string;
+    Tutoring_Sessions?: string;
+    Physical_Activity?: string;
+    
+    // Campos retornados pelo backend
+    IDHabito?: string;
+    IDAluno?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export const HabitService = {

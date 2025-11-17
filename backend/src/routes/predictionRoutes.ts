@@ -12,7 +12,7 @@ router.get('/', PredictionController.getAll);
 router.get('/:id', PredictionController.getById);
 router.post('/', AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), PredictionController.create);
 router.post('/generate', 
-  AuthMiddleware.requireAnyRole([UserRole.TEACHER, UserRole.ADMIN]), 
+  AuthMiddleware.requireAnyRole([UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN]), 
   validateBody(generatePredictionSchema),
   PredictionController.createPrediction
 );

@@ -28,6 +28,11 @@ export default function StudentCardScreen({ navigation }: Props) {
     navigation.navigate("Habits");
   };
 
+  const goToEngagement = () => {
+    // Navega para a tela de predição de evasão
+    navigation.navigate("Engagement");
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -37,10 +42,16 @@ export default function StudentCardScreen({ navigation }: Props) {
         <Text style={styles.subtitle}>Lista de Estudantes</Text>
       </View>
 
-      {/* NOVO BOTÃO DE ACESSO AOS HÁBITOS */}
-      <TouchableOpacity style={styles.button} onPress={goToHabits}>
-        <Text style={styles.buttonText}>Acessar Meus Hábitos</Text>
-      </TouchableOpacity>
+      {/* BOTÕES DE ACESSO */}
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity style={styles.button} onPress={goToHabits}>
+          <Text style={styles.buttonText}>Acessar Meus Hábitos</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={goToEngagement}>
+          <Text style={styles.buttonText}>Predição de Evasão</Text>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView
         style={styles.scrollView}
@@ -81,11 +92,15 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
-  // NOVOS ESTILOS PARA O BOTÃO
+  // ESTILOS PARA OS BOTÕES
+  buttonsContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 12,
+  },
   button: {
     backgroundColor: "#4A90E2", // Cor de destaque
     padding: 12,
-    margin: 16,
     borderRadius: 8,
     alignItems: "center",
     shadowColor: "#000",
@@ -93,6 +108,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 5,
+  },
+  buttonSecondary: {
+    backgroundColor: "#1E88E5",
   },
   buttonText: {
     color: "white",
