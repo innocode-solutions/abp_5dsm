@@ -12,11 +12,8 @@ import DashboardIESScreen from '../screens/DashboardIESScreen';
 import SimulationResultScreen from '../screens/SimulationResultScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
 import HabitsScreen from '../screens/HabitScreen';
-<<<<<<< HEAD
 import EngagementScreen from '../screens/EngagementScreen';
-=======
 import ClassStudentsScreen from '../screens/ClassStudentsScreen';
->>>>>>> 3a0173f489decaaf207ec8201839f642b9847edf
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
