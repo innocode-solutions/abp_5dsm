@@ -13,7 +13,10 @@ import SimulationResultScreen from '../screens/SimulationResultScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
 import HabitsScreen from '../screens/HabitScreen';
 import EngagementScreen from '../screens/EngagementScreen';
+<<<<<<< HEAD
 import ClassStudentsScreen from '../screens/ClassStudentsScreen';
+=======
+>>>>>>> 98c6cbee957e068de50d1d5b82d42dbd969e70fc
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -28,6 +31,7 @@ export type RootStackParamList = {
   ClassPerformance: undefined;
   Habits: undefined;
   Engagement: undefined;
+<<<<<<< HEAD
   ClassStudents: {
     subjectId: string;
     subjectName?: string;
@@ -49,6 +53,8 @@ export type RootStackParamList = {
     IDPrediction?: string;
     IDMatricula?: string;
   };
+=======
+>>>>>>> 98c6cbee957e068de50d1d5b82d42dbd969e70fc
 };
 
 export type RootTabParamList = {
@@ -189,6 +195,7 @@ export default function RootNavigator() {
             name="Engagement"
             component={EngagementScreen}
             options={{ headerShown: true, headerTitle: 'Predição de Evasão' }}
+<<<<<<< HEAD
             />
             <Stack.Screen
             name="ClassStudents"
@@ -199,6 +206,8 @@ export default function RootNavigator() {
             name="SimulationResult"
             component={SimulationResultScreen}
             options={{ headerShown: true, headerTitle: 'Resultado da Simulação' }}
+=======
+>>>>>>> 98c6cbee957e068de50d1d5b82d42dbd969e70fc
           />
         </>
       )}

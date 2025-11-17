@@ -101,6 +101,18 @@ export class AuthController {
         }
       }
 
+      // Busca o aluno associado ao usuário (se houver)
+      let studentId: string | undefined = undefined
+      if (user.Role === 'STUDENT') {
+        const aluno = await prisma.aluno.findFirst({
+          where: { IDUser: user.IDUser },
+          select: { IDAluno: true }
+        })
+        if (aluno) {
+          studentId = aluno.IDAluno
+        }
+      }
+
       // Gera token JWT
       const jwtSecret =
         process.env.JWT_SECRET ||
