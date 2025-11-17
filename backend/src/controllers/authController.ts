@@ -246,8 +246,62 @@ export class AuthController {
     }
   }
 
-  // POST /auth/password/reset - Redefinir senha usando reset token
+  // POST /auth/password/reset - Redefinir senha usando email + code (alternativa sem token)
   static async resetPassword(req: Request, res: Response) {
+    try {
+      const { email, code, newPassword, confirmPassword } = req.body;
+
+      if (!email || !code || !newPassword || !confirmPassword) {
+        return res.status(400).json({ 
+          error: "Email, código, nova senha e confirmação são obrigatórios" 
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({ error: "As senhas não coincidem" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres" });
+      }
+
+      // Verifica o código OTP e marca como usado
+      const verification = await PasswordResetService.verifyOtpAndMarkAsUsed(
+        email.trim(),
+        code.trim()
+      );
+
+      // Verifica se o usuário existe
+      const existingUser = await prisma.user.findUnique({
+        where: { IDUser: verification.userId },
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({ error: "Usuário não encontrado" });
+      }
+
+      // Hash da nova senha
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Atualiza a senha
+      await prisma.user.update({
+        where: { IDUser: verification.userId },
+        data: { PasswordHash: hashedPassword },
+      });
+
+      res.json({ message: "Senha redefinida com sucesso" });
+    } catch (err) {
+      if (err instanceof PasswordResetInvalidError) {
+        return res.status(400).json({ error: "Código inválido ou expirado" });
+      }
+      console.error("Erro ao redefinir senha:", err);
+      res.status(500).json({ error: "Erro interno ao redefinir senha" });
+    }
+  }
+
+  // POST /auth/password/reset-with-token - Redefinir senha usando reset token (alternativa com token)
+  static async resetPasswordWithToken(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({ error: "Token de redefinição inválido" });

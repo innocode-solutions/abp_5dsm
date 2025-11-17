@@ -212,10 +212,74 @@ export class PasswordResetService {
       throw new PasswordResetInvalidError();
     }
 
+    // Incrementa tentativas mas NÃO marca como USED ainda
+    // O código será marcado como USED apenas quando a senha for resetada
     await this.repository.update({
       where: { id: request.id },
       data: {
         attempts: request.attempts + 1,
+        // Mantém status PENDING para permitir uso no reset
+      },
+    });
+
+    return {
+      userId: user.IDUser,
+      email: user.Email,
+      requestId: request.id,
+    };
+  }
+
+  // Verifica OTP e marca como usado (para uso no reset de senha)
+  // Este método é chamado quando realmente vai resetar a senha
+  static async verifyOtpAndMarkAsUsed(email: string, otp: string) {
+    const user = await prisma.user.findUnique({
+      where: { Email: email },
+      select: {
+        IDUser: true,
+        Email: true,
+      },
+    });
+
+    if (!user) {
+      throw new PasswordResetInvalidError();
+    }
+
+    // Busca código PENDING (não usado ainda)
+    const request = await this.repository.findFirst({
+      where: {
+        userId: user.IDUser,
+        status: PasswordResetStatus.PENDING,
+      },
+      orderBy: {
+        requestedAt: "desc",
+      },
+    });
+
+    if (!request) {
+      throw new PasswordResetInvalidError();
+    }
+
+    // Verifica expiração
+    const now = new Date();
+    if (request.expiresAt <= now) {
+      await this.repository.update({
+        where: { id: request.id },
+        data: { status: PasswordResetStatus.EXPIRED },
+      });
+      throw new PasswordResetInvalidError();
+    }
+
+    // Verifica o código
+    const isValid = await bcrypt.compare(otp, request.otpHash);
+    if (!isValid) {
+      await this.registerFailedAttempt(request.id, request.attempts);
+      throw new PasswordResetInvalidError();
+    }
+
+    // Marca como usado agora (quando realmente vai resetar a senha)
+    await this.repository.update({
+      where: { id: request.id },
+      data: {
         status: PasswordResetStatus.USED,
       },
     });

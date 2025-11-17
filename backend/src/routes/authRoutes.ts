@@ -8,7 +8,8 @@ import {
   authLoginSchema,
   authRegisterSchema,
   forgotPasswordSchema,
-  verifyResetCodeSchema
+  verifyResetCodeSchema,
+  resetPasswordSchema
 } from '../validation/authSchemas'
 // import { passwordResetLimiter } from '../middleware/rateLimitMiddleware'  // Comentado para desenvolvimento
 
@@ -27,6 +28,11 @@ router.post(
   '/password/verify-code',
   validateBody(verifyResetCodeSchema),
   AuthController.verifyResetCode
+)
+router.post(
+  '/password/reset',
+  validateBody(resetPasswordSchema),
+  AuthController.resetPassword
 )
 
 // Auth routes protegidas
