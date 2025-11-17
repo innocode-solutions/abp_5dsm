@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import routes from './src/routes';
 import { HealthService } from './src/service/healthService';
+import { initializeSocket } from './src/service/socketService';
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
@@ -48,12 +49,17 @@ app.use(helmet({
 }));
 
 // ======== CORS configuration ========
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+// Para React Native, permitir todas as origens em desenvolvimento
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? (process.env.FRONTEND_URL || 'http://localhost:3000')
+    : true, // Permite todas as origens em desenvolvimento (necessário para React Native)
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
+};
+
+app.use(cors(corsOptions));
 
 // ======== Body parsing ========
 app.use(express.json({ limit: '10mb' }));
@@ -108,11 +114,19 @@ HealthService.setupShutdownHandlers();
 if (useHttps) {
   https.createServer(sslOptions, app).listen(HTTPS_PORT, '0.0.0.0', () => {
     console.log(`✅ HTTPS ativo em https://0.0.0.0:${HTTPS_PORT}`);
+  const httpsServer = https.createServer(sslOptions, app);
+  
+  // Inicializa Socket.io com o servidor HTTPS
+  initializeSocket(httpsServer);
+  
+  httpsServer.listen(HTTPS_PORT, () => {
+    console.log(`✅ HTTPS ativo em https://localhost:${HTTPS_PORT}`);
     console.log(`🌎 Ambiente: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📊 Health: https://localhost:${HTTPS_PORT}/health`);
     console.log(`🗄️  DB Health: https://localhost:${HTTPS_PORT}/health/db`);
     console.log(`📚 API: https://localhost:${HTTPS_PORT}/api`);
     console.log(`📱 Acessível na rede local via IP da máquina`);
+    console.log(`🔌 WebSocket ativo na porta ${HTTPS_PORT}`);
   });
 
   http.createServer((req, res) => {
@@ -127,6 +141,14 @@ if (useHttps) {
     console.log(`🚀 Servidor HTTP rodando em http://0.0.0.0:${HTTP_PORT}`);
     console.log(`📱 Acessível na rede local via IP da máquina`);
     console.log(`💡 Para usar no celular, configure o IP em: frontend/src/config/api.ts`);
+  const httpServer = http.createServer(app);
+  
+  // Inicializa Socket.io com o servidor HTTP
+  initializeSocket(httpServer);
+  
+  httpServer.listen(HTTP_PORT, () => {
+    console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
+    console.log(`🔌 WebSocket ativo na porta ${HTTP_PORT}`);
   });
 }
 

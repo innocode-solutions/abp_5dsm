@@ -8,9 +8,15 @@ import UsersScreen from '../screens/UsersScreen';
 import CoursesScreen from '../screens/CoursesScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
+import DashboardIESScreen from '../screens/DashboardIESScreen';
+import SimulationResultScreen from '../screens/SimulationResultScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
 import HabitsScreen from '../screens/HabitScreen';
+<<<<<<< HEAD
 import EngagementScreen from '../screens/EngagementScreen';
+=======
+import ClassStudentsScreen from '../screens/ClassStudentsScreen';
+>>>>>>> 3a0173f489decaaf207ec8201839f642b9847edf
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -20,10 +26,32 @@ import { useAuth } from '../context/AuthContext';
 export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
+  DashboardIES: undefined;
   StudentCard: undefined;
   ClassPerformance: undefined;
   Habits: undefined;
   Engagement: undefined;
+  ClassStudents: {
+    subjectId: string;
+    subjectName?: string;
+  };
+  SimulationResult: {
+    predicted_score: number;
+    approval_status: string;
+    grade_category: string;
+    disciplina: {
+      IDDisciplina: string;
+      NomeDaDisciplina: string;
+      CodigoDaDisciplina?: string;
+    };
+    periodo: {
+      IDPeriodo: string;
+      Nome: string;
+    };
+    Explicacao?: string;
+    IDPrediction?: string;
+    IDMatricula?: string;
+  };
 };
 
 export type RootTabParamList = {
@@ -52,12 +80,12 @@ function LogoutButton({ onPress }: { onPress: () => void }) {
 
 function MainTabs({ navigation: parentNavigation }: any) {
   const { logout } = useAuth();
-  
+
   const handleLogout = async () => {
     await logout();
     parentNavigation.replace('Login');
   };
-  
+
   return (
     <Tab.Navigator
       initialRouteName="Dashboard"
@@ -112,7 +140,7 @@ function MainTabs({ navigation: parentNavigation }: any) {
 }
 
 export default function RootNavigator() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   if (isLoading) {
     return (
@@ -129,21 +157,31 @@ export default function RootNavigator() {
           name="Login"
           component={LoginScreen}
         />
+      ) : user?.Role === 'ADMIN' ? (
+        <Stack.Screen
+          name="DashboardIES"
+          component={DashboardIESScreen}
+          options={{
+            headerTitle: 'Dashboard IES',
+            headerShown: true,
+            headerRight: () => <LogoutButton onPress={async () => await logout()} />,
+          }}
+        />
       ) : (
         <>
+          <Stack.Screen
+            name="MainTabs"
+            component={MainTabs}
+          />
           <Stack.Screen
             name="StudentCard"
             component={StudentCardScreen}
             options={{ headerShown: true, headerTitle: 'Estudantes' }}
           />
           <Stack.Screen
-            name="MainTabs"
-            component={MainTabs}
-          />
-          <Stack.Screen
             name="Habits"
             component={HabitsScreen}
-            options={{ headerTitle: 'Hábitos de Estudo' }}
+            options={{ headerShown: true, headerTitle: 'Hábitos de Estudo' }}
           />
           <Stack.Screen
             name="ClassPerformance"
@@ -154,6 +192,16 @@ export default function RootNavigator() {
             name="Engagement"
             component={EngagementScreen}
             options={{ headerShown: true, headerTitle: 'Predição de Evasão' }}
+            />
+            <Stack.Screen
+            name="ClassStudents"
+            component={ClassStudentsScreen}
+            options={{ headerShown: true, headerTitle: 'Alunos da Turma' }}
+          />
+          <Stack.Screen
+            name="SimulationResult"
+            component={SimulationResultScreen}
+            options={{ headerShown: true, headerTitle: 'Resultado da Simulação' }}
           />
         </>
       )}

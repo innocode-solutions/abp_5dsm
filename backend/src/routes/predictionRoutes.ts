@@ -22,6 +22,13 @@ router.delete('/:id', AuthMiddleware.requireRole(UserRole.ADMIN), PredictionCont
 router.get('/matricula/:matriculaId', PredictionController.getByMatricula);
 router.get('/tipo/:tipo', PredictionController.getByTipo);
 
+// Rota para alunos fazerem predições
+router.post('/student/generate', 
+  AuthMiddleware.requireRole(UserRole.STUDENT),
+  PredictionController.createPredictionForStudent
+);
+
 export default router;
+
 
 

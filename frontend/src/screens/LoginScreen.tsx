@@ -15,6 +15,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import colors from "../theme/colors";
 import { RootStackParamList } from "../navigation";
 import { useAuth } from "../context/AuthContext";
+import PasswordResetModal from "./PasswordResetModal";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
@@ -22,6 +23,7 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordResetVisible, setPasswordResetVisible] = useState(false);
   const { login } = useAuth();
 
   const onEnter = useCallback(async () => {
@@ -108,12 +110,25 @@ export default function LoginScreen({ navigation }: Props) {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => {}} style={styles.linkWrap}>
+            <TouchableOpacity
+              onPress={() => setPasswordResetVisible(true)}
+              style={styles.linkWrap}
+            >
               <Text style={styles.link}>Esqueci minha senha</Text>
             </TouchableOpacity>
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Password Reset Modal */}
+      <PasswordResetModal
+        visible={passwordResetVisible}
+        onClose={() => setPasswordResetVisible(false)}
+        onSuccess={() => {
+          // Optional: Navigate to login or show success message
+          Alert.alert("Sucesso", "Sua senha foi redefinida. Faça login!");
+        }}
+      />
     </LinearGradient>
   );
 }

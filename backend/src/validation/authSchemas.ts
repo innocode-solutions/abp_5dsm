@@ -39,4 +39,23 @@ export const verifyResetCodeSchema = z.object({
     .regex(/^\d{6}$/, 'Código deve conter 6 dígitos')
 }).strict()
 
+export const resetPasswordSchema = z.object({
+  email: z.string()
+    .trim()
+    .email('Email inválido')
+    .max(255, 'Email muito longo'),
+  code: z.string()
+    .trim()
+    .regex(/^\d{6}$/, 'Código deve conter 6 dígitos'),
+  newPassword: z.string()
+    .min(6, 'Senha deve ter no mínimo 6 caracteres')
+    .max(128, 'Senha muito longa'),
+  confirmPassword: z.string()
+    .min(6, 'Confirmação de senha deve ter no mínimo 6 caracteres')
+    .max(128, 'Confirmação de senha muito longa')
+}).strict().refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'As senhas não coincidem',
+  path: ['confirmPassword']
+})
+
 

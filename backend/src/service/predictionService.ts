@@ -9,6 +9,9 @@ export interface MLPredictionResponse {
   prediction: string;
   probability: number;
   explanation: string;
+  predicted_score?: number; // 0-100 para predições de desempenho
+  approval_status?: string;
+  grade_category?: string;
 }
 
 // Raw response interfaces from ML service
@@ -113,7 +116,10 @@ async function callPerformanceService(data: any): Promise<MLPredictionResponse> 
     return {
       prediction: response.data.approval_status,
       probability: response.data.confidence,
-      explanation: explanation
+      explanation: explanation,
+      predicted_score: response.data.predicted_score, // 0-100
+      approval_status: response.data.approval_status,
+      grade_category: response.data.grade_category
     };
   } catch (error) {
     if (isAxiosError(error)) {
