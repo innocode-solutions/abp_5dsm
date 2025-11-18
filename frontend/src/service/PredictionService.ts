@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import { getToken } from './tokenStore';
-import { API_URL } from '../config/api';
+import { API_URL } from '../api/apiConnection';
 
 export interface EngagementData {
   raisedhands: number;

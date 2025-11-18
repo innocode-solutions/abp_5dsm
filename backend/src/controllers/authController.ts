@@ -123,8 +123,16 @@ export class AuthController {
         token,
         expiresIn: "1h",
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao realizar login:", err);
+      
+      // Handle Prisma database connection errors
+      if (err?.code === 'P1001' || err?.name === 'PrismaClientInitializationError') {
+        return res.status(503).json({ 
+          error: "Serviço de banco de dados indisponível. Verifique a conexão com o banco de dados." 
+        });
+      }
+      
       res.status(500).json({ error: "Erro interno ao realizar login" });
     }
   }

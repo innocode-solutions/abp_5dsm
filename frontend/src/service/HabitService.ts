@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import { getToken } from '../service/tokenStore';
-import { API_URL } from '../config/api';
+import { API_URL } from '../api/apiConnection';
 
 // No arquivo src/service/HabitService.ts (ou onde sua interface HabitData está definida)
 
