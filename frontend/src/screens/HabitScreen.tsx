@@ -124,14 +124,17 @@ const HabitScreen: React.FC = () => {
   useEffect(() => { loadHabits().catch(console.error); }, [user]);
 
   const validateBasic = (): boolean => {
+    setValidationError(null); // Limpa erros anteriores
     const num = (v: string, min: number, max: number) => {
+      if (!v || v.trim() === '') return true; // Campo vazio
       const n = Number(v);
-      return !v || isNaN(n) || n < min || n > max;
+      return isNaN(n) || n < min || n > max; // Fora do range
     };
     if (num(horasEstudo, 0, 12)) { setValidationError("Horas de estudo devem estar entre 0 e 12."); return false; }
     if (num(horasSono, 0, 12)) { setValidationError("Horas de sono devem estar entre 0 e 12."); return false; }
     if (num(motivacao, 0, 10)) { setValidationError("Motivação deve estar entre 0 e 10."); return false; }
     if (num(frequencia, 0, 100)) { setValidationError("Frequência deve estar entre 0 e 100%."); return false; }
+    setValidationError(null); // Limpa erro se tudo estiver ok
     return true;
   };
 
@@ -162,55 +165,106 @@ const HabitScreen: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateBasic() || !user?.IDUser) return;
+    if (!user?.IDUser) {
+      Alert.alert("Erro", "Usuário não autenticado.");
+      return;
+    }
+    if (!validateBasic()) return;
     try {
-      await submitHabits({ horasEstudo: Number(horasEstudo), sono: Number(horasSono), motivacao: Number(motivacao), frequencia: Number(frequencia) });
+      setValidationError(null);
+      await submitHabits({ 
+        horasEstudo: Number(horasEstudo), 
+        sono: Number(horasSono), 
+        motivacao: Number(motivacao), 
+        frequencia: Number(frequencia) 
+      });
       setSuccessMessage("Hábitos básicos salvos com sucesso!");
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
-      Alert.alert("Erro", "Erro ao enviar hábitos.");
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || err?.message || "Erro ao enviar hábitos.";
+      setValidationError(errorMsg);
+      Alert.alert("Erro", errorMsg);
     }
   };
 
   const handleSaveAll = async () => {
-    if (!validateAll() || !user?.IDUser) return;
+    if (!user?.IDUser) {
+      Alert.alert("Erro", "Usuário não autenticado.");
+      return;
+    }
+    if (!validateAll()) return;
     try {
+      setValidationError(null);
       await submitHabits({
-        horasEstudo: Number(horasEstudo), sono: Number(horasSono), motivacao: Number(motivacao), frequencia: Number(frequencia),
-        Previous_Scores: Number(previousScores), Distance_from_Home: distanceFromHome, Gender: gender,
-        Parental_Education_Level: parentalEducationLevel, Parental_Involvement: parentalInvolvement, School_Type: schoolType,
-        Peer_Influence: peerInfluence, Extracurricular_Activities: extracurricularActivities, Learning_Disabilities: learningDisabilities,
-        Internet_Access: internetAccess, Access_to_Resources: accessToResources, Teacher_Quality: teacherQuality,
-        Family_Income: familyIncome, Tutoring_Sessions: tutoringSessions, Physical_Activity: physicalActivity,
+        horasEstudo: Number(horasEstudo), 
+        sono: Number(horasSono), 
+        motivacao: Number(motivacao), 
+        frequencia: Number(frequencia),
+        Previous_Scores: Number(previousScores), 
+        Distance_from_Home: distanceFromHome, 
+        Gender: gender,
+        Parental_Education_Level: parentalEducationLevel, 
+        Parental_Involvement: parentalInvolvement, 
+        School_Type: schoolType,
+        Peer_Influence: peerInfluence, 
+        Extracurricular_Activities: extracurricularActivities, 
+        Learning_Disabilities: learningDisabilities,
+        Internet_Access: internetAccess, 
+        Access_to_Resources: accessToResources, 
+        Teacher_Quality: teacherQuality,
+        Family_Income: familyIncome, 
+        Tutoring_Sessions: tutoringSessions, 
+        Physical_Activity: physicalActivity,
       } as any);
       setSuccessMessage("Todos os dados foram salvos com sucesso!");
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
-      Alert.alert("Erro", "Erro ao salvar dados.");
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || err?.message || "Erro ao salvar dados.";
+      setValidationError(errorMsg);
+      Alert.alert("Erro", errorMsg);
     }
   };
 
   const handlePredictPerformance = async () => {
-    if (!validateAll() || !user?.IDUser) {
+    if (!user?.IDUser) {
+      Alert.alert("Erro", "Usuário não autenticado.");
+      return;
+    }
+    if (!validateAll()) {
       Alert.alert("Atenção", "Por favor, preencha todos os campos para obter uma predição precisa.");
       return;
     }
     setPredictionLoading(true);
     setPredictionError(null);
     setPredictionResult(null);
+    setValidationError(null);
     try {
       const result = await PredictionService.predictPerformance({
-        horasEstudo: Number(horasEstudo), sono: Number(horasSono), motivacao: Number(motivacao), frequencia: Number(frequencia),
-        Previous_Scores: Number(previousScores), Distance_from_Home: distanceFromHome, Gender: gender,
-        Parental_Education_Level: parentalEducationLevel, Parental_Involvement: parentalInvolvement, School_Type: schoolType,
-        Peer_Influence: peerInfluence, Extracurricular_Activities: extracurricularActivities, Learning_Disabilities: learningDisabilities,
-        Internet_Access: internetAccess, Access_to_Resources: accessToResources, Teacher_Quality: teacherQuality,
-        Family_Income: familyIncome, Tutoring_Sessions: tutoringSessions, Physical_Activity: physicalActivity,
+        horasEstudo: Number(horasEstudo), 
+        sono: Number(horasSono), 
+        motivacao: Number(motivacao), 
+        frequencia: Number(frequencia),
+        Previous_Scores: Number(previousScores), 
+        Distance_from_Home: distanceFromHome, 
+        Gender: gender,
+        Parental_Education_Level: parentalEducationLevel, 
+        Parental_Involvement: parentalInvolvement, 
+        School_Type: schoolType,
+        Peer_Influence: peerInfluence, 
+        Extracurricular_Activities: extracurricularActivities, 
+        Learning_Disabilities: learningDisabilities,
+        Internet_Access: internetAccess, 
+        Access_to_Resources: accessToResources, 
+        Teacher_Quality: teacherQuality,
+        Family_Income: familyIncome, 
+        Tutoring_Sessions: tutoringSessions, 
+        Physical_Activity: physicalActivity,
       });
       setPredictionResult(result);
     } catch (err: any) {
-      setPredictionError(err.message || "Erro ao gerar predição de desempenho.");
-      Alert.alert("Erro", err.message || "Erro ao gerar predição de desempenho.");
+      const errorMsg = err?.response?.data?.message || err?.message || "Erro ao gerar predição de desempenho.";
+      setPredictionError(errorMsg);
+      Alert.alert("Erro", errorMsg);
     } finally {
       setPredictionLoading(false);
     }

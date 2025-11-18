@@ -14,15 +14,10 @@
 // - iOS Simulator: use http://localhost:8080/api
 // - Web: use http://localhost:8080/api
 
-// Tenta usar variável de ambiente, senão usa o padrão
-const API_URL = 'http://192.168.15.10:8080/api'; // ← SUBSTITUA pelo seu IP
-
-// Se estiver usando no celular físico, descomente e substitua pelo seu IP:
-// const API_URL = 'http://192.168.1.100:8080/api'; // ← SUBSTITUA 192.168.1.100 pelo seu IP
-const API_URL = 'http://:8080/api'; // ← SUBSTITUA pelo seu IP
-
-// Se estiver usando no celular físico, descomente e substitua pelo seu IP:
-// const API_URL = 'http://:8080/api'; // ← SUBSTITUA 192.168.1.100 pelo seu IP
+// URL da API - substitua pelo seu IP se necessário
+// Para celular físico: use o IP da sua máquina (ex: http://192.168.15.10:8080/api)
+// Para emulador Android: use http://10.0.2.2:8080/api
+// Para iOS Simulator/Web: use http://localhost:8080/api
+const API_URL = 'http://192.168.15.10:8080/api'; // ← SUBSTITUA pelo seu IP se necessário
 
 export { API_URL };
-
