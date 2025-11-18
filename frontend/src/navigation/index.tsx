@@ -11,9 +11,12 @@ import LoginScreen from '../screens/LoginScreen';
 import DashboardIESScreen from '../screens/DashboardIESScreen';
 import SimulationResultScreen from '../screens/SimulationResultScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
+import StudentDashboardScreen from '../screens/StudentDashboardScreen';
 import HabitsScreen from '../screens/HabitScreen';
 import EngagementScreen from '../screens/EngagementScreen';
 import ClassStudentsScreen from '../screens/ClassStudentsScreen';
+import StudentFeedbacksScreen from '../screens/StudentFeedbacksScreen';
+import StudentProfileScreen from '../screens/StudentProfileScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -24,6 +27,8 @@ export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
   DashboardIES: undefined;
+  StudentDashboard: undefined;
+  StudentTabs: undefined;
   StudentCard: undefined;
   ClassPerformance: undefined;
   Habits: undefined;
@@ -58,7 +63,15 @@ export type RootTabParamList = {
   Configurações: undefined;
 };
 
+export type StudentTabParamList = {
+  Home: undefined;
+  Formulário: undefined;
+  Feedbacks: undefined;
+  Perfil: undefined;
+};
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
+const StudentTab = createBottomTabNavigator<StudentTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Logout button component
@@ -136,6 +149,67 @@ function MainTabs({ navigation: parentNavigation }: any) {
   );
 }
 
+function StudentTabs({ navigation: parentNavigation }: any) {
+  return (
+    <StudentTab.Navigator
+      initialRouteName="Home"
+      screenOptions={{
+        headerTitleAlign: 'center',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { borderTopWidth: 0, elevation: 0 },
+      }}
+    >
+      <StudentTab.Screen
+        name="Home"
+        component={StudentDashboardScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="home" size={size} color={color} />
+          ),
+          tabBarLabel: 'Home',
+        }}
+      />
+      <StudentTab.Screen
+        name="Formulário"
+        component={HabitsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Formulario',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="file-text" size={size} color={color} />
+          ),
+          tabBarLabel: 'Formulário',
+        }}
+      />
+      <StudentTab.Screen
+        name="Feedbacks"
+        component={StudentFeedbacksScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Feedbacks',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="message-circle" size={size} color={color} />
+          ),
+          tabBarLabel: 'Feedbacks',
+        }}
+      />
+      <StudentTab.Screen
+        name="Perfil"
+        component={StudentProfileScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Perfil',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="user" size={size} color={color} />
+          ),
+          tabBarLabel: 'Perfil',
+        }}
+      />
+    </StudentTab.Navigator>
+  );
+}
+
 export default function RootNavigator() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
 
@@ -164,6 +238,23 @@ export default function RootNavigator() {
             headerRight: () => <LogoutButton onPress={async () => await logout()} />,
           }}
         />
+      ) : user?.Role === 'STUDENT' ? (
+        <>
+          <Stack.Screen
+            name="StudentDashboard"
+            component={StudentTabs}
+          />
+          <Stack.Screen
+            name="Habits"
+            component={HabitsScreen}
+            options={{ headerShown: true, headerTitle: 'Formulario' }}
+          />
+          <Stack.Screen
+            name="Engagement"
+            component={EngagementScreen}
+            options={{ headerShown: true, headerTitle: 'Predição de Evasão' }}
+          />
+        </>
       ) : (
         <>
           <Stack.Screen
