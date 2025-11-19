@@ -17,6 +17,7 @@ import EngagementScreen from '../screens/EngagementScreen';
 import ClassStudentsScreen from '../screens/ClassStudentsScreen';
 import StudentFeedbacksScreen from '../screens/StudentFeedbacksScreen';
 import StudentProfileScreen from '../screens/StudentProfileScreen';
+import ClassesTeacherScreen from '../screens/ClassesTeacherScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -57,6 +58,7 @@ export type RootStackParamList = {
 };
 
 export type RootTabParamList = {
+  Turmas: undefined;
   Dashboard: undefined;
   Usuários: undefined;
   Cursos: undefined;
@@ -96,9 +98,14 @@ function MainTabs({ navigation: parentNavigation }: any) {
     parentNavigation.replace('Login');
   };
 
+  const handleAddClass = () => {
+    // TODO: Implementar navegação para tela de adicionar turma
+    console.log('Adicionar nova turma');
+  };
+
   return (
     <Tab.Navigator
-      initialRouteName="Dashboard"
+      initialRouteName="Turmas"
       // ⚠️ Use função aqui para garantir que o header pegue o navigation correto
       screenOptions={({ navigation }) => ({
         headerTitleAlign: 'center',
@@ -108,6 +115,30 @@ function MainTabs({ navigation: parentNavigation }: any) {
         headerRight: () => <LogoutButton onPress={handleLogout} />,
       })}
     >
+      <Tab.Screen
+        name="Turmas"
+        component={ClassesTeacherScreen}
+        options={{
+          headerTitle: 'Turmas',
+          tabBarLabel: 'Turmas',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="users" color={color} size={size} />
+          ),
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={handleAddClass}
+                style={{ marginRight: 16 }}
+                accessibilityRole="button"
+                accessibilityLabel="Adicionar turma"
+              >
+                <Feather name="plus" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <LogoutButton onPress={handleLogout} />
+            </View>
+          ),
+        }}
+      />
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
