@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build-test-deploy:
@@ -25,6 +28,11 @@ jobs:
       # 3️⃣ Instalar dependências
       - name: Instalar dependências
         run: npm ci
+        working-directory: ./backend
+      
+      # 3.5️⃣ Atualizar baseline-browser-mapping (opcional, para remover warning)
+      - name: Atualizar baseline-browser-mapping
+        run: npm install baseline-browser-mapping@latest --save-dev || echo "⚠️ Não foi possível atualizar baseline-browser-mapping"
         working-directory: ./backend
 
       # 4️⃣ Rodar Lint (opcional)

@@ -7,7 +7,19 @@ module.exports = {
     '**/*.(test|spec).+(ts|tsx|js)'
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: {
+        target: 'ES2020',
+        module: 'commonjs',
+        esModuleInterop: true,
+        skipLibCheck: true,
+        strict: true,
+        moduleResolution: 'node',
+        resolveJsonModule: true,
+        allowSyntheticDefaultImports: true
+      },
+      isolatedModules: false
+    }],
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -16,5 +28,9 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   testTimeout: 10000,
-  verbose: true
+  verbose: true,
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))'
+  ]
 };
+

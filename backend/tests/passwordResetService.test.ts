@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { PasswordResetService } from '../src/service/passwordResetService'
+import bcrypt from 'bcrypt'
 
 jest.mock('../src/config/database', () => {
   const mockPrisma = {
@@ -26,12 +27,12 @@ jest.mock('bcrypt', () => ({
 }))
 
 const { prisma } = require('../src/config/database')
-const bcrypt = require('bcrypt')
+
 const PasswordResetStatus = {
   PENDING: 'PENDING',
   USED: 'USED',
   EXPIRED: 'EXPIRED'
-} as const
+} as const;
 
 describe('PasswordResetService.generateAndStoreOtp', () => {
   const user = {
