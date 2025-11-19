@@ -18,6 +18,7 @@ import ClassStudentsScreen from '../screens/ClassStudentsScreen';
 import StudentFeedbacksScreen from '../screens/StudentFeedbacksScreen';
 import StudentProfileScreen from '../screens/StudentProfileScreen';
 import ClassesTeacherScreen from '../screens/ClassesTeacherScreen';
+import AddUserScreen from '../screens/AddUserScreen';
 
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
@@ -27,6 +28,7 @@ import { useAuth } from '../context/AuthContext';
 export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
+  AdminTabs: undefined;
   DashboardIES: undefined;
   StudentDashboard: undefined;
   StudentTabs: undefined;
@@ -34,6 +36,7 @@ export type RootStackParamList = {
   ClassPerformance: undefined;
   Habits: undefined;
   Engagement: undefined;
+  AddUser: undefined;
   ClassStudents: {
     subjectId: string;
     subjectName?: string;
@@ -65,6 +68,13 @@ export type RootTabParamList = {
   Configurações: undefined;
 };
 
+export type AdminTabParamList = {
+  Dashboard: undefined;
+  Usuários: undefined;
+  Cursos: undefined;
+  Configurações: undefined;
+};
+
 export type StudentTabParamList = {
   Home: undefined;
   Formulário: undefined;
@@ -72,6 +82,7 @@ export type StudentTabParamList = {
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
+const AdminTab = createBottomTabNavigator<AdminTabParamList>();
 const StudentTab = createBottomTabNavigator<StudentTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -179,6 +190,86 @@ function MainTabs({ navigation: parentNavigation }: any) {
   );
 }
 
+function AdminTabs({ navigation: parentNavigation }: any) {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    parentNavigation.replace('Login');
+  };
+
+  return (
+    <AdminTab.Navigator
+      initialRouteName="Dashboard"
+      screenOptions={({ navigation }) => ({
+        headerTitleAlign: 'center',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { borderTopWidth: 0, elevation: 0 },
+        headerRight: () => <LogoutButton onPress={handleLogout} />,
+      })}
+    >
+      <AdminTab.Screen
+        name="Dashboard"
+        component={DashboardIESScreen}
+        options={{
+          headerTitle: 'Dashboard',
+          tabBarLabel: 'Dashboard',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="home" color={color} size={size} />
+          ),
+        }}
+      />
+      <AdminTab.Screen
+        name="Usuários"
+        component={UsersScreen}
+        options={({ navigation }) => ({
+          headerTitle: 'Usuários',
+          tabBarLabel: 'Usuários',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="users" color={color} size={size} />
+          ),
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('AddUser')}
+                style={{ marginRight: 16 }}
+                accessibilityRole="button"
+                accessibilityLabel="Adicionar usuário"
+              >
+                <Feather name="plus" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <LogoutButton onPress={handleLogout} />
+            </View>
+          ),
+        })}
+      />
+      <AdminTab.Screen
+        name="Cursos"
+        component={CoursesScreen}
+        options={{
+          headerTitle: 'Cursos',
+          tabBarLabel: 'Cursos',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="book-open" color={color} size={size} />
+          ),
+        }}
+      />
+      <AdminTab.Screen
+        name="Configurações"
+        component={SettingsScreen}
+        options={{
+          headerTitle: 'Configurações',
+          tabBarLabel: 'Configurações',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="settings" color={color} size={size} />
+          ),
+        }}
+      />
+    </AdminTab.Navigator>
+  );
+}
+
 function StudentTabs({ navigation: parentNavigation }: any) {
   return (
     <StudentTab.Navigator
@@ -247,15 +338,21 @@ export default function RootNavigator() {
           component={LoginScreen}
         />
       ) : user?.Role === 'ADMIN' ? (
-        <Stack.Screen
-          name="DashboardIES"
-          component={DashboardIESScreen}
-          options={{
-            headerTitle: 'Dashboard IES',
-            headerShown: true,
-            headerRight: () => <LogoutButton onPress={async () => await logout()} />,
-          }}
-        />
+        <>
+          <Stack.Screen
+            name="AdminTabs"
+            component={AdminTabs}
+          />
+          <Stack.Screen
+            name="AddUser"
+            component={AddUserScreen}
+            options={{
+              headerTitle: 'Adicionar Usuário',
+              headerShown: true,
+              headerBackTitleVisible: false,
+            }}
+          />
+        </>
       ) : user?.Role === 'STUDENT' ? (
         <>
           <Stack.Screen
