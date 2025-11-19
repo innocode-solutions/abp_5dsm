@@ -2,7 +2,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { TouchableOpacity, ActivityIndicator, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-
 import DashboardScreen from '../screens/DashboardScreen';
 import UsersScreen from '../screens/UsersScreen';
 import CoursesScreen from '../screens/CoursesScreen';
@@ -24,6 +23,7 @@ import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
 import ClassPerformance from '~/screens/ClassPerformance';
 import { useAuth } from '../context/AuthContext';
+import CoursesIESScreen from '~/screens/CoursesIESScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -232,7 +232,7 @@ function AdminTabs({ navigation: parentNavigation }: any) {
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TouchableOpacity
-                onPress={() => navigation.navigate('AddUser')}
+                onPress={() => parentNavigation.navigate('AddUser')}
                 style={{ marginRight: 16 }}
                 accessibilityRole="button"
                 accessibilityLabel="Adicionar usuário"
@@ -246,7 +246,7 @@ function AdminTabs({ navigation: parentNavigation }: any) {
       />
       <AdminTab.Screen
         name="Cursos"
-        component={CoursesScreen}
+        component={CoursesIESScreen}
         options={{
           headerTitle: 'Cursos',
           tabBarLabel: 'Cursos',
@@ -349,7 +349,7 @@ export default function RootNavigator() {
             options={{
               headerTitle: 'Adicionar Usuário',
               headerShown: true,
-              headerBackTitleVisible: false,
+              headerBackTitle: '',
             }}
           />
         </>
@@ -395,8 +395,8 @@ export default function RootNavigator() {
             name="Engagement"
             component={EngagementScreen}
             options={{ headerShown: true, headerTitle: 'Predição de Evasão' }}
-            />
-            <Stack.Screen
+          />
+          <Stack.Screen
             name="ClassStudents"
             component={ClassStudentsScreen}
             options={{ headerShown: true, headerTitle: 'Alunos da Turma' }}
