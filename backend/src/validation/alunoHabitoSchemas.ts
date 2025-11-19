@@ -17,7 +17,7 @@ const ResourceAccess = z.enum(['Poor', 'Average', 'Good']);
 
 // Schema para campos básicos de hábitos (compatibilidade com versão anterior)
 export const AlunoHabitoBasicoSchema = z.object({
-  horasEstudo: z.number().min(0).max(12, 'Horas de estudo deve ser entre 0 e 12'),
+  horasEstudo: z.number().min(0).max(84, 'Horas de estudo semanais deve ser entre 0 e 84 (máximo ~12h por dia)'),
   sono: z.number().min(0).max(12, 'Horas de sono deve ser entre 0 e 12'),
   motivacao: z.number().int().min(0).max(10, 'Motivação deve ser entre 0 e 10'),
   frequencia: z.number().min(0).max(100, 'Frequência deve ser entre 0 e 100'),
@@ -71,7 +71,7 @@ export const AlunoHabitoDesempenhoSchema = z.object({
 // Schema completo que combina todos os campos (para salvar no banco)
 export const AlunoHabitoCompletoSchema = z.object({
   // Campos básicos
-  horasEstudo: z.number().min(0).max(12).optional(),
+  horasEstudo: z.number().min(0).max(84).optional(), // Horas semanais (0-84 = até ~12h por dia)
   sono: z.number().min(0).max(12).optional(),
   motivacao: z.number().int().min(0).max(10).optional(),
   frequencia: z.number().min(0).max(100).optional(),

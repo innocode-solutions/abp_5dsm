@@ -28,21 +28,21 @@ export default function StudentFeedbacksScreen() {
       // Mock data - substituir por API real quando disponível
       setFeedbacks([
         {
-          disciplina: 'Matemática',
-          descricao: 'Excelente progresso na álgebra',
-          professor: 'Professor: Dr. Silva',
+          disciplina: 'Aprendizagem de Máquina',
+          descricao: 'Continue praticando os algoritmos de classificação e regressão',
+          professor: 'Professor: Leandro',
           data: '15/01/2024',
         },
         {
-          disciplina: 'Física',
-          descricao: 'Bom trabalho em mecânica',
-          professor: 'Professor: Dra. Oliveira',
+          disciplina: 'Computação em Nuvem',
+          descricao: 'Bom trabalho nos exercícios de AWS e Azure',
+          professor: 'Professor: Ronaldo',
           data: '12/01/2024',
         },
         {
-          disciplina: 'Química',
-          descricao: 'Continue estudando as reações orgânicas',
-          professor: 'Professor: Dr. Costa',
+          disciplina: 'Segurança no Desenvolvimento de aplicações',
+          descricao: 'Excelente compreensão dos conceitos de segurança e criptografia',
+          professor: 'Professor: Arley',
           data: '10/01/2024',
         },
       ]);

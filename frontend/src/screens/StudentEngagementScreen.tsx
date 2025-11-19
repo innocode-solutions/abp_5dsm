@@ -5,6 +5,8 @@ import { RootStackParamList } from '../navigation';
 import { PredictionService, EngagementData, PredictionResponse } from '../service/PredictionService';
 import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
+import { generateDropoutFeedback } from '../service/FeedbackService';
+import { Feather } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Engagement'>;
 
@@ -122,10 +124,59 @@ const EngagementScreen: React.FC<Props> = () => {
               <Text style={styles.infoLabel}>Classificação:</Text>
               <Text style={styles.infoValue}>{predictionResult.data.Classificacao}</Text>
             </View>
-            <View style={styles.infoCard}>
-              <Text style={styles.infoLabel}>Explicação:</Text>
-              <Text style={styles.infoValue}>{predictionResult.data.Explicacao}</Text>
-            </View>
+            {(() => {
+              const feedback = generateDropoutFeedback(
+                predictionResult.data.Explicacao || '',
+                predictionResult.data.Probabilidade,
+                predictionResult.data.Classificacao
+              );
+              
+              return (
+                <View style={styles.feedbackContainer}>
+                  <View style={styles.feedbackHeader}>
+                    <Feather name="info" size={20} color={getRiskColor(predictionResult.data.Probabilidade)} />
+                    <Text style={styles.feedbackTitle}>{feedback.title}</Text>
+                  </View>
+                  <Text style={styles.feedbackMessage}>{feedback.message}</Text>
+                  
+                  {feedback.features.length > 0 && (
+                    <View style={styles.featuresContainer}>
+                      <Text style={styles.featuresTitle}>Principais fatores:</Text>
+                      {feedback.features.map((feature, idx) => (
+                        <View key={idx} style={styles.featureItem}>
+                          <Feather 
+                            name={feature.influence === 'positiva' ? 'arrow-up-circle' : 'arrow-down-circle'} 
+                            size={16} 
+                            color={feature.influence === 'positiva' ? '#4CAF50' : '#F44336'} 
+                          />
+                          <Text style={styles.featureText}>
+                            <Text style={styles.featureName}>{feature.feature}</Text>
+                            {': '}
+                            <Text style={[
+                              styles.featureValue,
+                              { color: feature.influence === 'positiva' ? '#4CAF50' : '#F44336' }
+                            ]}>
+                              {feature.value} ({feature.influence})
+                            </Text>
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  
+                  {feedback.suggestions.length > 0 && (
+                    <View style={styles.suggestionsContainer}>
+                      <Text style={styles.suggestionsTitle}>💡 Sugestões para reduzir o risco:</Text>
+                      {feedback.suggestions.map((suggestion, idx) => (
+                        <View key={idx} style={styles.suggestionItem}>
+                          <Text style={styles.suggestionText}>• {suggestion}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
           </View>
         )}
 
@@ -161,6 +212,20 @@ const styles = StyleSheet.create({
   infoCard: { backgroundColor: '#fff', borderRadius: 8, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#E5E7EB' },
   infoLabel: { fontSize: 14, color: colors.muted, marginBottom: 4 },
   infoValue: { fontSize: 16, color: colors.text },
+  feedbackContainer: { backgroundColor: '#FFF3E0', borderRadius: 12, padding: 16, marginTop: 12, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#FF9800' },
+  feedbackHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  feedbackTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginLeft: 8 },
+  feedbackMessage: { fontSize: 15, color: colors.text, lineHeight: 22, marginBottom: 12 },
+  featuresContainer: { marginTop: 12, marginBottom: 12 },
+  featuresTitle: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 8 },
+  featureItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  featureText: { fontSize: 14, color: colors.text, marginLeft: 8, flex: 1 },
+  featureName: { fontWeight: '600' },
+  featureValue: { fontWeight: '500' },
+  suggestionsContainer: { marginTop: 12, backgroundColor: '#fff', borderRadius: 8, padding: 12 },
+  suggestionsTitle: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 8 },
+  suggestionItem: { marginBottom: 4 },
+  suggestionText: { fontSize: 14, color: colors.text, lineHeight: 20 },
 });
 
 export default EngagementScreen;

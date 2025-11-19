@@ -10,14 +10,16 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { StudentTabParamList } from '../navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { StudentTabParamList, RootStackParamList } from '../navigation';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
 import { apiConnection } from '../api/apiConnection';
 import { getToken } from '../service/tokenStore';
 
-type StudentDashboardNavigationProp = BottomTabNavigationProp<StudentTabParamList, 'Home'>;
+type StudentDashboardNavigationProp = BottomTabNavigationProp<StudentTabParamList, 'Home'> & 
+  NativeStackNavigationProp<RootStackParamList>;
 
 interface Feedback {
   disciplina: string;
@@ -46,14 +48,14 @@ export default function StudentDashboardScreen() {
       // Feedbacks mockados - substituir por API real quando disponível
       setFeedbacks([
         {
-          disciplina: 'Matemática',
-          descricao: 'Excelente progresso na álgebra',
-          professor: 'Professor: Dr. Silva',
+          disciplina: 'Aprendizagem de Máquina',
+          descricao: 'Continue praticando os algoritmos de classificação',
+          professor: 'Professor: Leandro',
         },
         {
-          disciplina: 'Física',
-          descricao: 'Bom trabalho em mecânica',
-          professor: 'Professor: Dra. Oliveira',
+          disciplina: 'Computação em Nuvem',
+          descricao: 'Bom trabalho nos exercícios de AWS',
+          professor: 'Professor: Ronaldo',
         },
       ]);
     } catch (error) {
@@ -118,13 +120,22 @@ export default function StudentDashboardScreen() {
           ))}
         </View>
 
-        {/* Answer Form Button */}
+        {/* Action Buttons */}
+        <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={styles.formButton}
             onPress={() => navigation.navigate('Formulário')}
           >
             <Text style={styles.formButtonText}>Responder Formulário</Text>
           </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.evasionButton}
+            onPress={() => navigation.navigate('Engagement')}
+          >
+            <Text style={styles.evasionButtonText}>Ver Chance de Evasão</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -246,6 +257,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 12,
   },
+  buttonsContainer: {
+    gap: 12,
+  },
   formButton: {
     backgroundColor: '#4A90E2',
     borderRadius: 12,
@@ -258,6 +272,22 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   formButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  evasionButton: {
+    backgroundColor: '#E53935',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  evasionButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
