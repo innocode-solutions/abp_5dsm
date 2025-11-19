@@ -12,8 +12,8 @@ import DashboardIESScreen from '../screens/DashboardIESScreen';
 import SimulationResultScreen from '../screens/SimulationResultScreen';
 import StudentCardScreen from '../screens/StudentCardScreen';
 import StudentDashboardScreen from '../screens/StudentDashboardScreen';
-import HabitsScreen from '../screens/HabitScreen';
-import EngagementScreen from '../screens/EngagementScreen';
+import HabitsScreen from '../screens/StudentHabitScreen';
+import EngagementScreen from '../screens/StudentEngagementScreen';
 import ClassStudentsScreen from '../screens/ClassStudentsScreen';
 import StudentFeedbacksScreen from '../screens/StudentFeedbacksScreen';
 import StudentProfileScreen from '../screens/StudentProfileScreen';
@@ -69,7 +69,6 @@ export type StudentTabParamList = {
   Home: undefined;
   Formulário: undefined;
   Feedbacks: undefined;
-  Perfil: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -223,18 +222,6 @@ function StudentTabs({ navigation: parentNavigation }: any) {
             <Feather name="message-circle" size={size} color={color} />
           ),
           tabBarLabel: 'Feedbacks',
-        }}
-      />
-      <StudentTab.Screen
-        name="Perfil"
-        component={StudentProfileScreen}
-        options={{
-          headerShown: true,
-          headerTitle: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
-          ),
-          tabBarLabel: 'Perfil',
         }}
       />
     </StudentTab.Navigator>

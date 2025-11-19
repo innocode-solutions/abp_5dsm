@@ -15,6 +15,8 @@ import { PredictionService } from "../service/PredictionService";
 import { useHabit } from "../context/HabitContext";
 import { useAuth } from "../context/AuthContext";
 import colors from "../theme/colors";
+import { generatePerformanceFeedback } from "../service/FeedbackService";
+import { Feather } from "@expo/vector-icons";
 
 export interface HabitData {
   sono: number;
@@ -130,7 +132,7 @@ const HabitScreen: React.FC = () => {
       const n = Number(v);
       return isNaN(n) || n < min || n > max; // Fora do range
     };
-    if (num(horasEstudo, 0, 12)) { setValidationError("Horas de estudo devem estar entre 0 e 12."); return false; }
+    if (num(horasEstudo, 0, 84)) { setValidationError("Horas de estudo semanais devem estar entre 0 e 84 (máximo ~12h por dia)."); return false; }
     if (num(horasSono, 0, 12)) { setValidationError("Horas de sono devem estar entre 0 e 12."); return false; }
     if (num(motivacao, 0, 10)) { setValidationError("Motivação deve estar entre 0 e 10."); return false; }
     if (num(frequencia, 0, 100)) { setValidationError("Frequência deve estar entre 0 e 100%."); return false; }
@@ -312,8 +314,9 @@ const HabitScreen: React.FC = () => {
         {currentSection === 'basic' && (
           <View>
             <Text style={styles.sectionTitle}>Hábitos Básicos</Text>
-            <Text style={styles.label}>Horas de Estudo Diárias (0-12):</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={horasEstudo} onChangeText={setHorasEstudo} placeholder="Ex: 6" />
+            <Text style={styles.label}>Horas de Estudo Semanais:</Text>
+            <Text style={styles.description}>Quantas horas você estuda por semana? (Ex: 35 horas = ~5h por dia)</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={horasEstudo} onChangeText={setHorasEstudo} placeholder="Ex: 35" />
             <Text style={styles.label}>Horas de Sono (0-12):</Text>
             <TextInput style={styles.input} keyboardType="numeric" value={horasSono} onChangeText={setHorasSono} placeholder="Ex: 8" />
             <Text style={styles.label}>Nível de Motivação (0-10):</Text>
@@ -408,12 +411,59 @@ const HabitScreen: React.FC = () => {
                 <Text style={styles.infoLabel}>Confiança:</Text>
                 <Text style={styles.infoValue}>{predictionResult.prediction?.probabilidade || 0}%</Text>
               </View>
-              {predictionResult.prediction?.explicacao && (
-                <View style={styles.infoCard}>
-                  <Text style={styles.infoLabel}>Explicação:</Text>
-                  <Text style={styles.infoValue}>{predictionResult.prediction.explicacao}</Text>
-                </View>
-              )}
+              {(() => {
+                const feedback = generatePerformanceFeedback(
+                  predictionResult.prediction?.explicacao || '',
+                  predictionResult.prediction?.notaPrevista,
+                  predictionResult.prediction?.classificacao
+                );
+                
+                return (
+                  <View style={styles.feedbackContainer}>
+                    <View style={styles.feedbackHeader}>
+                      <Feather name="info" size={20} color={colors.primary || "#4A90E2"} />
+                      <Text style={styles.feedbackTitle}>{feedback.title}</Text>
+                    </View>
+                    <Text style={styles.feedbackMessage}>{feedback.message}</Text>
+                    
+                    {feedback.features.length > 0 && (
+                      <View style={styles.featuresContainer}>
+                        <Text style={styles.featuresTitle}>Principais fatores:</Text>
+                        {feedback.features.map((feature, idx) => (
+                          <View key={idx} style={styles.featureItem}>
+                            <Feather 
+                              name={feature.influence === 'positiva' ? 'arrow-up-circle' : 'arrow-down-circle'} 
+                              size={16} 
+                              color={feature.influence === 'positiva' ? '#4CAF50' : '#F44336'} 
+                            />
+                            <Text style={styles.featureText}>
+                              <Text style={styles.featureName}>{feature.feature}</Text>
+                              {': '}
+                              <Text style={[
+                                styles.featureValue,
+                                { color: feature.influence === 'positiva' ? '#4CAF50' : '#F44336' }
+                              ]}>
+                                {feature.value} ({feature.influence})
+                              </Text>
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    
+                    {feedback.suggestions.length > 0 && (
+                      <View style={styles.suggestionsContainer}>
+                        <Text style={styles.suggestionsTitle}>💡 Sugestões para melhorar:</Text>
+                        {feedback.suggestions.map((suggestion, idx) => (
+                          <View key={idx} style={styles.suggestionItem}>
+                            <Text style={styles.suggestionText}>• {suggestion}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                );
+              })()}
             </View>
           );
         })()}
@@ -458,6 +508,20 @@ const styles = StyleSheet.create({
   infoCard: { backgroundColor: "#fff", borderRadius: 8, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#E5E7EB" },
   infoLabel: { fontSize: 14, color: colors.muted || "#666", marginBottom: 4 },
   infoValue: { fontSize: 16, color: colors.text || "#333" },
+  feedbackContainer: { backgroundColor: "#E3F2FD", borderRadius: 12, padding: 16, marginTop: 12, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.primary || "#4A90E2" },
+  feedbackHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  feedbackTitle: { fontSize: 18, fontWeight: "700", color: colors.text || "#333", marginLeft: 8 },
+  feedbackMessage: { fontSize: 15, color: colors.text || "#333", lineHeight: 22, marginBottom: 12 },
+  featuresContainer: { marginTop: 12, marginBottom: 12 },
+  featuresTitle: { fontSize: 14, fontWeight: "600", color: colors.text || "#333", marginBottom: 8 },
+  featureItem: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  featureText: { fontSize: 14, color: colors.text || "#333", marginLeft: 8, flex: 1 },
+  featureName: { fontWeight: "600" },
+  featureValue: { fontWeight: "500" },
+  suggestionsContainer: { marginTop: 12, backgroundColor: "#fff", borderRadius: 8, padding: 12 },
+  suggestionsTitle: { fontSize: 14, fontWeight: "600", color: colors.text || "#333", marginBottom: 8 },
+  suggestionItem: { marginBottom: 4 },
+  suggestionText: { fontSize: 14, color: colors.text || "#333", lineHeight: 20 },
 });
 
 export default HabitScreen;
