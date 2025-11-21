@@ -3,10 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { TouchableOpacity, ActivityIndicator, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import DashboardScreen from '../screens/DashboardScreen';
 import UsersScreen from '../screens/UsersScreen';
-import CoursesScreen from '../screens/CoursesScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardIESScreen from '../screens/DashboardIESScreen';
@@ -18,6 +16,7 @@ import StudentFeedbacksScreen from '../screens/StudentFeedbacksScreen';
 import StudentProfileScreen from '../screens/StudentProfileScreen';
 
 import ClassesTeacherScreen from '../screens/ClassesTeacherScreen';
+import AddUserScreen from '../screens/AddUserScreen';
 import TeacherClassOverviewScreen from '../screens/TeacherClassOverviewScreen';
 import ClassPerformance from '../screens/ClassPerformance';
 import ClassStudentsScreen from '../screens/ClassStudentsScreen';
@@ -28,6 +27,7 @@ import StudentCardScreen from '../screens/StudentCardScreen';
 import TabBarIcon from '../components/TabBarIcon';
 import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
+import CoursesIESScreen from '~/screens/CoursesIESScreen';
 import TeacherStudentsScreen from '../screens/TeacherStudentScreen';
 import TeacherReportsScreen from '../screens/TeacherReportScreen';
 import StudentPerformanceScreen from '../screens/StudentPerformanceScreen';
@@ -37,6 +37,8 @@ import StudentPerformanceScreen from '../screens/StudentPerformanceScreen';
 // ====================================================
 export type RootStackParamList = {
   Login: undefined;
+  MainTabs: undefined;
+  AdminTabs: undefined;
 
   // ADMIN
   DashboardIES: undefined;
@@ -46,6 +48,7 @@ export type RootStackParamList = {
   StudentTabs: undefined;
   Habits: undefined;
   Engagement: undefined;
+  AddUser: undefined;
 
   // TEACHER
   TeacherClasses: undefined;
@@ -79,6 +82,13 @@ export type RootTabParamList = {
   Cursos: undefined;
 };
 
+export type AdminTabParamList = {
+  Dashboard: undefined;
+  Usuários: undefined;
+  Cursos: undefined;
+  Configurações: undefined;
+};
+
 export type StudentTabParamList = {
   Home: undefined;
   Formulário: undefined;
@@ -89,6 +99,7 @@ export type StudentTabParamList = {
 // =============== NAVIGATORS =========================
 // ====================================================
 const Tab = createBottomTabNavigator<RootTabParamList>();
+const AdminTab = createBottomTabNavigator<AdminTabParamList>();
 const StudentTab = createBottomTabNavigator<StudentTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -166,7 +177,7 @@ function TeacherTabs() {
           ),
         }}
       />
-      <Tab.Screen
+      <AdminTab.Screen
         name="Configurações"
         component={SettingsScreen}
         options={{
@@ -177,7 +188,87 @@ function TeacherTabs() {
           ),
         }}
       />
-    </Tab.Navigator>
+    </AdminTab.Navigator>
+  );
+}
+
+function AdminTabs({ navigation: parentNavigation }: any) {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    parentNavigation.replace('Login');
+  };
+
+  return (
+    <AdminTab.Navigator
+      initialRouteName="Dashboard"
+      screenOptions={({ navigation }) => ({
+        headerTitleAlign: 'center',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { borderTopWidth: 0, elevation: 0 },
+        headerRight: () => <LogoutButton onPress={handleLogout} />,
+      })}
+    >
+      <AdminTab.Screen
+        name="Dashboard"
+        component={DashboardIESScreen}
+        options={{
+          headerTitle: 'Dashboard',
+          tabBarLabel: 'Dashboard',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="home" color={color} size={size} />
+          ),
+        }}
+      />
+      <AdminTab.Screen
+        name="Usuários"
+        component={UsersScreen}
+        options={({ navigation }) => ({
+          headerTitle: 'Usuários',
+          tabBarLabel: 'Usuários',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="users" color={color} size={size} />
+          ),
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={() => parentNavigation.navigate('AddUser')}
+                style={{ marginRight: 16 }}
+                accessibilityRole="button"
+                accessibilityLabel="Adicionar usuário"
+              >
+                <Feather name="plus" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <LogoutButton onPress={handleLogout} />
+            </View>
+          ),
+        })}
+      />
+      <AdminTab.Screen
+        name="Cursos"
+        component={CoursesIESScreen}
+        options={{
+          headerTitle: 'Cursos',
+          tabBarLabel: 'Cursos',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="book-open" color={color} size={size} />
+          ),
+        }}
+      />
+      <AdminTab.Screen
+        name="Configurações"
+        component={SettingsScreen}
+        options={{
+          headerTitle: 'Configurações',
+          tabBarLabel: 'Configurações',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="settings" color={color} size={size} />
+          ),
+        }}
+      />
+    </AdminTab.Navigator>
   );
 }
 
@@ -293,6 +384,21 @@ export default function RootNavigator() {
       {!isAuthenticated ? (
         <Stack.Screen name="Login" component={LoginScreen} />
       ) : user?.Role === 'ADMIN' ? (
+        <>
+          <Stack.Screen
+            name="AdminTabs"
+            component={AdminTabs}
+          />
+          <Stack.Screen
+            name="AddUser"
+            component={AddUserScreen}
+            options={{
+              headerTitle: 'Adicionar Usuário',
+              headerShown: true,
+              headerBackTitle: '',
+            }}
+          />
+        </>
         /* ADMIN */
         <Stack.Screen
           name="DashboardIES"
@@ -311,6 +417,33 @@ export default function RootNavigator() {
           <Stack.Screen name="Engagement" component={EngagementScreen} />
         </>
       ) : (
+        <>
+          <Stack.Screen
+            name="MainTabs"
+            component={MainTabs}
+          />
+          <Stack.Screen
+            name="StudentCard"
+            component={StudentCardScreen}
+            options={{ headerShown: true, headerTitle: 'Estudantes' }}
+          />
+          <Stack.Screen
+            name="Habits"
+            component={HabitsScreen}
+            options={{ headerShown: true, headerTitle: 'Hábitos de Estudo' }}
+          />
+          <Stack.Screen
+            name="ClassPerformance"
+            component={ClassPerformance}
+            options={{ headerShown: true, headerTitle: 'Performance da Turma' }}
+          />
+          <Stack.Screen
+            name="Engagement"
+            component={EngagementScreen}
+            options={{ headerShown: true, headerTitle: 'Predição de Evasão' }}
+          />
+          <Stack.Screen
+            name="ClassStudents"
         /* TEACHER */
         <>
           <Stack.Screen name="TeacherClasses" component={TeacherTabs} />

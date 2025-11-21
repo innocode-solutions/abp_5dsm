@@ -6,6 +6,9 @@ import { UserRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
+// Aplicar autenticação em todas as rotas
+router.use(AuthMiddleware.authenticateToken);
+
 // GET /api/users - Get all users (apenas ADMIN)
 router.get('/', AuthMiddleware.requireRole(UserRole.ADMIN), UserController.getAll);
 
