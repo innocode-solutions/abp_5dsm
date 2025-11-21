@@ -105,3 +105,123 @@ export async function getProfessorDashboard(
   }
 }
 
+export interface IESOverview {
+  resumo: {
+    totalCursos: number;
+    totalDisciplinas: number;
+    totalAlunos: number;
+    totalMatriculas: number;
+    totalPeriodos: number;
+    evasaoMedia: string;
+    desempenhoMedio: number;
+  };
+  cursosMaisPopulares: Array<{
+    id: string;
+    curso: string;
+    alunos: number;
+  }>;
+  disciplinasMaisCursadas: Array<{
+    id: string;
+    disciplina: string;
+    matriculas: number;
+  }>;
+  statusMatriculas: Array<{
+    status: string;
+    total: number;
+  }>;
+  percentualPorCurso: Array<{
+    curso: string;
+    alunos: number;
+    percentual: string;
+  }>;
+  top3CursosRisco: Array<{
+    curso: string;
+    evasao: number;
+  }>;
+}
+
+export interface IESAggregates {
+  filtros: {
+    courseId: string | null;
+    subjectId: string | null;
+    professorId: string | null;
+  };
+  agregadoGeral: {
+    mediaNota: number;
+    percentualAprovacao: number;
+    percentualEvasao: number;
+  };
+  porCurso: Array<{
+    idCurso: string;
+    nomeCurso: string;
+    mediaNota: number;
+    percentualAprovacao: number;
+    percentualEvasao: number;
+  }>;
+  porDisciplina: Array<{
+    idDisciplina: string;
+    nomeDisciplina: string;
+    idCurso: string;
+    nomeCurso: string;
+    mediaNota: number;
+    percentualAprovacao: number;
+    percentualEvasao: number;
+  }>;
+}
+
+/**
+ * Busca overview do dashboard IES
+ */
+export async function getIESOverview(
+  courseId?: string,
+  subjectId?: string,
+  professorId?: string
+): Promise<IESOverview> {
+  try {
+    const params = new URLSearchParams();
+    if (courseId) params.append('courseId', courseId);
+    if (subjectId) params.append('subjectId', subjectId);
+    if (professorId) params.append('professorId', professorId);
+    
+    const queryString = params.toString();
+    const url = `/dashboard/ies/overview${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiConnection.get<IESOverview>(url);
+    return response.data;
+  } catch (error: any) {
+    console.error('Erro ao buscar overview da IES:', error);
+    if (error.response?.status === 401) {
+      throw new Error('Não autorizado. Faça login novamente.');
+    }
+    throw new Error('Erro ao buscar dados da IES. Tente novamente.');
+  }
+}
+
+/**
+ * Busca agregados do dashboard IES
+ */
+export async function getIESAggregates(
+  courseId?: string,
+  subjectId?: string,
+  professorId?: string
+): Promise<IESAggregates> {
+  try {
+    const params = new URLSearchParams();
+    if (courseId) params.append('courseId', courseId);
+    if (subjectId) params.append('subjectId', subjectId);
+    if (professorId) params.append('professorId', professorId);
+    
+    const queryString = params.toString();
+    const url = `/dashboard/ies${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiConnection.get<IESAggregates>(url);
+    return response.data;
+  } catch (error: any) {
+    console.error('Erro ao buscar agregados da IES:', error);
+    if (error.response?.status === 401) {
+      throw new Error('Não autorizado. Faça login novamente.');
+    }
+    throw new Error('Erro ao buscar dados da IES. Tente novamente.');
+  }
+}
+

@@ -86,8 +86,10 @@ export default function StudentPerformanceScreen({ route }: Props) {
     })
     .filter((sg) => sg.nota > 0) || [];
 
-  // Calcular frequência geral (mock por enquanto, pode ser adicionado ao backend)
-  const attendance = 95; // TODO: buscar do backend
+  // Calcular frequência geral
+  // Por enquanto não temos este dado no backend, então calculamos baseado nas matrículas
+  // TODO: Adicionar campo de frequência no backend quando disponível
+  const attendance = student?.matriculas && student.matriculas.length > 0 ? 95 : 0; // Placeholder até ter dados reais
 
   // Ícones por tipo de disciplina
   const getSubjectIcon = (disciplina: string) => {

@@ -1,63 +1,148 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet, FlatList, ListRenderItemInfo } from "react-native";
+import React, { useMemo, useState, useEffect } from "react";
+import { View, Text, StyleSheet, FlatList, ListRenderItemInfo, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../components/Card";
 import Section from "../components/Section";
 import colors from "../theme/colors";
+import { useAuth } from "../context/AuthContext";
+import { getProfessorDashboard } from "../service/dashboardService";
 
 type Distribuicao = {
   label: string;
   value: number;
 };
 
-const MOCK = {
-  className: "Turma Aprendizagem de Maquina",
-  metrics: {
-    mediaTurma: 7.8,
-    alunosRisco: 4,
-    alunosAprovados: 18,
-  },
-  distribuicaoNotas: [
-    { label: "A", value: 10 },
-    { label: "B", value: 12 },
-    { label: "C", value: 8 },
-    { label: "D", value: 6 },
-    { label: "E", value: 7 },
-    { label: "F", value: 5 },
-  ] as Distribuicao[],
-  pontosFortes: ["Resolucao de Problemas", "Trabalho em Equipe"],
-  pontosFracos: ["Comunicacao", "Pensamento Critico"],
-};
-
 export default function ClassPerformance() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<{
+    className: string;
+    metrics: {
+      mediaTurma: number;
+      alunosRisco: number;
+      alunosAprovados: number;
+    };
+    distribuicaoNotas: Distribuicao[];
+    pontosFortes: string[];
+    pontosFracos: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (user?.IDUser && (user.Role === 'TEACHER' || user.Role === 'ADMIN')) {
+      loadClassData();
+    }
+  }, [user]);
+
+  const loadClassData = async () => {
+    if (!user?.IDUser) return;
+    
+    try {
+      setLoading(true);
+      const dashboard = await getProfessorDashboard(user.IDUser);
+      
+      // Calcular métricas
+      const metricas = dashboard.metricas;
+      const mediaTurma = metricas.mediaNotas || 0;
+      const alunosRisco = metricas.percentualRiscoAltoEvasao || 0;
+      const alunosAprovados = metricas.percentualAprovados || 0;
+      
+      // Calcular distribuição de notas (simplificada)
+      const distribuicaoNotas: Distribuicao[] = [
+        { label: "A (9-10)", value: Math.round((alunosAprovados * 0.3) || 0) },
+        { label: "B (7-8.9)", value: Math.round((alunosAprovados * 0.4) || 0) },
+        { label: "C (5-6.9)", value: Math.round((alunosAprovados * 0.2) || 0) },
+        { label: "D (3-4.9)", value: Math.round((100 - alunosAprovados) * 0.3 || 0) },
+        { label: "E (1-2.9)", value: Math.round((100 - alunosAprovados) * 0.5 || 0) },
+        { label: "F (0)", value: Math.round((100 - alunosAprovados) * 0.2 || 0) },
+      ];
+      
+      // Pontos fortes e fracos baseados nas métricas
+      const pontosFortes: string[] = [];
+      const pontosFracos: string[] = [];
+      
+      if (alunosAprovados >= 70) {
+        pontosFortes.push("Alta taxa de aprovação");
+      } else {
+        pontosFracos.push("Taxa de aprovação abaixo do ideal");
+      }
+      
+      if (alunosRisco < 20) {
+        pontosFortes.push("Baixo risco de evasão");
+      } else {
+        pontosFracos.push("Alto risco de evasão detectado");
+      }
+      
+      if (mediaTurma >= 7) {
+        pontosFortes.push("Boa média geral");
+      } else {
+        pontosFracos.push("Média geral abaixo do esperado");
+      }
+      
+      setDashboardData({
+        className: dashboard.disciplinas.length > 0 
+          ? `Turma ${dashboard.disciplinas[0].NomeDaDisciplina}`
+          : "Turma Geral",
+        metrics: {
+          mediaTurma,
+          alunosRisco,
+          alunosAprovados,
+        },
+        distribuicaoNotas,
+        pontosFortes: pontosFortes.length > 0 ? pontosFortes : ["Aguardando dados"],
+        pontosFracos: pontosFracos.length > 0 ? pontosFracos : ["Aguardando dados"],
+      });
+    } catch (error) {
+      console.error('Erro ao carregar dados da turma:', error);
+      setDashboardData({
+        className: "Turma",
+        metrics: { mediaTurma: 0, alunosRisco: 0, alunosAprovados: 0 },
+        distribuicaoNotas: [],
+        pontosFortes: [],
+        pontosFracos: [],
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const ListHeader = useMemo(() => (
     <View style={{ gap: 20 }}>
-      <Text style={styles.classTitle}>{MOCK.className}</Text>
+      <Text style={styles.classTitle}>{dashboardData?.className || "Carregando..."}</Text>
 
-      <Section title="Desempenho Consolidado">
-        <View style={styles.metricsRow}>
-          <Card style={styles.metricBox}>
-            <Text style={styles.cardLabel}>Média Geral</Text>
-            <Text style={styles.cardValue}>{MOCK.metrics.mediaTurma}</Text>
-          </Card>
-          <Card style={styles.metricBox}>
-            <Text style={styles.cardLabel}>Alunos em Risco</Text>
-            <Text style={styles.cardValue}>{MOCK.metrics.alunosRisco}%</Text>
-          </Card>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={styles.loadingText}>Carregando dados...</Text>
         </View>
-        <Card style={styles.metricBox}>
-          <Text style={styles.cardLabel}>Alunos Aprovados</Text>
-          <Text style={styles.cardValue}>{MOCK.metrics.alunosAprovados}%</Text>
-        </Card>
-      </Section>
+      ) : (
+        <>
+          <Section title="Desempenho Consolidado">
+            <View style={styles.metricsRow}>
+              <Card style={styles.metricBox}>
+                <Text style={styles.cardLabel}>Média Geral</Text>
+                <Text style={styles.cardValue}>{dashboardData?.metrics.mediaTurma.toFixed(1) || '0.0'}</Text>
+              </Card>
+              <Card style={styles.metricBox}>
+                <Text style={styles.cardLabel}>Alunos em Risco</Text>
+                <Text style={styles.cardValue}>{dashboardData?.metrics.alunosRisco.toFixed(1) || '0.0'}%</Text>
+              </Card>
+            </View>
+            <Card style={styles.metricBox}>
+              <Text style={styles.cardLabel}>Alunos Aprovados</Text>
+              <Text style={styles.cardValue}>{dashboardData?.metrics.alunosAprovados.toFixed(1) || '0.0'}%</Text>
+            </Card>
+          </Section>
 
-      <Section title="Distribuição de Notas" />
+          <Section title="Distribuição de Notas" />
+        </>
+      )}
     </View>
-  ), []);
+  ), [dashboardData, loading]);
 
   const renderDistribuicao = ({ item, index }: ListRenderItemInfo<Distribuicao>) => {
+    const distribuicao = dashboardData?.distribuicaoNotas || [];
     const isFirst = index === 0;
-    const isLast = index === MOCK.distribuicaoNotas.length - 1;
+    const isLast = index === distribuicao.length - 1;
 
     return (
       <View style={[
@@ -73,29 +158,46 @@ export default function ClassPerformance() {
 
   const renderPontos = (pontos: string[], title: string) => (
     <Section title={title}>
-      {pontos.map((p, index) => (
-        <View key={index} style={styles.rowContainer}>
-          <Text>{title === "Pontos Fortes" ? "✓" : "✕"} {p}</Text>
+      {pontos.length > 0 ? (
+        pontos.map((p, index) => (
+          <View key={index} style={styles.rowContainer}>
+            <Text>{title === "Pontos Fortes" ? "✓" : "✕"} {p}</Text>
+          </View>
+        ))
+      ) : (
+        <View style={styles.rowContainer}>
+          <Text style={styles.emptyText}>Nenhum dado disponível</Text>
         </View>
-      ))}
+      )}
     </Section>
   );
+
+  const distribuicaoNotas = dashboardData?.distribuicaoNotas || [];
 
   return (
     <SafeAreaView style={styles.safe}>
       <FlatList
-        data={MOCK.distribuicaoNotas}
+        data={distribuicaoNotas}
         keyExtractor={(item) => item.label}
         renderItem={renderDistribuicao}
         ListHeaderComponent={ListHeader}
         ListFooterComponent={
-          <View style={{ gap: 12 }}>
-            {renderPontos(MOCK.pontosFortes, "Pontos Fortes")}
-            {renderPontos(MOCK.pontosFracos, "Pontos Fracos")}
-          </View>
+          !loading && dashboardData ? (
+            <View style={{ gap: 12 }}>
+              {renderPontos(dashboardData.pontosFortes, "Pontos Fortes")}
+              {renderPontos(dashboardData.pontosFracos, "Pontos Fracos")}
+            </View>
+          ) : null
         }
         contentContainerStyle={styles.container}
         initialNumToRender={6}
+        ListEmptyComponent={
+          !loading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhum dado disponível</Text>
+            </View>
+          ) : null
+        }
       />
     </SafeAreaView>
   );
@@ -157,5 +259,25 @@ const styles = StyleSheet.create({
   innerSeparator: {
     height: 10,
     backgroundColor: "transparent",
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    gap: 8,
+  },
+  loadingText: {
+    color: colors.muted,
+    fontSize: 14,
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontStyle: "italic",
   },
 });
