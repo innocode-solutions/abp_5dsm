@@ -3,8 +3,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { TouchableOpacity, ActivityIndicator, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import DashboardScreen from '../screens/DashboardScreen';
-import UsersScreen from '../screens/UsersScreen';
+import UsersScreen from '../screens/UsersScreenIES';
 import SettingsScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardIESScreen from '../screens/DashboardIESScreen';
@@ -124,7 +125,7 @@ function LogoutButton({ onPress }: { onPress: () => void }) {
 // ====================================================
 function TeacherTabs() {
   const insets = useSafeAreaInsets();
-  
+
   return (
     <Tab.Navigator
       initialRouteName="Turmas"
@@ -133,7 +134,7 @@ function TeacherTabs() {
         headerShown: true,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { 
+        tabBarStyle: {
           display: 'flex',
           borderTopWidth: 1,
           elevation: 3,
@@ -177,7 +178,7 @@ function TeacherTabs() {
           ),
         }}
       />
-      <AdminTab.Screen
+      <Tab.Screen
         name="Configurações"
         component={SettingsScreen}
         options={{
@@ -188,7 +189,7 @@ function TeacherTabs() {
           ),
         }}
       />
-    </AdminTab.Navigator>
+    </Tab.Navigator>
   );
 }
 
@@ -376,7 +377,7 @@ export default function RootNavigator() {
 
   // ✅ Usar key para forçar re-renderização na web
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       key={isAuthenticated ? 'authenticated' : 'unauthenticated'}
       screenOptions={{ headerShown: false }}
     >
@@ -398,17 +399,17 @@ export default function RootNavigator() {
               headerBackTitle: '',
             }}
           />
+          {/* ADMIN */}
+          <Stack.Screen
+            name="DashboardIES"
+            component={DashboardIESScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Dashboard IES',
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
         </>
-        /* ADMIN */
-        <Stack.Screen
-          name="DashboardIES"
-          component={DashboardIESScreen}
-          options={{
-            headerShown: true,
-            headerTitle: 'Dashboard IES',
-            headerRight: () => <LogoutButton onPress={logout} />,
-          }}
-        />
       ) : user?.Role === 'STUDENT' ? (
         /* STUDENT */
         <>
@@ -417,39 +418,12 @@ export default function RootNavigator() {
           <Stack.Screen name="Engagement" component={EngagementScreen} />
         </>
       ) : (
-        <>
-          <Stack.Screen
-            name="MainTabs"
-            component={MainTabs}
-          />
-          <Stack.Screen
-            name="StudentCard"
-            component={StudentCardScreen}
-            options={{ headerShown: true, headerTitle: 'Estudantes' }}
-          />
-          <Stack.Screen
-            name="Habits"
-            component={HabitsScreen}
-            options={{ headerShown: true, headerTitle: 'Hábitos de Estudo' }}
-          />
-          <Stack.Screen
-            name="ClassPerformance"
-            component={ClassPerformance}
-            options={{ headerShown: true, headerTitle: 'Performance da Turma' }}
-          />
-          <Stack.Screen
-            name="Engagement"
-            component={EngagementScreen}
-            options={{ headerShown: true, headerTitle: 'Predição de Evasão' }}
-          />
-          <Stack.Screen
-            name="ClassStudents"
         /* TEACHER */
         <>
           <Stack.Screen name="TeacherClasses" component={TeacherTabs} />
           <Stack.Screen name="TeacherClassOverview" component={TeacherClassOverviewScreen} />
-          <Stack.Screen 
-            name="ClassStudents" 
+          <Stack.Screen
+            name="ClassStudents"
             component={ClassStudentsScreen}
             options={{
               headerShown: true,
@@ -460,8 +434,8 @@ export default function RootNavigator() {
           />
           <Stack.Screen name="ClassPerformance" component={ClassPerformance} />
           <Stack.Screen name="SimulationResult" component={SimulationResultScreen} />
-          <Stack.Screen 
-            name="StudentPerformance" 
+          <Stack.Screen
+            name="StudentPerformance"
             component={StudentPerformanceScreen}
             options={{
               headerShown: true,

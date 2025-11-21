@@ -56,5 +56,19 @@ export const userService = {
       throw error;
     }
   },
+
+  /**
+   * Busca lista de usuários
+   */
+  getUsers: async (): Promise<CreateUserResponse[]> => {
+    try {
+      // A API retorna { users: [...], pagination: ... }
+      const response = await apiConnection.get<{ users: CreateUserResponse[] }>('/users');
+      return response.data.users || [];
+    } catch (error: any) {
+      console.error('Erro ao buscar usuários:', error);
+      throw error;
+    }
+  },
 };
 
