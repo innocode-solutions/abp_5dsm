@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
 import { apiConnection } from '../api/apiConnection';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'TeacherClassOverview'>;
+type Props = NativeStackScreenProps<RootStackParamList, keyof RootStackParamList>;
 
 type ClassStudent = {
   id: string;
@@ -19,7 +19,7 @@ type ClassStudent = {
 };
 
 export default function TeacherClassOverviewScreen({ route }: Props) {
-  const { subjectId, subjectName } = route.params;
+  const { subjectId, subjectName } = route.params ?? ({} as { subjectId: string; subjectName?: string });
   const { user } = useAuth(); // se quiser mostrar "Professor(a) Fulano" no header ou no futuro
   const navigation = useNavigation();
 
