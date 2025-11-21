@@ -33,7 +33,7 @@ if (useHttps) {
 }
 
 // Ports
-const HTTP_PORT = Number(process.env.HTTP_PORT) || 8080;
+const HTTP_PORT = Number(process.env.HTTP_PORT) || 3333;
 const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 8443;
 
 // ======== Security middleware ========
@@ -52,7 +52,7 @@ app.use(helmet({
 // Para React Native, permitir todas as origens em desenvolvimento
 const corsOptions = {
  origin: process.env.NODE_ENV === 'production' 
-  ? (process.env.FRONTEND_URL || 'http://localhost:3000')
+  ? (process.env.FRONTEND_URL || 'http://localhost:3333')
   : true, // Permite todas as origens em desenvolvimento (necessário para React Native)
  credentials: true,
  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -111,10 +111,7 @@ HealthService.setupShutdownHandlers();
 
 // ======== Start HTTPS and HTTP redirect (CORRIGIDO) ========
 
-if (useHttps) {
- // O seu código original tentava criar e iniciar o servidor duas vezes.
- // Apenas as chaves e a lógica de instanciação foram movidas para garantir uma única execução.
-
+/*if (useHttps) {
  const httpsServer = https.createServer(sslOptions, app); 
  initializeSocket(httpsServer);
  
@@ -129,7 +126,7 @@ if (useHttps) {
   console.log(`📚 API: https://localhost:${HTTPS_PORT}/api`);
   console.log(`📱 Acessível na rede local via IP da máquina`);
   console.log(`🔌 WebSocket ativo na porta ${HTTPS_PORT}`);
- }); // <-- CHAVE DE FECHAMENTO CORRETA (Faltava no seu original)
+ }); // <-- CHAVE DE FECHAMENTO CORRETA
 
  http.createServer((req, res) => {
   const host = req.headers.host?.replace(/:\d+$/, '');
@@ -139,9 +136,6 @@ if (useHttps) {
   console.log(`🟡 HTTP redirecionando → HTTPS na porta ${HTTP_PORT}`);
  });
 } else {
- // O seu código original também tentava criar e iniciar o servidor HTTP duas vezes.
- // A correção de chaves e lógica foi aplicada aqui também.
-
  const httpServer = http.createServer(app);
  initializeSocket(httpServer);
  
@@ -149,11 +143,13 @@ if (useHttps) {
   console.log(`🚀 Servidor HTTP rodando em http://0.0.0.0:${HTTP_PORT}`);
   console.log(`📱 Acessível na rede local via IP da máquina`);
   console.log(`💡 Para usar no celular, configure o IP em: frontend/src/config/api.ts`);
-
-  // O bloco interno de logs foi mantido, mas as chaves externas foram fechadas aqui.
   console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
   console.log(`🔌 WebSocket ativo na porta ${HTTP_PORT}`);
- }); // <-- CHAVE DE FECHAMENTO CORRETA (Faltava no seu original)
-}
+ });
+}*/
+
+app.listen(HTTP_PORT, () => {
+  console.log(`🚀 Servidor rodando em http://localhost:${HTTP_PORT}`);
+});
 
 export default app;

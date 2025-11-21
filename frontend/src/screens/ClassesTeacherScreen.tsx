@@ -6,24 +6,30 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
-  TouchableOpacity,
   Alert,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CommonActions } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
+
 import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { getTeacherClasses, Class } from '../service/classService';
 import ClassListItem from '../components/ClassListItem';
-import { RootStackParamList } from '../navigation';
+import { RootStackParamList, RootTabParamList } from '../navigation';
 
-type ClassesScreenProp = NativeStackNavigationProp<RootStackParamList, 'MainTabs'>;
+// Tipo combinado para permitir navegação tanto no Tab quanto no Stack
+type ClassesScreenProp = BottomTabNavigationProp<RootTabParamList, 'Turmas'> &
+  NativeStackNavigationProp<RootStackParamList>;
 
-export default function ClassesScreen() {
+export default function ClassesTeacherScreen() {
   const navigation = useNavigation<ClassesScreenProp>();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,21 +63,141 @@ export default function ClassesScreen() {
     loadClasses();
   }, [loadClasses]);
 
+  // Função de logout separada (similar ao SettingsScreen)
+  const performLogout = async () => {
+    try {
+      await logout();
+      
+      // ✅ Na web, forçar navegação imediatamente
+      if (Platform.OS === 'web') {
+        // Usar requestAnimationFrame para garantir que o estado foi atualizado
+        requestAnimationFrame(() => {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            })
+          );
+        });
+      }
+    } catch (err: any) {
+      console.error('Erro ao fazer logout:', err);
+      if (Platform.OS !== 'web') {
+        Alert.alert('Erro', 'Não foi possível fazer logout');
+      } else {
+        alert('Erro: Não foi possível fazer logout');
+      }
+    }
+  };
+
+  // Adicionar no useEffect para configurar o header
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={async () => {
+            // ✅ Na web, usar window.confirm
+            if (Platform.OS === 'web') {
+              const confirmed = window.confirm('Tem certeza que deseja sair?');
+              if (confirmed) {
+                await performLogout();
+              }
+            } else {
+              Alert.alert(
+                'Sair',
+                'Tem certeza que deseja sair?',
+                [
+                  {
+                    text: 'Cancelar',
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Sair',
+                    style: 'destructive',
+                    onPress: performLogout,
+                  },
+                ]
+              );
+            }
+          }}
+          style={{ marginLeft: 16 }}
+          accessibilityRole="button"
+          accessibilityLabel="Sair"
+        >
+          <Feather name="log-out" size={24} color={colors.primary} />
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => {
+            // TODO: Implementar funcionalidade de adicionar turma
+            Alert.alert('Info', 'Funcionalidade de adicionar turma em breve');
+          }}
+          style={{ marginRight: 16 }}
+        >
+          <Feather name="plus" size={24} color={colors.primary} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, logout]); // ✅ Adicionar logout nas dependências
+
   // Função de refresh
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    loadClasses();
+    try {
+      // Recarregar turmas primeiro
+      await loadClasses();
+      // Se houver turma selecionada, recarregar alunos também
+      // if (selectedClassId) { // selectedClassId is not defined in this file
+      //   await fetchStudents();
+      // }
+    } catch (err) {
+      console.error('Erro ao recarregar:', err);
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadClasses]);
 
   // Handler para pressionar uma turma
   const handleClassPress = useCallback(
     (classItem: Class) => {
-      navigation.navigate('ClassStudents', {
-        subjectId: classItem.IDDisciplina,
-        subjectName: classItem.NomeDaDisciplina,
-      });
+      console.log('🔵 [DEBUG] handleClassPress chamado!', classItem.NomeDaDisciplina);
+      console.log('🔵 [DEBUG] ID:', classItem.IDDisciplina);
+      
+      try {
+        // Método 1: Tentar usar getParent() e navigate
+        const parentNavigation = navigation.getParent();
+        console.log('🔵 [DEBUG] Parent navigation:', parentNavigation ? 'encontrado' : 'não encontrado');
+        
+        if (parentNavigation) {
+          console.log('🔵 [DEBUG] Tentando navegar via parent...');
+          (parentNavigation as NativeStackNavigationProp<RootStackParamList>).navigate('ClassStudents', {
+            subjectId: classItem.IDDisciplina,
+            subjectName: classItem.NomeDaDisciplina,
+          });
+          console.log('✅ [DEBUG] Navegação via parent executada!');
+          return;
+        }
+
+        // Método 2: Usar CommonActions para navegar no Stack root
+        console.log('🔵 [DEBUG] Tentando navegar via CommonActions...');
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: 'ClassStudents',
+            params: {
+              subjectId: classItem.IDDisciplina,
+              subjectName: classItem.NomeDaDisciplina,
+            },
+          })
+        );
+        console.log('✅ [DEBUG] Navegação via CommonActions executada!');
+      } catch (error: any) {
+        console.error('❌ [DEBUG] Erro ao navegar:', error);
+        console.error('❌ [DEBUG] Erro completo:', JSON.stringify(error, null, 2));
+        Alert.alert('Erro', `Não foi possível abrir a turma: ${error.message || 'Erro desconhecido'}`);
+      }
     },
-    [navigation]
+    [navigation],
   );
 
   // Renderizar item da lista
@@ -79,7 +205,7 @@ export default function ClassesScreen() {
     ({ item }: { item: Class }) => (
       <ClassListItem classItem={item} onPress={() => handleClassPress(item)} />
     ),
-    [handleClassPress]
+    [handleClassPress],
   );
 
   // Empty state
@@ -93,7 +219,7 @@ export default function ClassesScreen() {
         </Text>
       </View>
     ),
-    []
+    [],
   );
 
   // Loading state
@@ -171,4 +297,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

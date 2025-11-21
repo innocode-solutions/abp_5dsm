@@ -92,10 +92,15 @@ export default function ClassStudentsScreen() {
   // Configurar WebSocket
   useEffect(() => {
     let isMounted = true;
+    let socketSetupAttempted = false;
 
     const setupWebSocket = async () => {
+      // ✅ Evitar múltiplas tentativas
+      if (socketSetupAttempted) return;
+      socketSetupAttempted = true;
+
       try {
-        // Conectar ao WebSocket
+        // Conectar ao WebSocket (não bloqueia se falhar)
         await connectSocket();
 
         // Inscrever-se na disciplina
@@ -106,25 +111,29 @@ export default function ClassStudentsScreen() {
 
         if (!isMounted) return;
       } catch (err) {
-        console.error('Erro ao configurar WebSocket:', err);
-        // Não mostrar erro ao usuário, apenas log
-        // O WebSocket é opcional para atualização em tempo real
+        // ✅ Silenciosamente ignorar - WebSocket é opcional
+        // Não logar erro para não poluir o console
       }
     };
 
-    setupWebSocket();
+    // ✅ Executar de forma assíncrona sem bloquear
+    setupWebSocket().catch(() => {
+      // Silenciosamente ignorar
+    });
 
     return () => {
       isMounted = false;
+      socketSetupAttempted = false;
       // Limpar timeout se existir
       if (reloadTimeoutRef.current) {
         clearTimeout(reloadTimeoutRef.current);
       }
       // Limpar listeners
       offPredictionCreated();
-      // Cancelar inscrição
-      unsubscribeFromDiscipline(subjectId).catch(console.error);
-      // Não desconectar completamente, pois pode ser usado por outras telas
+      // Cancelar inscrição (silenciosamente)
+      unsubscribeFromDiscipline(subjectId).catch(() => {
+        // Ignorar erros
+      });
     };
   }, [subjectId, handlePredictionCreated]);
 

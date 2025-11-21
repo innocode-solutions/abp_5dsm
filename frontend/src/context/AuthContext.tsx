@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { authService } from "~/service/authService";
 import { isTokenValid } from "~/service/tokenValidator";
 import { clearTokens } from "~/service/tokenStore";
+import { Platform } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 
 interface User {
   IDUser: string;
@@ -61,13 +63,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
-      await authService.logout();
-    } finally {
+      // ✅ Limpar estado primeiro para evitar tentativas de reconexão
       setUser(null);
+      setIsLoading(false);
+      
+      // ✅ Chamar logout do serviço (que desconecta WebSocket e limpa tokens)
+      await authService.logout();
+      
+      // ✅ Na web, forçar atualização
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        // Disparar evento para notificar mudança de estado
+        window.dispatchEvent(new Event('auth-logout'));
+      }
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      // Mesmo com erro, garantir que o estado seja limpo
+      setUser(null);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
   return (
     <AuthContext.Provider

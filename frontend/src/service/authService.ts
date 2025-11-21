@@ -1,5 +1,6 @@
 import { apiConnection } from "~/api/apiConnection";
 import { setToken, clearTokens } from "~/service/tokenStore";
+import { disconnectSocket } from "~/service/socketService";
 
 interface LoginRequest {
   Email: string;
@@ -54,6 +55,12 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
+    try {
+      disconnectSocket();
+    } catch (error) {
+      console.warn('Erro ao desconectar WebSocket:', error);
+    }
+    
     await clearTokens();
   },
 };
