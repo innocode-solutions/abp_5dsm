@@ -84,19 +84,19 @@ const EngagementScreen: React.FC<Props> = () => {
 
         <Text style={styles.label}>Participação em Aula:</Text>
         <Text style={styles.description}>Quantas vezes você levantou a mão ou participou ativamente nas aulas (fazendo perguntas, respondendo, etc.)</Text>
-        <TextInput style={styles.input} keyboardType="numeric" value={raisedhands} onChangeText={setRaisedhands} placeholder="Ex: 15" />
+        <TextInput style={styles.input} keyboardType="numeric" value={raisedhands} onChangeText={setRaisedhands} placeholder="Ex: 30" />
 
         <Text style={styles.label}>Materiais de Estudo Acessados:</Text>
         <Text style={styles.description}>Quantos materiais de estudo você acessou (vídeos, textos, exercícios, etc.) na plataforma ou sistema da escola</Text>
-        <TextInput style={styles.input} keyboardType="numeric" value={visitedResources} onChangeText={setVisitedResources} placeholder="Ex: 20" />
+        <TextInput style={styles.input} keyboardType="numeric" value={visitedResources} onChangeText={setVisitedResources} placeholder="Ex: 25" />
 
         <Text style={styles.label}>Avisos e Comunicados Visualizados:</Text>
         <Text style={styles.description}>Quantos avisos, comunicados ou anúncios da escola você leu ou visualizou</Text>
-        <TextInput style={styles.input} keyboardType="numeric" value={announcementsView} onChangeText={setAnnouncementsView} placeholder="Ex: 10" />
+        <TextInput style={styles.input} keyboardType="numeric" value={announcementsView} onChangeText={setAnnouncementsView} placeholder="Ex: 25" />
 
         <Text style={styles.label}>Participações em Discussões:</Text>
         <Text style={styles.description}>Quantas vezes você participou de discussões, fóruns ou debates online ou presenciais</Text>
-        <TextInput style={styles.input} keyboardType="numeric" value={discussion} onChangeText={setDiscussion} placeholder="Ex: 8" />
+        <TextInput style={styles.input} keyboardType="numeric" value={discussion} onChangeText={setDiscussion} placeholder="Ex: 30" />
 
         <Text style={styles.label}>Pais Responderam Pesquisa da Escola:</Text>
         <Text style={styles.description}>Se seus pais ou responsáveis responderam pesquisas ou questionários enviados pela escola</Text>

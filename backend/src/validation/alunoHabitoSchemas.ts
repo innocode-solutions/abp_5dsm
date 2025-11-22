@@ -26,7 +26,7 @@ export const AlunoHabitoBasicoSchema = z.object({
 // Schema completo para predição de EVASÃO
 export const AlunoHabitoEvasaoSchema = z.object({
   // Campos básicos
-  horasEstudo: z.number().min(0).max(12).optional(),
+  horasEstudo: z.number().min(0).max(84).optional(), // Horas semanais (0-84 = até ~12h por dia)
   sono: z.number().min(0).max(12).optional(),
   motivacao: z.number().int().min(0).max(10).optional(),
   frequencia: z.number().min(0).max(100).optional(),
@@ -44,7 +44,7 @@ export const AlunoHabitoEvasaoSchema = z.object({
 // Schema completo para predição de DESEMPENHO
 export const AlunoHabitoDesempenhoSchema = z.object({
   // Campos básicos
-  horasEstudo: z.number().min(0).max(12),
+  horasEstudo: z.number().min(0).max(84), // Horas semanais (0-84 = até ~12h por dia)
   sono: z.number().min(0).max(12),
   motivacao: z.number().int().min(0).max(10).optional(),
   frequencia: z.number().min(0).max(100),

@@ -111,13 +111,12 @@ export function mapToPerformanceData(habito: AlunoHabitoExtended) {
   }
 
   // O modelo ML espera Hours_Studied em horas semanais
-  // Se horasEstudo estiver no formato diário (0-12), converte para semanal (multiplica por 7)
-  // Se já estiver em formato semanal (valores > 12), usa diretamente
+  // O frontend sempre envia horas semanais (0-84), então usamos diretamente
   const hoursStudied = habito.horasEstudo!;
-  const hoursStudiedWeekly = hoursStudied <= 12 ? hoursStudied * 7 : hoursStudied;
+  // Não fazemos conversão - o valor já vem em horas semanais do frontend
 
   return {
-    Hours_Studied: hoursStudiedWeekly,
+    Hours_Studied: hoursStudied,
     Previous_Scores: habito.Previous_Scores!,
     Sleep_Hours: habito.sono!,
     Distance_from_Home: habito.Distance_from_Home!,

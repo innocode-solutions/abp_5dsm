@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
-import { getStudentDetails } from '../service/studentService';
+import { getStudentDetails, getStudentIdByUserId } from '../service/studentService';
 
 interface Feedback {
   disciplina: string;
@@ -33,7 +33,6 @@ export default function StudentFeedbacksScreen() {
       if (!user?.IDUser) return;
       
       // Primeiro, buscar o ID do aluno associado ao usuário
-      const { getStudentIdByUserId } = await import('../service/studentService');
       const studentId = await getStudentIdByUserId();
       if (!studentId) {
         console.warn('Aluno não encontrado para este usuário');

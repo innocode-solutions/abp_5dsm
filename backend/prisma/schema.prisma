@@ -70,7 +70,7 @@ model AlunoHabito {
   updatedAt   DateTime @updatedAt
 
   // Campos básicos de hábitos (mantidos para compatibilidade)
-  horasEstudo Float?  // Horas de estudo por dia (0-12)
+  horasEstudo Float?  // Horas de estudo semanais (0-84 = até ~12h por dia)
   sono        Float?  // Horas de sono por dia (0-12)
   motivacao   Int?    // Nível de motivação (0-10) - mantido como Int para compatibilidade
   frequencia  Float?  // Frequência/Attendance em percentual (0-100)
