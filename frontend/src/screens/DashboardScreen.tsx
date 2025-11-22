@@ -8,7 +8,7 @@ import Section from '../components/Section';
 import StudentItem from '../components/StudentItem';
 import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
-import { getProfessorDashboard, Discipline } from '../service/dashboardService';
+import { getProfessorDashboard, Discipline, ProfessorDashboard } from '../service/dashboardService';
 import { RootStackParamList } from '../navigation';
 
 type DashboardScreenProp = NativeStackNavigationProp<RootStackParamList, 'MainTabs'>;
@@ -20,51 +20,78 @@ type Student = {
   avatar: string;
 };
 
-const MOCK = {
-  overview: {
-    ativos: 120,
-    inativos: 30,
-    total: 150,
-  },
-  evasao: {
-    taxa: '10 %',
-  },
-  risco: [
-    { id: '1', name: 'Lucas Oliveira',  course: 'Engenharia de Software',   avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
-    { id: '2', name: 'Isabela Santos',  course: 'Ciência da Computação',    avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-    { id: '3', name: 'Marcos Lima',     course: 'Sistemas de Informação',   avatar: 'https://randomuser.me/api/portraits/men/11.jpg' },
-    { id: '4', name: 'Ana Souza',       course: 'Engenharia de Produção',   avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
-    { id: '5', name: 'Pedro Carvalho',  course: 'Engenharia Elétrica',      avatar: 'https://randomuser.me/api/portraits/men/78.jpg' },
-    { id: '6', name: 'Beatriz Ramos',   course: 'Ciência de Dados',         avatar: 'https://randomuser.me/api/portraits/women/12.jpg' },
-  ] as Student[],
-};
-
 export default function DashboardScreen() {
   const navigation = useNavigation<DashboardScreenProp>();
   const { user } = useAuth();
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+  const [dashboardData, setDashboardData] = useState<{
+    overview: { ativos: number; inativos: number; total: number };
+    evasao: { taxa: string };
+    students: Student[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const students = MOCK.risco;
-
-  // Carregar disciplinas do professor
+  // Carregar dados do dashboard
   useEffect(() => {
     if (user?.IDUser && (user.Role === 'TEACHER' || user.Role === 'ADMIN')) {
-      loadDisciplines();
+      loadDashboardData();
     }
   }, [user]);
 
-  const loadDisciplines = async () => {
+  const loadDashboardData = async () => {
     if (!user?.IDUser) return;
     
     try {
-      setLoadingDisciplines(true);
+      setLoading(true);
       const dashboard = await getProfessorDashboard(user.IDUser);
       setDisciplines(dashboard.disciplinas || []);
+      
+      // Calcular overview
+      const totalAlunos = dashboard.totalAlunos || 0;
+      const alunosAtivos = dashboard.alunos.filter(a => a.status === 'ENROLLED' || a.status === 'COMPLETED').length;
+      const alunosInativos = totalAlunos - alunosAtivos;
+      
+      // Calcular taxa de evasão
+      const taxaEvasao = dashboard.metricas.percentualRiscoAltoEvasao || 0;
+      
+      // Alunos em risco (alto risco de evasão)
+      const alunosRisco = dashboard.alunos
+        .filter(a => {
+          const riscoEvasao = a.predicoes.evasao;
+          if (!riscoEvasao) return false;
+          const prob = riscoEvasao.probabilidade;
+          return prob >= 0.66; // Alto risco
+        })
+        .slice(0, 6)
+        .map(a => ({
+          id: a.id,
+          name: a.nome,
+          course: a.disciplina.nome,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.nome)}&background=random`,
+        }));
+      
+      setDashboardData({
+        overview: {
+          ativos: alunosAtivos,
+          inativos: alunosInativos,
+          total: totalAlunos,
+        },
+        evasao: {
+          taxa: `${taxaEvasao.toFixed(1)}%`,
+        },
+        students: alunosRisco,
+      });
     } catch (error) {
-      console.error('Erro ao carregar disciplinas:', error);
-      // Não mostrar erro ao usuário, apenas log
+      console.error('Erro ao carregar dados do dashboard:', error);
+      // Em caso de erro, usar valores padrão
+      setDashboardData({
+        overview: { ativos: 0, inativos: 0, total: 0 },
+        evasao: { taxa: '0%' },
+        students: [],
+      });
     } finally {
+      setLoading(false);
       setLoadingDisciplines(false);
     }
   };
@@ -80,28 +107,44 @@ export default function DashboardScreen() {
     () => (
       <View style={{ gap: 20 }}>
         <Section title="Visão Geral dos Alunos">
-          <View style={styles.grid}>
-            <Card>
-              <Text style={styles.cardLabel}>Ativos</Text>
-              <Text style={styles.cardValue}>{MOCK.overview.ativos}</Text>
-            </Card>
-            <Card>
-              <Text style={styles.cardLabel}>Inativos</Text>
-              <Text style={styles.cardValue}>{MOCK.overview.inativos}</Text>
-            </Card>
-          </View>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.loadingText}>Carregando...</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.grid}>
+                <Card>
+                  <Text style={styles.cardLabel}>Ativos</Text>
+                  <Text style={styles.cardValue}>{dashboardData?.overview.ativos ?? 0}</Text>
+                </Card>
+                <Card>
+                  <Text style={styles.cardLabel}>Inativos</Text>
+                  <Text style={styles.cardValue}>{dashboardData?.overview.inativos ?? 0}</Text>
+                </Card>
+              </View>
 
-          <Card style={{ marginTop: 12 }}>
-            <Text style={styles.cardLabel}>Total</Text>
-            <Text style={styles.totalValue}>{MOCK.overview.total}</Text>
-          </Card>
+              <Card style={{ marginTop: 12 }}>
+                <Text style={styles.cardLabel}>Total</Text>
+                <Text style={styles.totalValue}>{dashboardData?.overview.total ?? 0}</Text>
+              </Card>
+            </>
+          )}
         </Section>
 
         <Section title="Indicadores de Evasão">
-          <Card>
-            <Text style={styles.cardLabel}>Taxa de Evasão</Text>
-            <Text style={styles.cardValue}>{MOCK.evasao.taxa}</Text>
-          </Card>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.loadingText}>Carregando...</Text>
+            </View>
+          ) : (
+            <Card>
+              <Text style={styles.cardLabel}>Taxa de Evasão</Text>
+              <Text style={styles.cardValue}>{dashboardData?.evasao.taxa ?? '0%'}</Text>
+            </Card>
+          )}
         </Section>
 
         {/* Novo botão para acessar a tela de Performance da Turma */}
@@ -155,6 +198,7 @@ export default function DashboardScreen() {
   );
 
   const renderItem = ({ item, index }: ListRenderItemInfo<Student>) => {
+    const students = dashboardData?.students ?? [];
     const isFirst = index === 0;
     const isLast = index === students.length - 1;
 
@@ -172,6 +216,8 @@ export default function DashboardScreen() {
     );
   };
 
+  const students = dashboardData?.students ?? [];
+
   return (
     <SafeAreaView style={styles.safe}>
       <FlatList
@@ -183,6 +229,13 @@ export default function DashboardScreen() {
         initialNumToRender={8}
         windowSize={10}
         removeClippedSubviews
+        ListEmptyComponent={
+          !loading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhum aluno em risco encontrado</Text>
+            </View>
+          ) : null
+        }
       />
     </SafeAreaView>
   );
@@ -263,5 +316,9 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
     textAlign: 'center',
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
 });

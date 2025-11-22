@@ -57,6 +57,27 @@ export interface StudentDetails {
 }
 
 /**
+ * Busca o ID do aluno associado ao usuário logado
+ */
+export async function getStudentIdByUserId(): Promise<string | null> {
+  try {
+    // Usar o endpoint /auth/me que retorna o usuário com seus alunos
+    const response = await apiConnection.get<{
+      IDUser: string;
+      alunos?: Array<{ IDAluno: string }>;
+    }>(`/auth/me`);
+    
+    if (response.data.alunos && response.data.alunos.length > 0) {
+      return response.data.alunos[0].IDAluno;
+    }
+    return null;
+  } catch (error: any) {
+    console.error('Erro ao buscar ID do aluno:', error);
+    return null;
+  }
+}
+
+/**
  * Busca dados completos do aluno incluindo matrículas e predições
  */
 export async function getStudentDetails(studentId: string): Promise<StudentDetails> {
@@ -71,7 +92,29 @@ export async function getStudentDetails(studentId: string): Promise<StudentDetai
     if (error.response?.status === 401) {
       throw new Error('Não autorizado. Faça login novamente.');
     }
+    if (error.response?.status === 403) {
+      throw new Error('Acesso negado. Você só pode acessar seus próprios dados.');
+    }
     throw new Error('Erro ao buscar dados do aluno. Tente novamente.');
+  }
+}
+
+/**
+ * Busca dados do aluno atual (do usuário logado)
+ */
+export async function getCurrentStudentDetails(): Promise<StudentDetails | null> {
+  try {
+    // Primeiro, buscar o ID do aluno do usuário atual
+    const studentId = await getStudentIdByUserId();
+    if (!studentId) {
+      return null;
+    }
+    
+    // Depois, buscar os detalhes completos
+    return await getStudentDetails(studentId);
+  } catch (error: any) {
+    console.error('Erro ao buscar dados do aluno atual:', error);
+    return null;
   }
 }
 

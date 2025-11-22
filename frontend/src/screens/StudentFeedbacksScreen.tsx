@@ -7,6 +7,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import colors from '../theme/colors';
+import { useAuth } from '../context/AuthContext';
+import { getStudentDetails } from '../service/studentService';
 
 interface Feedback {
   disciplina: string;
@@ -16,38 +18,94 @@ interface Feedback {
 }
 
 export default function StudentFeedbacksScreen() {
+  const { user } = useAuth();
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadFeedbacks();
-  }, []);
+    if (user?.IDUser) {
+      loadFeedbacks();
+    }
+  }, [user]);
 
   const loadFeedbacks = async () => {
     try {
-      // Mock data - substituir por API real quando disponível
-      setFeedbacks([
-        {
-          disciplina: 'Aprendizagem de Máquina',
-          descricao: 'Continue praticando os algoritmos de classificação e regressão',
-          professor: 'Professor: Leandro',
-          data: '15/01/2024',
-        },
-        {
-          disciplina: 'Computação em Nuvem',
-          descricao: 'Bom trabalho nos exercícios de AWS e Azure',
-          professor: 'Professor: Ronaldo',
-          data: '12/01/2024',
-        },
-        {
-          disciplina: 'Segurança no Desenvolvimento de aplicações',
-          descricao: 'Excelente compreensão dos conceitos de segurança e criptografia',
-          professor: 'Professor: Arley',
-          data: '10/01/2024',
-        },
-      ]);
+      if (!user?.IDUser) return;
+      
+      // Primeiro, buscar o ID do aluno associado ao usuário
+      const { getStudentIdByUserId } = await import('../service/studentService');
+      const studentId = await getStudentIdByUserId();
+      if (!studentId) {
+        console.warn('Aluno não encontrado para este usuário');
+        setFeedbacks([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Buscar dados completos do aluno usando o IDAluno correto
+      const studentData = await getStudentDetails(studentId);
+      
+      // Gerar feedbacks baseados nas predições
+      const feedbacksList: Feedback[] = [];
+      
+      studentData.matriculas.forEach((matricula) => {
+        const performancePred = matricula.predictions?.find(
+          (p) => p.TipoPredicao === 'DESEMPENHO'
+        );
+        const dropoutPred = matricula.predictions?.find(
+          (p) => p.TipoPredicao === 'EVASAO'
+        );
+        
+        if (performancePred || dropoutPred) {
+          let descricao = '';
+          
+          if (performancePred) {
+            const nota = Math.round(performancePred.Probabilidade * 1000) / 10;
+            if (nota >= 8) {
+              descricao = `Excelente desempenho previsto (${nota.toFixed(1)}/10)! Continue mantendo o bom trabalho e dedicação.`;
+            } else if (nota >= 6) {
+              descricao = `Bom desempenho previsto (${nota.toFixed(1)}/10). Com mais dedicação, você pode melhorar ainda mais!`;
+            } else {
+              descricao = `Desempenho previsto de ${nota.toFixed(1)}/10. Foque em aumentar suas horas de estudo e participação nas aulas.`;
+            }
+          }
+          
+          if (dropoutPred) {
+            const risco = dropoutPred.Probabilidade;
+            if (risco >= 0.66) {
+              descricao += (descricao ? ' ' : '') + '⚠️ Risco de evasão alto detectado. Procure se engajar mais com as atividades e manter contato com professores.';
+            } else if (risco >= 0.33) {
+              descricao += (descricao ? ' ' : '') + 'Risco de evasão moderado. Continue participando ativamente das aulas.';
+            }
+          }
+          
+          if (descricao) {
+            const dataPredicao = performancePred?.createdAt || dropoutPred?.createdAt;
+            const dataFormatada = dataPredicao 
+              ? new Date(dataPredicao).toLocaleDateString('pt-BR')
+              : undefined;
+            
+            feedbacksList.push({
+              disciplina: matricula.disciplina.NomeDaDisciplina,
+              descricao,
+              professor: `Disciplina: ${matricula.disciplina.NomeDaDisciplina}`,
+              data: dataFormatada,
+            });
+          }
+        }
+      });
+      
+      // Ordenar por data (mais recentes primeiro)
+      feedbacksList.sort((a, b) => {
+        if (!a.data || !b.data) return 0;
+        return new Date(b.data.split('/').reverse().join('-')).getTime() - 
+               new Date(a.data.split('/').reverse().join('-')).getTime();
+      });
+      
+      setFeedbacks(feedbacksList);
     } catch (error) {
       console.error('Erro ao carregar feedbacks:', error);
+      setFeedbacks([]);
     } finally {
       setLoading(false);
     }

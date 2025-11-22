@@ -1,27 +1,76 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import StudentCard from "./StudentCard";
 import { useAuth } from "../context/AuthContext";
 import { RootStackParamList } from "../navigation";
+import { apiConnection } from "../api/apiConnection";
+import colors from "../theme/colors";
+
 type Props = NativeStackScreenProps<RootStackParamList, "StudentCard">;
+
+interface Student {
+  nome: string;
+  risco: string;
+  media: number;
+}
 
 // O componente agora recebe 'navigation' nas props
 export default function StudentCardScreen({ navigation }: Props) {
   const { user } = useAuth();
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with actual API call
-  const mockStudents = [
-    { nome: "João Silva", risco: "Risco Baixo", media: 8.5 },
-    { nome: "Maria Santos", risco: "Risco Médio", media: 6.2 },
-    { nome: "Pedro Costa", risco: "Risco Alto", media: 4.1 },
-  ];
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  const loadStudents = async () => {
+    try {
+      setLoading(true);
+      // Buscar alunos - se for aluno, buscar apenas seus próprios dados
+      // Se for professor/admin, buscar todos os alunos
+      if (user?.Role === 'STUDENT') {
+        // Para aluno, não faz sentido mostrar lista de outros alunos
+        // Esta tela provavelmente não deveria ser acessível para alunos
+        setStudents([]);
+      } else {
+        // Para professor/admin, buscar lista de alunos
+        const response = await apiConnection.get<{
+          data: Array<{
+            IDAluno: string;
+            Nome: string;
+            Email: string;
+            curso?: { NomeDoCurso: string };
+          }>;
+        }>('/alunos?limit=50');
+        
+        // Converter para formato esperado
+        // Nota: Esta tela parece ser uma tela de exemplo/deprecada
+        // Para calcular risco e média reais, seria necessário buscar predições de cada aluno
+        // Por enquanto, mostramos apenas os nomes
+        const studentsList: Student[] = response.data.data.map(aluno => ({
+          nome: aluno.Nome,
+          risco: "Não calculado", // Seria necessário buscar predições individuais
+          media: 0, // Seria necessário buscar predições individuais
+        }));
+        
+        setStudents(studentsList);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar alunos:', error);
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const goToHabits = () => {
     // Navega para a tela de hábitos. O nome 'Habits' deve ser o nome da rota.
@@ -57,9 +106,24 @@ export default function StudentCardScreen({ navigation }: Props) {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
       >
-        {mockStudents.map((student, index) => (
-          <StudentCard key={index} student={student} />
-        ))}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Carregando alunos...</Text>
+          </View>
+        ) : students.length > 0 ? (
+          students.map((student, index) => (
+            <StudentCard key={index} student={student} />
+          ))
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              {user?.Role === 'STUDENT' 
+                ? 'Esta tela não está disponível para alunos'
+                : 'Nenhum aluno encontrado'}
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -116,5 +180,27 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    color: colors.muted,
+    fontSize: 14,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    color: colors.muted,
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

@@ -228,7 +228,16 @@ export class DashboardController {
       const porCurso = new Map<string, Agg & { id: string; nome: string }>()
       const porDisciplina = new Map<string, Agg & { id: string; nome: string; idCurso: string; nomeCurso: string }>()
 
-      const isAprovado = (cls?: string | null) => (cls ?? '').toUpperCase() === 'APROVADO'
+      // Função para determinar aprovação: prioriza nota real, usa predição como fallback
+      const isAprovado = (nota: number | null | undefined, cls?: string | null) => {
+        // Se tem nota real, usa critério de nota >= 6.0 (mesmo do dashboard do professor)
+        if (typeof nota === 'number') {
+          return nota >= 6.0
+        }
+        // Caso contrário, usa classificação da predição ML
+        return (cls ?? '').toUpperCase() === 'APROVADO'
+      }
+      
       const isRiscoAlto = (cls?: string | null, prob?: number | null) => {
         const c = (cls ?? '').toUpperCase()
         return c === 'ALTO' || (prob ?? 0) >= 0.5
@@ -268,17 +277,18 @@ export class DashboardController {
 
         if ((p.TipoPredicao ?? '').toUpperCase() === 'DESEMPENHO') {
           geral.totalPerf += 1
-          if (isAprovado(p.Classificacao)) geral.aprovados += 1
+          // Usar nota real quando disponível, caso contrário usar predição
+          if (isAprovado(nota, p.Classificacao)) geral.aprovados += 1
 
           if (cursoId) {
             const aggC = porCurso.get(cursoId)!
             aggC.totalPerf += 1
-            if (isAprovado(p.Classificacao)) aggC.aprovados += 1
+            if (isAprovado(nota, p.Classificacao)) aggC.aprovados += 1
           }
           if (discId) {
             const aggD = porDisciplina.get(discId)!
             aggD.totalPerf += 1
-            if (isAprovado(p.Classificacao)) aggD.aprovados += 1
+            if (isAprovado(nota, p.Classificacao)) aggD.aprovados += 1
           }
         }
 

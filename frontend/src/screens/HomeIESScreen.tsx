@@ -8,7 +8,7 @@ import Section from '../components/Section';
 import StudentItem from '../components/StudentItem';
 import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
-import { getProfessorDashboard, Discipline } from '../service/dashboardService';
+import { getIESOverview, getIESAggregates, IESOverview } from '../service/dashboardService';
 import { RootStackParamList } from '../navigation';
 
 type DashboardScreenProp = NativeStackNavigationProp<RootStackParamList, 'MainTabs'>;
@@ -20,130 +20,115 @@ type Student = {
   avatar: string;
 };
 
-const MOCK = {
-  overview: {
-    ativos: 120,
-    inativos: 30,
-    total: 150,
-  },
-  evasao: {
-    taxa: '10 %',
-  },
-  risco: [
-    { id: '1', name: 'Lucas Oliveira',  course: 'Engenharia de Software',   avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
-    { id: '2', name: 'Isabela Santos',  course: 'Ciência da Computação',    avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-    { id: '3', name: 'Marcos Lima',     course: 'Sistemas de Informação',   avatar: 'https://randomuser.me/api/portraits/men/11.jpg' },
-    { id: '4', name: 'Ana Souza',       course: 'Engenharia de Produção',   avatar: 'https://randomuser.me/api/portraits/women/65.jpg' },
-    { id: '5', name: 'Pedro Carvalho',  course: 'Engenharia Elétrica',      avatar: 'https://randomuser.me/api/portraits/men/78.jpg' },
-    { id: '6', name: 'Beatriz Ramos',   course: 'Ciência de Dados',         avatar: 'https://randomuser.me/api/portraits/women/12.jpg' },
-  ] as Student[],
-};
-
-export default function DashboardScreen() {
+export default function HomeIESScreen() {
   const navigation = useNavigation<DashboardScreenProp>();
   const { user } = useAuth();
-  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
-  const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+  const [dashboardData, setDashboardData] = useState<{
+    overview: { ativos: number; inativos: number; total: number };
+    evasao: { taxa: string };
+    students: Student[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const students = MOCK.risco;
-
-  // Carregar disciplinas do professor
+  // Carregar dados da IES
   useEffect(() => {
-    if (user?.IDUser && (user.Role === 'TEACHER' || user.Role === 'ADMIN')) {
-      loadDisciplines();
+    if (user?.Role === 'ADMIN') {
+      loadIESData();
     }
   }, [user]);
 
-  const loadDisciplines = async () => {
-    if (!user?.IDUser) return;
-    
+  const loadIESData = async () => {
     try {
-      setLoadingDisciplines(true);
-      const dashboard = await getProfessorDashboard(user.IDUser);
-      setDisciplines(dashboard.disciplinas || []);
+      setLoading(true);
+      const overview = await getIESOverview();
+      
+      // Calcular overview
+      const totalAlunos = overview.resumo.totalAlunos || 0;
+      // Assumindo que alunos ativos são aqueles com matrículas ativas
+      // Vamos usar uma estimativa baseada no total de matrículas
+      const totalMatriculas = overview.resumo.totalMatriculas || 0;
+      const alunosAtivos = Math.min(totalAlunos, totalMatriculas);
+      const alunosInativos = Math.max(0, totalAlunos - alunosAtivos);
+      
+      // Taxa de evasão
+      const taxaEvasao = parseFloat(overview.resumo.evasaoMedia) || 0;
+      
+      // Alunos em risco - baseado nos top 3 cursos com maior evasão
+      // Como não temos lista direta de alunos, vamos criar uma representação baseada nos cursos
+      const alunosRisco: Student[] = overview.top3CursosRisco
+        .slice(0, 6)
+        .map((curso, index) => ({
+          id: `curso-${index}`,
+          name: `Alunos do curso ${curso.curso}`,
+          course: curso.curso,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(curso.curso)}&background=random`,
+        }));
+      
+      setDashboardData({
+        overview: {
+          ativos: alunosAtivos,
+          inativos: alunosInativos,
+          total: totalAlunos,
+        },
+        evasao: {
+          taxa: `${taxaEvasao.toFixed(1)}%`,
+        },
+        students: alunosRisco,
+      });
     } catch (error) {
-      console.error('Erro ao carregar disciplinas:', error);
-      // Não mostrar erro ao usuário, apenas log
+      console.error('Erro ao carregar dados da IES:', error);
+      // Em caso de erro, usar valores padrão
+      setDashboardData({
+        overview: { ativos: 0, inativos: 0, total: 0 },
+        evasao: { taxa: '0%' },
+        students: [],
+      });
     } finally {
-      setLoadingDisciplines(false);
+      setLoading(false);
     }
   };
 
-  const handleDisciplinePress = useCallback((discipline: Discipline) => {
-    navigation.navigate('ClassStudents', {
-      subjectId: discipline.IDDisciplina,
-      subjectName: discipline.NomeDaDisciplina,
-    });
-  }, [navigation]);
 
   const ListHeader = useMemo(
     () => (
       <View style={{ gap: 20 }}>
         <Section title="Visão Geral dos Alunos">
-          <View style={styles.grid}>
-            <Card>
-              <Text style={styles.cardLabel}>Ativos</Text>
-              <Text style={styles.cardValue}>{MOCK.overview.ativos}</Text>
-            </Card>
-            <Card>
-              <Text style={styles.cardLabel}>Inativos</Text>
-              <Text style={styles.cardValue}>{MOCK.overview.inativos}</Text>
-            </Card>
-          </View>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.loadingText}>Carregando...</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.grid}>
+                <Card>
+                  <Text style={styles.cardLabel}>Ativos</Text>
+                  <Text style={styles.cardValue}>{dashboardData?.overview.ativos ?? 0}</Text>
+                </Card>
+                <Card>
+                  <Text style={styles.cardLabel}>Inativos</Text>
+                  <Text style={styles.cardValue}>{dashboardData?.overview.inativos ?? 0}</Text>
+                </Card>
+              </View>
 
-          <Card style={{ marginTop: 12 }}>
-            <Text style={styles.cardLabel}>Total</Text>
-            <Text style={styles.totalValue}>{MOCK.overview.total}</Text>
-          </Card>
+              <Card style={{ marginTop: 12 }}>
+                <Text style={styles.cardLabel}>Total</Text>
+                <Text style={styles.totalValue}>{dashboardData?.overview.total ?? 0}</Text>
+              </Card>
+            </>
+          )}
         </Section>
 
         <Section title="Indicadores de Evasão">
-          <Card>
-            <Text style={styles.cardLabel}>Taxa de Evasão</Text>
-            <Text style={styles.cardValue}>{MOCK.evasao.taxa}</Text>
-          </Card>
-        </Section>
-
-        {/* Novo botão para acessar a tela de Performance da Turma */}
-        <Section title="Performance da Turma">
-          <TouchableOpacity
-            style={[styles.rowContainer, { alignItems: 'center', justifyContent: 'center' }]}
-            onPress={() => navigation.navigate('ClassPerformance' as never)}
-          >
-            <Text style={{ fontWeight: '600', color: colors.text }}>Ver Desempenho Completo da Turma</Text>
-          </TouchableOpacity>
-        </Section>
-
-        {/* Seção de Disciplinas/Turmas */}
-        <Section title="Minhas Turmas">
-          {loadingDisciplines ? (
+          {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.loadingText}>Carregando turmas...</Text>
+              <Text style={styles.loadingText}>Carregando...</Text>
             </View>
-          ) : disciplines.length > 0 ? (
-            disciplines.map((discipline, index) => (
-              <TouchableOpacity
-                key={discipline.IDDisciplina}
-                style={[
-                  styles.disciplineCard,
-                  index === 0 && styles.disciplineCardFirst,
-                  index === disciplines.length - 1 && styles.disciplineCardLast,
-                ]}
-                onPress={() => handleDisciplinePress(discipline)}
-              >
-                <View style={styles.disciplineInfo}>
-                  <Text style={styles.disciplineName}>{discipline.NomeDaDisciplina}</Text>
-                  {discipline.CodigoDaDisciplina && (
-                    <Text style={styles.disciplineCode}>{discipline.CodigoDaDisciplina}</Text>
-                  )}
-                </View>
-                <Text style={styles.disciplineArrow}>→</Text>
-              </TouchableOpacity>
-            ))
           ) : (
             <Card>
-              <Text style={styles.emptyText}>Nenhuma turma encontrada</Text>
+              <Text style={styles.cardLabel}>Taxa de Evasão</Text>
+              <Text style={styles.cardValue}>{dashboardData?.evasao.taxa ?? '0%'}</Text>
             </Card>
           )}
         </Section>
@@ -151,10 +136,11 @@ export default function DashboardScreen() {
         <Section title="Alunos em Risco" />
       </View>
     ),
-    [disciplines, loadingDisciplines, handleDisciplinePress, navigation]
+    [dashboardData, loading, navigation]
   );
 
   const renderItem = ({ item, index }: ListRenderItemInfo<Student>) => {
+    const students = dashboardData?.students ?? [];
     const isFirst = index === 0;
     const isLast = index === students.length - 1;
 
@@ -172,6 +158,8 @@ export default function DashboardScreen() {
     );
   };
 
+  const students = dashboardData?.students ?? [];
+
   return (
     <SafeAreaView style={styles.safe}>
       <FlatList
@@ -183,6 +171,13 @@ export default function DashboardScreen() {
         initialNumToRender={8}
         windowSize={10}
         removeClippedSubviews
+        ListEmptyComponent={
+          !loading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhum dado de risco encontrado</Text>
+            </View>
+          ) : null
+        }
       />
     </SafeAreaView>
   );
@@ -263,5 +258,9 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
     textAlign: 'center',
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
 });
