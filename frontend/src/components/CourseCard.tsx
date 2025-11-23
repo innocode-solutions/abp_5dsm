@@ -8,9 +8,10 @@ interface CourseCardProps {
     title: string;
     description?: string;
     onEdit: () => void;
+    onDelete: () => void;
 }
 
-export default function CourseCard({ title, description, onEdit }: CourseCardProps) {
+export default function CourseCard({ title, description, onEdit, onDelete }: CourseCardProps) {
     return (
         <Card style={styles.card}>
             <View style={styles.content}>
@@ -23,6 +24,9 @@ export default function CourseCard({ title, description, onEdit }: CourseCardPro
                 </View>
                 <TouchableOpacity onPress={onEdit} style={styles.editButton}>
                     <Feather name="edit-2" size={20} color={colors.text || '#000'} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                    <Feather name="x" size={20} color="#E74C3C" />
                 </TouchableOpacity>
             </View>
         </Card>
@@ -61,5 +65,9 @@ const styles = StyleSheet.create({
     },
     editButton: {
         padding: 8,
+    },
+    deleteButton: {
+        padding: 8,
+        marginLeft: 4,
     },
 });
