@@ -1,4 +1,5 @@
 # Machine Learning & Data Science (usados no código)
+numpy>=1.26.0
 joblib==1.5.2
 pandas==2.3.2
 scikit-learn==1.7.2
@@ -12,4 +13,5 @@ seaborn==0.13.2
 # Testes
 pytest==9.0.0
 httpx==0.28.1
+
 
