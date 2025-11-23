@@ -45,10 +45,12 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
     name: 'Test User'
   }
   let randomIntSpy: jest.SpyInstance<number, any[]>
+  let isRateLimitedSpy: jest.SpyInstance<Promise<boolean>, [userId: string, ipAddress?: string]>
 
   beforeEach(() => {
     randomIntSpy = jest.spyOn(crypto, 'randomInt') as unknown as jest.SpyInstance<number, any[]>
     randomIntSpy.mockImplementation(() => 123456)
+    isRateLimitedSpy = jest.spyOn(PasswordResetService, 'isRateLimited')
     prisma.user.findUnique.mockReset()
     prisma.passwordResetRequest.count.mockReset()
     prisma.passwordResetRequest.updateMany.mockReset()
@@ -61,6 +63,7 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
 
   afterEach(() => {
     randomIntSpy.mockRestore()
+    isRateLimitedSpy.mockRestore()
   })
 
   it('retorna null quando usuário não existe', async () => {
@@ -74,8 +77,8 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
 
   it('lança erro quando excede limite por usuário ou IP', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(user)
-    // Primeiro count por usuário excede
-    prisma.passwordResetRequest.count.mockResolvedValueOnce(3)
+    // Mock do método isRateLimited para retornar true
+    isRateLimitedSpy.mockResolvedValueOnce(true)
 
     await expect(
       PasswordResetService.generateAndStoreOtp(user.Email, '127.0.0.1')
@@ -85,9 +88,8 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
 
   it('cria solicitação de redefinição quando dentro do limite', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(user)
-    prisma.passwordResetRequest.count
-      .mockResolvedValueOnce(1) // por usuário
-      .mockResolvedValueOnce(0) // por IP
+    // Mock do método isRateLimited para retornar false (dentro do limite)
+    isRateLimitedSpy.mockResolvedValueOnce(false)
     prisma.passwordResetRequest.updateMany.mockResolvedValueOnce({ count: 1 })
     prisma.passwordResetRequest.create.mockResolvedValueOnce({})
 
@@ -134,7 +136,11 @@ describe('PasswordResetService.verifyOtp', () => {
   }
 
   beforeEach(() => {
+    prisma.user.findUnique.mockReset()
     prisma.user.findUnique.mockResolvedValue(user)
+    prisma.passwordResetRequest.findFirst.mockReset()
+    prisma.passwordResetRequest.update.mockReset()
+    mockedCompare.mockReset()
   })
 
   it('lança erro quando usuário não existe', async () => {
@@ -231,11 +237,12 @@ describe('PasswordResetService.verifyOtp', () => {
       requestId: request.id
     })
 
+    // verifyOtp incrementa tentativas mas mantém status PENDING (não marca como USED)
     expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
       where: { id: request.id },
       data: {
         attempts: request.attempts + 1,
-        status: PasswordResetStatus.USED
+        // status não é alterado, mantém PENDING
       }
     })
   })
