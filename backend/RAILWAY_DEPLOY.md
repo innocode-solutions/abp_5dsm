@@ -40,11 +40,26 @@ Configure as seguintes variáveis de ambiente no Railway:
 
 ### 3. Deploy
 
+#### ⚠️ CONFIGURAÇÃO CRÍTICA: Root Directory
+
+**ANTES DE FAZER O DEPLOY**, você DEVE configurar o Root Directory:
+
+1. No Railway Dashboard, vá em seu serviço backend
+2. Clique em **Settings** (ou ⚙️)
+3. Role até a seção **Build**
+4. Em **Root Directory**, digite: `backend`
+5. Clique em **Save**
+
+**Por que isso é importante?**
+- Sem o Root Directory correto, o Railway tenta fazer build na raiz do projeto
+- O Dockerfile não encontra o diretório `prisma` e o build falha
+- O erro será: `"/prisma": not found`
+
 #### Opção A: Deploy Automático via GitHub
 
 1. No Railway, crie um novo projeto
 2. Conecte seu repositório GitHub
-3. Configure o **Root Directory** para `backend` ⚠️ **IMPORTANTE**
+3. **Configure o Root Directory para `backend`** ⚠️ **OBRIGATÓRIO**
 4. O Railway vai usar o `Dockerfile` (configurado via `railway.json`)
 5. Configure as variáveis de ambiente (veja seção abaixo)
 6. O deploy será feito automaticamente a cada push
@@ -95,4 +110,11 @@ Após o deploy, verifique:
 ### Erro: "Port already in use"
 - O Railway gerencia a porta automaticamente via `PORT`
 - Não configure `PORT` manualmente, deixe o Railway definir
+
+### Erro: "/prisma": not found
+- **Causa**: Root Directory não está configurado como `backend`
+- **Solução**: 
+  1. Vá em Settings → Build
+  2. Configure **Root Directory** como `backend`
+  3. Salve e faça um novo deploy
 

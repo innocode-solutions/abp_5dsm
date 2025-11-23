@@ -9,6 +9,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+
+# Copy Prisma schema (necessário para gerar o client)
+# Se o prisma não existir, o build falhará - isso garante que o Root Directory está correto
 COPY prisma ./prisma
 
 # Install all dependencies (include devDependencies for build)
@@ -17,6 +20,7 @@ RUN npm ci
 # Generate Prisma client
 # DATABASE_URL dummy apenas para validação do schema durante o build
 # Não afeta o runtime pois é definida apenas neste RUN
+# ⚠️ NUNCA use credenciais reais aqui - apenas uma URL dummy para validação
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 # Copy source code
@@ -84,4 +88,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start script that runs migrations and starts the app
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
