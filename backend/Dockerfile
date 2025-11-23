@@ -37,7 +37,7 @@ RUN apk add --no-cache \
     make \
     libc-dev \
     wget \
-    && python3 -m pip install --upgrade pip
+    && python3 -m pip install --upgrade pip --break-system-packages
 
 # Create non-root user and group for security
 RUN addgroup -g 1001 -S appgroup \
@@ -63,7 +63,7 @@ COPY --from=builder --chown=appuser:appgroup /app/requirements.txt ./requirement
 
 # Install Python dependencies (as root, before switching user)
 # Instala globalmente para que o usuário não-root possa usar
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages
 
 # Switch to non-root user
 USER appuser
