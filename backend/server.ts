@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import https from 'https';
+import os from 'os';
 import { sanitizeRequest } from './src/middleware/sanitizeMiddleware';
 
 dotenv.config();
@@ -39,28 +40,27 @@ const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 8443;
 
 // ======== Security middleware ========
 app.use(helmet({
- contentSecurityPolicy: {
-  directives: {
-   defaultSrc: ["'self'"],
-   styleSrc: ["'self'", "'unsafe-inline'"],
-   scriptSrc: ["'self'"],
-   imgSrc: ["'self'", "data:", "https:"],
-  },
- },
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  } : false, // Desabilitar CSP em desenvolvimento para facilitar conexões locais
+  crossOriginEmbedderPolicy: false, // Permitir conexões externas
 }));
 
 // ======== CORS configuration ========
-// Para React Native, permitir todas as origens em desenvolvimento
-const corsOptions = {
- origin: process.env.NODE_ENV === 'production' 
-  ? (process.env.FRONTEND_URL || 'http://localhost:3333')
-  : true, // Permite todas as origens em desenvolvimento (necessário para React Native)
- credentials: true,
- methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
- allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-};
-
-app.use(cors(corsOptions));
+// Permitir todas as origens (desenvolvimento e produção)
+// Necessário para React Native, mobile apps e desenvolvimento local
+app.use(cors({
+  origin: true, // Aceita qualquer origem
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Authorization'],
+}));
 
 // ======== Body parsing ========
 app.use(express.json({ limit: '10mb' }));
@@ -155,7 +155,24 @@ const httpServer = http.createServer(app);
 initializeSocket(httpServer);
 
 httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
+  // Obter IP local para exibir
+  const networkInterfaces = os.networkInterfaces();
+  let localIp = '192.168.18.7'; // IP padrão conhecido
+  
+  // Tentar detectar IP automaticamente
+  for (const interfaceName in networkInterfaces) {
+    const interfaces = networkInterfaces[interfaceName];
+    if (interfaces) {
+      for (const iface of interfaces) {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          localIp = iface.address;
+          break;
+        }
+      }
+    }
+  }
+  
+  console.log(`🚀 Servidor HTTP rodando em http://0.0.0.0:${HTTP_PORT}`);
   console.log(`🌎 Ambiente: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Health: http://localhost:${HTTP_PORT}/health`);
   console.log(`🗄️ DB Health: http://localhost:${HTTP_PORT}/health/db`);
@@ -163,6 +180,8 @@ httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
   console.log(`📚 API: http://localhost:${HTTP_PORT}/api`);
   console.log(`🔌 WebSocket ativo na porta ${HTTP_PORT}`);
   console.log(`💡 Frontend deve conectar em: http://localhost:${HTTP_PORT}/api`);
+  console.log(`📱 Acessível na rede local: http://${localIp}:${HTTP_PORT}/api`);
+  console.log(`📱 Teste no celular: http://${localIp}:${HTTP_PORT}/health`);
 });
 
 export default app;

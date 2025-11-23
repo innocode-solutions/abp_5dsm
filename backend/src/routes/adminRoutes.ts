@@ -12,3 +12,4 @@ router.post('/assign-teacher-all-disciplines', AdminController.assignTeacherToAl
 
 export default router;
 
+

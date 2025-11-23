@@ -7,44 +7,69 @@ import { getToken, clearTokens } from "../service/tokenStore";
 // ============================================================================
 
 function getApiUrl(): string {
-  // Porta padrão do backend
+  // Porta padrão do backend (SEMPRE 8080, nunca 3000)
   const BACKEND_PORT = process.env.EXPO_PUBLIC_BACKEND_PORT || '8080';
   
-  // Se EXPO_PUBLIC_API_URL existir → usa ela primeiro, mas SEMPRE força a porta correta
+  // PRIORIDADE 1: Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual (desenvolvimento local)
+  // Isso tem prioridade sobre EXPO_PUBLIC_API_URL para garantir que use o IP local
+  const machineIp = process.env.EXPO_PUBLIC_MACHINE_IP;
+  if (machineIp) {
+    const url = `http://${machineIp}:${BACKEND_PORT}/api`;
+    console.log('🔗 Usando IP local:', url);
+    return url;
+  }
+  
+  // PRIORIDADE 2: Se EXPO_PUBLIC_API_URL existir → usa ela diretamente (produção/Railway)
+  // O Railway fornece a URL completa com protocolo, domínio e porta corretos
   if (process.env.EXPO_PUBLIC_API_URL) {
     const url = process.env.EXPO_PUBLIC_API_URL;
     try {
       const urlObj = new URL(url);
-      // SEMPRE força a porta correta, independente do que estiver na URL
-      urlObj.port = BACKEND_PORT;
+      // Garante que termina com /api
+      if (!urlObj.pathname.endsWith('/api')) {
+        urlObj.pathname = urlObj.pathname.endsWith('/') 
+          ? `${urlObj.pathname}api` 
+          : `${urlObj.pathname}/api`;
+      }
+      // FORÇA a porta 8080 se não estiver especificada ou se for 3000
+      if (!urlObj.port || urlObj.port === '3000') {
+        urlObj.port = BACKEND_PORT;
+      }
+      console.log('🔗 Usando API URL:', urlObj.toString());
       return urlObj.toString();
     } catch {
       // Se a URL for inválida, ignora e usa a lógica padrão
     }
   }
 
-  // Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual com porta correta
-  const machineIp = process.env.EXPO_PUBLIC_MACHINE_IP;
-  if (machineIp) {
-    return `http://${machineIp}:${BACKEND_PORT}/api`;
-  }
-
-  // Android Emulator - sempre HTTP na porta correta
+  // PRIORIDADE 3: Android Emulator - sempre HTTP na porta 8080
   if (Platform.OS === "android") {
-    return `http://10.0.2.2:${BACKEND_PORT}/api`;
+    const url = `http://10.0.2.2:${BACKEND_PORT}/api`;
+    console.log('🔗 Usando Android Emulator:', url);
+    return url;
   }
 
-  // iOS Simulator - sempre HTTP na porta correta
+  // PRIORIDADE 4: iOS Simulator - sempre HTTP na porta 8080
   if (Platform.OS === "ios") {
-    return `http://localhost:${BACKEND_PORT}/api`;
+    const url = `http://localhost:${BACKEND_PORT}/api`;
+    console.log('🔗 Usando iOS Simulator:', url);
+    return url;
   }
 
-  // Web - usar HTTP na porta correta
-  return `http://localhost:${BACKEND_PORT}/api`;
+  // PRIORIDADE 5: Web - usar HTTP na porta 8080
+  const url = `http://localhost:${BACKEND_PORT}/api`;
+  console.log('🔗 Usando Web:', url);
+  return url;
 }
 
 export const API_URL = getApiUrl();
 
+// Debug: Log da URL sendo usada (remover em produção)
+if (__DEV__) {
+  console.log('🔗 API URL configurada:', API_URL);
+  console.log('📱 EXPO_PUBLIC_MACHINE_IP:', process.env.EXPO_PUBLIC_MACHINE_IP || 'não definido');
+  console.log('🔌 EXPO_PUBLIC_BACKEND_PORT:', process.env.EXPO_PUBLIC_BACKEND_PORT || '8080 (padrão)');
+}
 
 export const apiConnection = axios.create({
   baseURL: API_URL,

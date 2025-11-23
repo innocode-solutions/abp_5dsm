@@ -24,8 +24,12 @@ O Railway vai procurar por um `Dockerfile` na raiz do diretório `backend`. O Do
 Configure as seguintes variáveis de ambiente no Railway:
 
 #### Obrigatórias:
-- `DATABASE_URL` - URL de conexão do PostgreSQL (Railway fornece automaticamente se você criar um banco)
+- `DATABASE_URL` - URL de conexão do PostgreSQL
+  - **Como obter**: No Railway, vá em seu serviço PostgreSQL → Variables → `DATABASE_URL` (ou `POSTGRES_URL`)
+  - **Formato**: `postgresql://usuario:senha@host:porta/database`
+  - **Importante**: Se você criou o banco no Railway, a variável pode ser criada automaticamente. Caso contrário, copie a URL completa do banco.
 - `JWT_SECRET` - Chave secreta para JWT (gere uma string aleatória segura)
+  - **Como gerar**: Use `openssl rand -base64 32` ou qualquer gerador de string aleatória
 - `NODE_ENV` - `production`
 
 #### Opcionais (com valores padrão):

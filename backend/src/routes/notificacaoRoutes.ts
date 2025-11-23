@@ -27,3 +27,4 @@ router.delete('/read/all', NotificacaoController.deleteAllRead);
 
 export default router;
 
+

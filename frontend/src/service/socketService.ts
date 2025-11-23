@@ -8,52 +8,65 @@ type ISocket = ReturnType<typeof io>;
 // Função para obter a URL do Socket
 // IMPORTANTE: Socket.io conecta na raiz do servidor, NÃO em /api
 function getSocketUrl(): string {
+  // Porta padrão do backend (SEMPRE 8080, nunca 3000)
   const backendPort = process.env.EXPO_PUBLIC_BACKEND_PORT || '8080';
   
-  // Se EXPO_PUBLIC_SOCKET_URL existir → remove /api e força porta correta
-  if (process.env.EXPO_PUBLIC_SOCKET_URL) {
-    try {
-      const socketUrl = process.env.EXPO_PUBLIC_SOCKET_URL;
-      // Remove /api do final se existir
-      const urlWithoutApi = socketUrl.replace(/\/api\/?$/, '');
-      const urlObj = new URL(urlWithoutApi);
-      // SEMPRE força a porta correta
-      urlObj.port = backendPort;
-      return urlObj.toString();
-    } catch {
-      // Se a URL for inválida, ignora e usa a lógica padrão
-    }
-  }
-
-  // Se EXPO_PUBLIC_API_URL existir, remove /api e força porta correta
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    try {
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-      // Remove /api do final se existir
-      const urlWithoutApi = apiUrl.replace(/\/api\/?$/, '');
-      const urlObj = new URL(urlWithoutApi);
-      // SEMPRE força a porta correta
-      urlObj.port = backendPort;
-      return urlObj.toString();
-    } catch {
-      // Se a URL for inválida, ignora e usa a lógica padrão
-    }
-  }
-
-  // Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual
+  // PRIORIDADE 1: Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual (desenvolvimento local)
   const machineIp = process.env.EXPO_PUBLIC_MACHINE_IP;
   if (machineIp) {
     // ✅ Socket.io conecta na raiz do servidor, não em /api
-    return `http://${machineIp}:${backendPort}`;
+    const url = `http://${machineIp}:${backendPort}`;
+    console.log('🔌 Socket usando IP local:', url);
+    return url;
+  }
+  
+  // PRIORIDADE 2: Se EXPO_PUBLIC_SOCKET_URL existir → usa ela diretamente (produção/Railway)
+  if (process.env.EXPO_PUBLIC_SOCKET_URL) {
+    try {
+      const socketUrl = process.env.EXPO_PUBLIC_SOCKET_URL;
+      // Remove /api do final se existir (Socket.io conecta na raiz)
+      const urlWithoutApi = socketUrl.replace(/\/api\/?$/, '');
+      const urlObj = new URL(urlWithoutApi);
+      // FORÇA a porta 8080 se não estiver especificada ou se for 3000
+      if (!urlObj.port || urlObj.port === '8080') {
+        urlObj.port = backendPort;
+      }
+      console.log('🔌 Socket usando SOCKET_URL:', urlObj.toString());
+      return urlObj.toString();
+    } catch {
+      // Se a URL for inválida, ignora e usa a lógica padrão
+    }
   }
 
-  // Android Emulator
+  // PRIORIDADE 3: Se EXPO_PUBLIC_API_URL existir, remove /api e usa diretamente (produção/Railway)
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    try {
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+      // Remove /api do final se existir (Socket.io conecta na raiz)
+      const urlWithoutApi = apiUrl.replace(/\/api\/?$/, '');
+      const urlObj = new URL(urlWithoutApi);
+      // FORÇA a porta 8080 se não estiver especificada ou se for 3000
+      if (!urlObj.port || urlObj.port === '8080') {
+        urlObj.port = backendPort;
+      }
+      console.log('🔌 Socket usando API_URL:', urlObj.toString());
+      return urlObj.toString();
+    } catch {
+      // Se a URL for inválida, ignora e usa a lógica padrão
+    }
+  }
+
+  // PRIORIDADE 4: Android Emulator
   if (Platform.OS === "android") {
-    return `http://10.0.2.2:${backendPort}`;
+    const url = `http://192.168.18.7:${backendPort}`;
+    console.log('🔌 Socket usando Android Emulator:', url);
+    return url;
   }
 
-  // iOS Simulator ou Web
-  return `http://localhost:${backendPort}`;
+  // PRIORIDADE 5: iOS Simulator ou Web
+  const url = `http://192.168.18.7:${backendPort}`;
+  console.log('🔌 Socket usando localhost:', url);
+  return url;
 }
 
 const SOCKET_URL = getSocketUrl();

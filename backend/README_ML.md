@@ -40,3 +40,4 @@ curl http://localhost:3333/health/ml
 - Não é necessário rodar um serviço Python separado
 - Todos os arquivos ML estão dentro do backend para facilitar deploy
 
+
