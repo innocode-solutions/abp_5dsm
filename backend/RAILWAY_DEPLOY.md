@@ -44,10 +44,15 @@ Configure as seguintes variáveis de ambiente no Railway:
 
 1. No Railway, crie um novo projeto
 2. Conecte seu repositório GitHub
-3. Configure o **Root Directory** para `backend`
-4. O Railway vai detectar o `Dockerfile` automaticamente
-5. Configure as variáveis de ambiente
+3. Configure o **Root Directory** para `backend` ⚠️ **IMPORTANTE**
+4. O Railway vai usar o `Dockerfile` (configurado via `railway.json`)
+5. Configure as variáveis de ambiente (veja seção abaixo)
 6. O deploy será feito automaticamente a cada push
+
+**⚠️ Se o Railway tentar usar Railpack/Nixpacks:**
+- Verifique se o **Root Directory** está configurado como `backend`
+- O arquivo `railway.json` força o uso do Dockerfile
+- Se ainda assim usar Railpack, vá em Settings → Build → Builder → selecione "Dockerfile"
 
 #### Opção B: Deploy Manual
 
