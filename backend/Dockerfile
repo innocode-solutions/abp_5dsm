@@ -38,6 +38,8 @@ RUN apk add --no-cache \
     libc-dev \
     wget \
     cmake \
+    llvm \
+    llvm-dev \
     && python3 -m pip install --upgrade pip --break-system-packages
 
 # Create non-root user and group for security
