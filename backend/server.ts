@@ -18,7 +18,7 @@ const app = express();
 // ======== HTTPS CONFIGURATION ========
 const basePath = process.cwd(); // garante caminho correto no Docker
 const SSL_KEY_PATH = path.resolve(basePath, process.env.SSL_KEY_PATH || 'certs/server.key');
-const SSL_CERT_PATH = path.resolve(basePath, process.env.SSL_CERT_PATH || 'certs/server.crt');
+const SSL_CERT_PATH = path.resolve(basePath, process.env.SSL_CERT_PATH || 'certs/server.cert');
 
 const useHttps = fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH);
 
