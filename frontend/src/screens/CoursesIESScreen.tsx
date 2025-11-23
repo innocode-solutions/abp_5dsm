@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import colors from '../theme/colors';
@@ -67,6 +67,32 @@ export default function CoursesIESScreen() {
     }
   };
 
+  const handleDeleteCourse = (course: Course) => {
+    Alert.alert(
+      'Excluir Curso',
+      `Tem certeza que deseja excluir o curso "${course.NomeDoCurso}"? Esta ação não pode ser desfeita.`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await courseService.delete(course.IDCurso);
+              fetchCourses(); // Refresh list
+            } catch (error) {
+              console.error('Error deleting course:', error);
+              Alert.alert('Erro', 'Não foi possível excluir o curso. Tente novamente.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
@@ -92,6 +118,7 @@ export default function CoursesIESScreen() {
                   title={item.NomeDoCurso}
                   description={item.Descricao}
                   onEdit={() => handleEditCourse(item)}
+                  onDelete={() => handleDeleteCourse(item)}
                 />
               )}
               contentContainerStyle={styles.listContent}
