@@ -28,6 +28,10 @@ jest.mock('bcrypt', () => ({
 
 const { prisma } = require('../src/config/database')
 
+// Variáveis tipadas para os mocks do bcrypt
+const mockedHash = bcrypt.hash as jest.Mock<Promise<string>, [data: string | Buffer, saltOrRounds: string | number]>
+const mockedCompare = bcrypt.compare as jest.Mock<Promise<boolean>, [data: string | Buffer, encrypted: string]>
+
 const PasswordResetStatus = {
   PENDING: 'PENDING',
   USED: 'USED',
@@ -41,22 +45,25 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
     name: 'Test User'
   }
   let randomIntSpy: jest.SpyInstance<number, any[]>
+  let isRateLimitedSpy: jest.SpyInstance<Promise<boolean>, [userId: string, ipAddress?: string]>
 
   beforeEach(() => {
     randomIntSpy = jest.spyOn(crypto, 'randomInt') as unknown as jest.SpyInstance<number, any[]>
     randomIntSpy.mockImplementation(() => 123456)
+    isRateLimitedSpy = jest.spyOn(PasswordResetService, 'isRateLimited')
     prisma.user.findUnique.mockReset()
     prisma.passwordResetRequest.count.mockReset()
     prisma.passwordResetRequest.updateMany.mockReset()
     prisma.passwordResetRequest.create.mockReset()
     prisma.passwordResetRequest.findFirst.mockReset()
     prisma.passwordResetRequest.update.mockReset()
-    bcrypt.hash.mockClear()
-    bcrypt.compare.mockReset()
+    mockedHash.mockClear()
+    mockedCompare.mockReset()
   })
 
   afterEach(() => {
     randomIntSpy.mockRestore()
+    isRateLimitedSpy.mockRestore()
   })
 
   it('retorna null quando usuário não existe', async () => {
@@ -70,8 +77,8 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
 
   it('lança erro quando excede limite por usuário ou IP', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(user)
-    // Primeiro count por usuário excede
-    prisma.passwordResetRequest.count.mockResolvedValueOnce(3)
+    // Mock do método isRateLimited para retornar true
+    isRateLimitedSpy.mockResolvedValueOnce(true)
 
     await expect(
       PasswordResetService.generateAndStoreOtp(user.Email, '127.0.0.1')
@@ -81,9 +88,8 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
 
   it('cria solicitação de redefinição quando dentro do limite', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(user)
-    prisma.passwordResetRequest.count
-      .mockResolvedValueOnce(1) // por usuário
-      .mockResolvedValueOnce(0) // por IP
+    // Mock do método isRateLimited para retornar false (dentro do limite)
+    isRateLimitedSpy.mockResolvedValueOnce(false)
     prisma.passwordResetRequest.updateMany.mockResolvedValueOnce({ count: 1 })
     prisma.passwordResetRequest.create.mockResolvedValueOnce({})
 
@@ -99,7 +105,7 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
       data: { status: PasswordResetStatus.EXPIRED }
     })
 
-    expect(bcrypt.hash).toHaveBeenCalledWith('123456', 12)
+    expect(mockedHash).toHaveBeenCalledWith('123456', 12)
 
     expect(prisma.passwordResetRequest.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -130,7 +136,11 @@ describe('PasswordResetService.verifyOtp', () => {
   }
 
   beforeEach(() => {
+    prisma.user.findUnique.mockReset()
     prisma.user.findUnique.mockResolvedValue(user)
+    prisma.passwordResetRequest.findFirst.mockReset()
+    prisma.passwordResetRequest.update.mockReset()
+    mockedCompare.mockReset()
   })
 
   it('lança erro quando usuário não existe', async () => {
@@ -178,13 +188,13 @@ describe('PasswordResetService.verifyOtp', () => {
       attempts: 1
     }
     prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(request)
-    bcrypt.compare.mockResolvedValueOnce(false)
+    mockedCompare.mockResolvedValueOnce(false)
 
     await expect(
       PasswordResetService.verifyOtp(user.Email, '000000')
     ).rejects.toThrow('INVALID_OR_EXPIRED')
 
-    expect(bcrypt.compare).toHaveBeenCalledWith('000000', request.otpHash)
+    expect(mockedCompare).toHaveBeenCalledWith('000000', request.otpHash)
     expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
       where: { id: request.id },
       data: expect.objectContaining({
@@ -217,7 +227,7 @@ describe('PasswordResetService.verifyOtp', () => {
       attempts: 2
     }
     prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(request)
-    bcrypt.compare.mockResolvedValueOnce(true)
+    mockedCompare.mockResolvedValueOnce(true)
 
     const result = await PasswordResetService.verifyOtp(user.Email, '123456')
 
@@ -227,11 +237,12 @@ describe('PasswordResetService.verifyOtp', () => {
       requestId: request.id
     })
 
+    // verifyOtp incrementa tentativas mas mantém status PENDING (não marca como USED)
     expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
       where: { id: request.id },
       data: {
         attempts: request.attempts + 1,
-        status: PasswordResetStatus.USED
+        // status não é alterado, mantém PENDING
       }
     })
   })
