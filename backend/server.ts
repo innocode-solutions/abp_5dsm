@@ -33,7 +33,8 @@ if (useHttps) {
 }
 
 // Ports
-const HTTP_PORT = Number(process.env.HTTP_PORT) || 8080;
+// Railway fornece PORT automaticamente, use ela se disponível
+const HTTP_PORT = Number(process.env.PORT) || Number(process.env.HTTP_PORT) || 8080;
 const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 8443;
 
 // ======== Security middleware ========
