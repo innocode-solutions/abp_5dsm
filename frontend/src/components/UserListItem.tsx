@@ -1,14 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import Card from './Card';
 import colors from '../theme/colors';
 import { CreateUserResponse } from '../service/userService';
 
 interface UserListItemProps {
     user: CreateUserResponse;
+    onEdit?: (user: CreateUserResponse) => void;
+    onDelete?: (user: CreateUserResponse) => void;
 }
 
-export default function UserListItem({ user }: UserListItemProps) {
+export default function UserListItem({ user, onEdit, onDelete }: UserListItemProps) {
     const getRoleLabel = (role: string) => {
         switch (role) {
             case 'STUDENT':
@@ -42,10 +45,34 @@ export default function UserListItem({ user }: UserListItemProps) {
                     <Text style={styles.name}>{user.name || 'Usuário sem nome'}</Text>
                     <Text style={styles.email}>{user.Email}</Text>
                 </View>
-                <View style={[styles.roleBadge, { backgroundColor: getRoleColor(user.Role) + '20' }]}>
-                    <Text style={[styles.roleText, { color: getRoleColor(user.Role) }]}>
-                        {getRoleLabel(user.Role)}
-                    </Text>
+                <View style={styles.rightSection}>
+                    <View style={[styles.roleBadge, { backgroundColor: getRoleColor(user.Role) + '20' }]}>
+                        <Text style={[styles.roleText, { color: getRoleColor(user.Role) }]}>
+                            {getRoleLabel(user.Role)}
+                        </Text>
+                    </View>
+                    {(onEdit || onDelete) && (
+                        <View style={styles.actions}>
+                            {onEdit && (
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => onEdit(user)}
+                                    accessibilityLabel="Editar usuário"
+                                >
+                                    <Feather name="edit-2" size={18} color={colors.primary} />
+                                </TouchableOpacity>
+                            )}
+                            {onDelete && (
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => onDelete(user)}
+                                    accessibilityLabel="Excluir usuário"
+                                >
+                                    <Feather name="trash-2" size={18} color="#ef4444" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
                 </View>
             </View>
         </Card>
@@ -74,6 +101,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#6b7280',
     },
+    rightSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
     roleBadge: {
         paddingHorizontal: 10,
         paddingVertical: 4,
@@ -83,5 +115,15 @@ const styles = StyleSheet.create({
     roleText: {
         fontSize: 12,
         fontWeight: '600',
+    },
+    actions: {
+        flexDirection: 'row',
+        gap: 8,
+        marginLeft: 8,
+    },
+    actionButton: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: '#f3f4f6',
     },
 });

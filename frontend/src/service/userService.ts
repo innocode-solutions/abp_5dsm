@@ -18,12 +18,33 @@ export interface CreateUserRequest {
   };
 }
 
+export interface UpdateUserRequest {
+  Email?: string;
+  Role?: 'STUDENT' | 'TEACHER';
+  name?: string;
+  alunoData?: {
+    Nome?: string;
+    Semestre?: number;
+    IDCurso?: string;
+  };
+}
+
 export interface CreateUserResponse {
   IDUser: string;
   Email: string;
   name: string | null;
   Role: string;
   createdAt: string;
+  alunos?: Array<{
+    IDAluno: string;
+    Nome: string;
+    Email: string;
+    Semestre: number;
+    curso?: {
+      IDCurso: string;
+      NomeDoCurso: string;
+    };
+  }>;
 }
 
 export const userService = {
@@ -67,6 +88,44 @@ export const userService = {
       return response.data.users || [];
     } catch (error: any) {
       console.error('Erro ao buscar usuários:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Busca um usuário por ID
+   */
+  getUserById: async (id: string): Promise<CreateUserResponse> => {
+    try {
+      const response = await apiConnection.get<CreateUserResponse>(`/users/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erro ao buscar usuário:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Atualiza um usuário existente
+   */
+  updateUser: async (id: string, data: UpdateUserRequest): Promise<CreateUserResponse> => {
+    try {
+      const response = await apiConnection.put<CreateUserResponse>(`/users/${id}`, data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erro ao atualizar usuário:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Exclui um usuário
+   */
+  deleteUser: async (id: string): Promise<void> => {
+    try {
+      await apiConnection.delete(`/users/${id}`);
+    } catch (error: any) {
+      console.error('Erro ao excluir usuário:', error);
       throw error;
     }
   },
