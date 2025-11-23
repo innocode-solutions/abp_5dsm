@@ -69,9 +69,8 @@ backend/
 
 ## 📚 Documentação
 
-- [ML_INTEGRATION.md](./ML_INTEGRATION.md) - Detalhes da integração ML
-- [START.md](./START.md) - Guia de início
-- [README_ML.md](./README_ML.md) - Documentação dos modelos
+- [README_ML.md](./README_ML.md) - Documentação dos modelos ML
+- [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md) - Guia de deploy no Railway
 
 ## 🐍 Requisitos Python
 
@@ -82,4 +81,16 @@ O backend executa scripts Python diretamente. Certifique-se de ter:
 
 ## 🔧 Troubleshooting
 
-Veja [START.md](./START.md) para soluções de problemas comuns.
+### Erro: "Script Python não encontrado"
+- Verifique se os arquivos estão em `backend/src/ml/models/`
+- Verifique se o caminho está correto no `mlService.ts`
+
+### Erro: "Python não disponível"
+- Instale Python 3.x
+- Verifique se está no PATH: `python --version` ou `python3 --version`
+
+### Erro: "ModuleNotFoundError" no Python
+- Instale as dependências: `pip install -r requirements.txt`
+
+### Erro: "@prisma/client" não encontrado
+- Execute: `npm run prisma:generate`

@@ -6,7 +6,13 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:android": "eas build --platform android",
+    "build:android:apk": "eas build --platform android --profile production --local",
+    "build:android:local": "npx expo prebuild --platform android && cd android && ./gradlew assembleRelease && cd ..",
+    "build:android:local-network": "eas build --platform android --profile local",
+    "build:local": "node scripts/build-local.js",
+    "build:ios": "eas build --platform ios"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
