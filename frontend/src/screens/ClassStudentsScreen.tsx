@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Card from '../components/Card';
 import Section from '../components/Section';
 import StudentListItem from '../components/StudentListItem';
+import { RootStackParamList } from '../navigation';
 import colors from '../theme/colors';
 import { getStudentsByClass, Student } from '../service/studentService';
 import {
@@ -26,13 +27,6 @@ import {
   offPredictionCreated,
   PredictionCreatedEvent,
 } from '../service/socketService';
-
-type RootStackParamList = {
-  ClassStudents: {
-    subjectId: string;
-    subjectName?: string;
-  };
-};
 
 type ClassStudentsRouteProp = RouteProp<RootStackParamList, 'ClassStudents'>;
 type ClassStudentsNavigationProp = NativeStackNavigationProp<
@@ -74,7 +68,6 @@ export default function ClassStudentsScreen() {
     async (event: PredictionCreatedEvent) => {
       // Verificar se o evento é da disciplina atual
       if (event.IDDisciplina === subjectId) {
-        console.log('Predição criada para esta disciplina, recarregando...');
         // Limpar timeout anterior se existir (debounce)
         if (reloadTimeoutRef.current) {
           clearTimeout(reloadTimeoutRef.current);
@@ -171,12 +164,22 @@ export default function ClassStudentsScreen() {
             isLast && styles.rowLast,
           ]}
         >
-          <StudentListItem student={item} />
+          <StudentListItem 
+            student={item} 
+            onAddNota={(studentId, studentName) => {
+              navigation.navigate('AddNota', {
+                studentId,
+                subjectId,
+                studentName,
+                subjectName,
+              });
+            }}
+          />
           {!isLast && <View style={styles.innerSeparator} />}
         </View>
       );
     },
-    [students.length]
+    [students.length, navigation, subjectId, subjectName]
   );
 
   // Header da lista

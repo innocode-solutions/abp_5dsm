@@ -50,7 +50,7 @@ export const AlunoHabitoDesempenhoSchema = z.object({
   frequencia: z.number().min(0).max(100),
   
   // Campos específicos para desempenho
-  Previous_Scores: z.number().min(0).max(100, 'Notas anteriores deve ser entre 0 e 100'),
+  // Previous_Scores removido para evitar viés - o modelo não deve usar notas anteriores
   Distance_from_Home: Distance,
   Gender: GenderEnum,
   Parental_Education_Level: EducationLevel,

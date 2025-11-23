@@ -1,6 +1,4 @@
-import { apiConnection } from "../api/apiConnection";
-
-const API_BASE_URL = "http://localhost:8080/api";
+import { API_URL } from "../api/apiConnection";
 
 export interface ForgotPasswordRequest {
   email: string;
@@ -43,7 +41,7 @@ class PasswordResetService {
     email: string
   ): Promise<ForgotPasswordResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/password/forgot`, {
+      const response = await fetch(`${API_URL}/auth/password/forgot`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +78,7 @@ class PasswordResetService {
   ): Promise<VerifyCodeResponse> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/auth/password/verify-code`,
+        `${API_URL}/auth/password/verify-code`,
         {
           method: "POST",
           headers: {
@@ -127,7 +125,7 @@ class PasswordResetService {
         throw new Error("A senha deve ter pelo menos 6 caracteres");
       }
 
-      const response = await fetch(`${API_BASE_URL}/auth/password/reset`, {
+      const response = await fetch(`${API_URL}/auth/password/reset`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

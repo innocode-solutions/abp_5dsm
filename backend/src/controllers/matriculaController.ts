@@ -67,7 +67,7 @@ export class MatriculaController {
         }
       });
     } catch (error) {
-      console.error('Error fetching enrollments:', error);
+      console.error('Error fetching enrollments');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -110,7 +110,7 @@ export class MatriculaController {
 
       res.json(matricula);
     } catch (error) {
-      console.error('Error fetching enrollment:', error);
+      console.error('Error fetching enrollment');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -213,7 +213,7 @@ export class MatriculaController {
 
       res.status(201).json(matricula);
     } catch (error) {
-      console.error('Error creating enrollment:', error);
+      console.error('Error creating enrollment');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           return res.status(409).json({ error: 'Student is already enrolled in this subject for this period' });
@@ -270,7 +270,7 @@ export class MatriculaController {
 
       res.json(matricula);
     } catch (error) {
-      console.error('Error updating enrollment:', error);
+      console.error('Error updating enrollment');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           return res.status(404).json({ error: 'Enrollment not found' });
@@ -291,7 +291,7 @@ export class MatriculaController {
 
       res.status(204).send();
     } catch (error) {
-      console.error('Error deleting enrollment:', error);
+      console.error('Error deleting enrollment');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           return res.status(404).json({ error: 'Enrollment not found' });
@@ -338,7 +338,7 @@ export class MatriculaController {
 
       res.json(matriculas);
     } catch (error) {
-      console.error('Error fetching enrollments by student:', error);
+      console.error('Error fetching enrollments by student');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -382,7 +382,7 @@ export class MatriculaController {
 
       res.json(matriculas);
     } catch (error) {
-      console.error('Error fetching enrollments by subject:', error);
+      console.error('Error fetching enrollments by subject');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -432,7 +432,7 @@ export class MatriculaController {
 
       res.json(matriculas);
     } catch (error) {
-      console.error('Error fetching enrollments by period:', error);
+      console.error('Error fetching enrollments by period');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -483,7 +483,7 @@ export class MatriculaController {
         data: results
       });
     } catch (error) {
-      console.error('Error bulk creating enrollments:', error);
+      console.error('Error bulk creating enrollments');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           return res.status(409).json({ error: 'One or more students are already enrolled in the specified subjects for the period' });

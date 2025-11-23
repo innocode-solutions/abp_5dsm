@@ -63,7 +63,7 @@ export class UserController {
   }
 
   private static handleError(err: unknown, defaultMessage: string, res: Response) {
-    console.error('UserController error:', err)
+    console.error('UserController error')
 
     if (err instanceof PrismaClientKnownRequestError) {
       switch (err.code) {

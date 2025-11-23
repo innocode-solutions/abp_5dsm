@@ -55,9 +55,13 @@ export function mapToDropoutData(habito: AlunoHabitoExtended) {
  * Converte motivacao (Int 0-10) para Motivation_Level (String: "Low"/"Medium"/"High")
  */
 function convertMotivacaoToLevel(motivacao: number | null | undefined): string {
-  if (motivacao === null || motivacao === undefined) return 'Medium'; // Default
-  if (motivacao <= 3) return 'Low';
-  if (motivacao <= 7) return 'Medium';
+  // Trata NaN, null, undefined e valores inválidos
+  if (motivacao === null || motivacao === undefined || isNaN(motivacao as number)) {
+    return 'Medium'; // Default
+  }
+  const numValue = Number(motivacao);
+  if (numValue <= 3) return 'Low';
+  if (numValue <= 7) return 'Medium';
   return 'High';
 }
 
@@ -82,8 +86,8 @@ export function mapToPerformanceData(habito: AlunoHabitoExtended) {
   const motivationLevel = habito.Motivation_Level || convertMotivacaoToLevel(habito.motivacao ?? null);
 
   // Valida todos os campos obrigatórios adicionais
+  // Previous_Scores removido - não é mais necessário para evitar viés
   const requiredFields = [
-    { field: 'Previous_Scores', name: 'Notas Anteriores' },
     { field: 'Distance_from_Home', name: 'Distância de Casa' },
     { field: 'Gender', name: 'Gênero' },
     { field: 'Parental_Education_Level', name: 'Nível Educacional dos Pais' },
@@ -115,9 +119,10 @@ export function mapToPerformanceData(habito: AlunoHabitoExtended) {
   const hoursStudied = habito.horasEstudo!;
   // Não fazemos conversão - o valor já vem em horas semanais do frontend
 
+  // REMOVER Previous_Scores para evitar viés - o modelo não deve usar notas anteriores
   return {
     Hours_Studied: hoursStudied,
-    Previous_Scores: habito.Previous_Scores!,
+    // Previous_Scores removido para evitar viés
     Sleep_Hours: habito.sono!,
     Distance_from_Home: habito.Distance_from_Home!,
     Attendance: habito.frequencia!,
@@ -165,7 +170,7 @@ export function hasCompletePerformanceData(habito: AlunoHabitoExtended | null): 
     habito.horasEstudo !== null &&
     habito.sono !== null &&
     habito.frequencia !== null &&
-    habito.Previous_Scores !== null &&
+    // Previous_Scores removido - não é mais necessário
     habito.Distance_from_Home &&
     habito.Gender &&
     habito.Parental_Education_Level &&

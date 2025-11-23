@@ -43,7 +43,7 @@ export class PeriodoLetivoController {
         }
       });
     } catch (error) {
-      console.error('Error fetching academic periods:', error);
+      console.error('Error fetching academic periods');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -94,7 +94,7 @@ export class PeriodoLetivoController {
 
       res.json(periodo);
     } catch (error) {
-      console.error('Error fetching academic period:', error);
+      console.error('Error fetching academic period');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -167,7 +167,7 @@ export class PeriodoLetivoController {
 
       res.status(201).json(periodo);
     } catch (error) {
-      console.error('Error creating academic period:', error);
+      console.error('Error creating academic period');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -252,7 +252,7 @@ export class PeriodoLetivoController {
 
       res.json(periodo);
     } catch (error) {
-      console.error('Error updating academic period:', error);
+      console.error('Error updating academic period');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           return res.status(404).json({ error: 'Academic period not found' });
@@ -273,7 +273,7 @@ export class PeriodoLetivoController {
 
       res.status(204).send();
     } catch (error) {
-      console.error('Error deleting academic period:', error);
+      console.error('Error deleting academic period');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           return res.status(404).json({ error: 'Academic period not found' });
@@ -312,7 +312,7 @@ export class PeriodoLetivoController {
 
       res.json(activePeriod);
     } catch (error) {
-      console.error('Error fetching active academic period:', error);
+      console.error('Error fetching active academic period');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -354,7 +354,7 @@ export class PeriodoLetivoController {
 
       res.json(result[1]);
     } catch (error) {
-      console.error('Error activating academic period:', error);
+      console.error('Error activating academic period');
       res.status(500).json({ error: 'Internal server error' });
     }
   }

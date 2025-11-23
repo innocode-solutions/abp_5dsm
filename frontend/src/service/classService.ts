@@ -32,7 +32,6 @@ export async function getTeacherClasses(professorId: string): Promise<Class[]> {
           };
         } catch (error) {
           // Se houver erro ao buscar alunos, retornar com contagem 0
-          console.warn(`Erro ao buscar alunos da disciplina ${discipline.IDDisciplina}:`, error);
           return {
             IDDisciplina: discipline.IDDisciplina,
             NomeDaDisciplina: discipline.NomeDaDisciplina,

@@ -25,7 +25,35 @@ export interface PredictionResponse {
     Classificacao: string;
     Explicacao: string;
     createdAt: string;
+    disciplina?: string; // Opcional, pode não estar presente
   };
+}
+
+interface DropoutPredictionApiResponse {
+  success: boolean;
+  prediction: {
+    IDPrediction: string;
+    IDMatricula?: string;
+    probabilidade: number;
+    classificacao: string;
+    explicacao: string;
+    createdAt: string;
+    disciplina?: string;
+  };
+}
+
+interface MatriculaResponse {
+  IDMatricula: string;
+  [key: string]: any;
+}
+
+interface UserWithAlunos {
+  IDUser: string;
+  alunos?: Array<{
+    IDAluno: string;
+    [key: string]: any;
+  }>;
+  [key: string]: any;
 }
 
 export interface PredictionError {
@@ -44,10 +72,16 @@ export const PredictionService = {
     try {
       const token = await getToken();
       
+      // Incluir IDMatricula no body se fornecido
+      const requestData = {
+        ...engagementData,
+        ...(IDMatricula && { IDMatricula })
+      };
+      
       // Usa o novo endpoint que salva os dados e retorna a predição
       const response = await axios.post(
         `${API_URL}/aluno-habitos/predict/dropout`,
-        engagementData,
+        requestData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -57,18 +91,19 @@ export const PredictionService = {
       );
       
       // Adapta a resposta para o formato esperado
-      const result = response.data;
+      const result = response.data as DropoutPredictionApiResponse;
       return {
         success: result.success,
         message: 'Predição gerada com sucesso',
         data: {
           IDPrediction: result.prediction.IDPrediction,
-          IDMatricula: IDMatricula,
+          IDMatricula: result.prediction.IDMatricula || IDMatricula,
           TipoPredicao: 'EVASAO' as const,
           Probabilidade: result.prediction.probabilidade / 100,
           Classificacao: result.prediction.classificacao,
           Explicacao: result.prediction.explicacao,
           createdAt: result.prediction.createdAt,
+          disciplina: result.prediction.disciplina, // Incluir disciplina se disponível
         },
       };
     } catch (error: any) {
@@ -102,14 +137,22 @@ export const PredictionService = {
 
   /**
    * Gera uma predição de desempenho com base nos hábitos do aluno
+   * @param habitData - Dados de hábitos do aluno
+   * @param matriculaId - ID da matrícula (opcional) - se fornecido, a predição será salva para essa matrícula específica
    */
-  async predictPerformance(habitData: any): Promise<any> {
+  async predictPerformance(habitData: any, matriculaId?: string): Promise<any> {
     try {
       const token = await getToken();
       
+      // Incluir IDMatricula no body se fornecido
+      const requestData = {
+        ...habitData,
+        ...(matriculaId && { IDMatricula: matriculaId })
+      };
+      
       const response = await axios.post(
         `${API_URL}/aluno-habitos/predict/performance`,
-        habitData,
+        requestData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -150,11 +193,11 @@ export const PredictionService = {
   /**
    * Busca matrículas do aluno atual
    */
-  async getStudentMatriculas(alunoId: string): Promise<any[]> {
+  async getStudentMatriculas(alunoId: string): Promise<MatriculaResponse[]> {
     try {
       const token = await getToken();
       
-      const response = await axios.get(
+      const response = await axios.get<MatriculaResponse[]>(
         `${API_URL}/matriculas/aluno/${alunoId}`,
         {
           headers: {
@@ -177,7 +220,7 @@ export const PredictionService = {
       const token = await getToken();
       
       // Usa o endpoint /auth/me que retorna o usuário com seus alunos
-      const response = await axios.get(
+      const response = await axios.get<UserWithAlunos>(
         `${API_URL}/auth/me`,
         {
           headers: {

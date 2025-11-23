@@ -14,7 +14,7 @@ export interface HabitData {
     frequencia: number;
     
     // Campos adicionais para desempenho
-    Previous_Scores?: number;
+    // Previous_Scores removido para evitar viés - não é mais necessário
     Distance_from_Home?: string;
     Gender?: string;
     Parental_Education_Level?: string;

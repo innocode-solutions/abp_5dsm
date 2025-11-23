@@ -15,6 +15,8 @@ import HabitsScreen from '../screens/StudentHabitScreen';
 import EngagementScreen from '../screens/StudentEngagementScreen';
 import StudentFeedbacksScreen from '../screens/StudentFeedbacksScreen';
 import StudentProfileScreen from '../screens/StudentProfileScreen';
+import PredictionResultScreen from '../screens/PredictionResultScreen';
+import SelectSubjectScreen from '../screens/SelectSubjectScreen';
 
 import ClassesTeacherScreen from '../screens/ClassesTeacherScreen';
 import AddUserScreen from '../screens/AddUserScreen';
@@ -32,6 +34,11 @@ import CoursesIESScreen from '~/screens/CoursesIESScreen';
 import TeacherStudentsScreen from '../screens/TeacherStudentScreen';
 import TeacherReportsScreen from '../screens/TeacherReportScreen';
 import StudentPerformanceScreen from '../screens/StudentPerformanceScreen';
+import AddNotaScreen from '../screens/AddNotaScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import AboutScreen from '../screens/AboutScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 // ====================================================
 // =============== PARAM LISTS ========================
@@ -47,8 +54,19 @@ export type RootStackParamList = {
   // STUDENT
   StudentDashboard: undefined;
   StudentTabs: undefined;
-  Habits: undefined;
-  Engagement: undefined;
+  Habits: {
+    selectedMatriculaId?: string;
+    selectedDisciplina?: string;
+  };
+  Engagement: { selectedMatriculaId?: string; selectedDisciplina?: string } | undefined;
+  SelectSubject: { 
+    returnTo?: 'Habits' | 'Engagement';
+    title?: string;
+    subtitle?: string;
+  } | undefined;
+  PredictionResult: {
+    predictionResult: any;
+  };
   AddUser: undefined;
 
   // TEACHER
@@ -67,6 +85,16 @@ export type RootStackParamList = {
     studentName?: string;
     subjectId?: string; // opcional, para contexto da turma
   };
+  AddNota: {
+    studentId: string;
+    subjectId: string;
+    studentName?: string;
+    subjectName?: string;
+  };
+  EditProfile: undefined;
+  ChangePassword: undefined;
+  About: undefined;
+  Notifications: undefined;
 
   // SHARED
   SimulationResult: any;
@@ -94,6 +122,7 @@ export type StudentTabParamList = {
   Home: undefined;
   Formulário: undefined;
   Feedbacks: undefined;
+  Perfil: undefined;
 };
 
 // ====================================================
@@ -111,11 +140,11 @@ function LogoutButton({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={{ marginRight: 16 }}
+      style={{ marginRight: 16, padding: 8 }}
       accessibilityRole="button"
       accessibilityLabel="Sair"
     >
-      <Feather name="log-out" size={20} color={colors.text} />
+      <Feather name="log-out" size={20} color={colors.text || '#fff'} />
     </TouchableOpacity>
   );
 }
@@ -125,6 +154,11 @@ function LogoutButton({ onPress }: { onPress: () => void }) {
 // ====================================================
 function TeacherTabs() {
   const insets = useSafeAreaInsets();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <Tab.Navigator
@@ -132,6 +166,7 @@ function TeacherTabs() {
       screenOptions={() => ({
         headerTitleAlign: 'center',
         headerShown: true,
+        headerRight: () => <LogoutButton onPress={handleLogout} />,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
@@ -277,20 +312,50 @@ function AdminTabs({ navigation: parentNavigation }: any) {
 // ========== TABS DO ALUNO (STUDENT) =================
 // ====================================================
 function StudentTabs() {
+  const insets = useSafeAreaInsets();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <StudentTab.Navigator
       initialRouteName="Home"
       screenOptions={{
         headerTitleAlign: 'center',
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: '#fff',
+          elevation: 2,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+        },
+        headerTitleStyle: {
+          fontWeight: '600',
+          fontSize: 18,
+        },
+        headerRight: () => <LogoutButton onPress={handleLogout} />,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { borderTopWidth: 0, elevation: 0 },
+        tabBarStyle: {
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+          elevation: 3,
+          backgroundColor: '#fff',
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          paddingTop: 8,
+        },
       }}
     >
       <StudentTab.Screen
         name="Home"
         component={StudentDashboardScreen}
         options={{
+          headerTitle: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
@@ -300,10 +365,10 @@ function StudentTabs() {
         name="Formulário"
         component={HabitsScreen}
         options={{
-          headerShown: true,
-          headerTitle: 'Formulario',
+          headerTitle: 'Formulário',
+          tabBarLabel: 'Formulário',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="file-text" size={size} color={color} />
+            <Feather name="trending-up" size={size} color={color} />
           ),
         }}
       />
@@ -311,10 +376,19 @@ function StudentTabs() {
         name="Feedbacks"
         component={StudentFeedbacksScreen}
         options={{
-          headerShown: true,
           headerTitle: 'Feedbacks',
           tabBarIcon: ({ color, size }) => (
             <Feather name="message-circle" size={size} color={color} />
+          ),
+        }}
+      />
+      <StudentTab.Screen
+        name="Perfil"
+        component={StudentProfileScreen}
+        options={{
+          headerTitle: 'Perfil',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="user" size={size} color={color} />
           ),
         }}
       />
@@ -397,6 +471,7 @@ export default function RootNavigator() {
               headerTitle: 'Adicionar Usuário',
               headerShown: true,
               headerBackTitle: '',
+              headerRight: () => <LogoutButton onPress={logout} />,
             }}
           />
           {/* ADMIN */}
@@ -414,14 +489,123 @@ export default function RootNavigator() {
         /* STUDENT */
         <>
           <Stack.Screen name="StudentDashboard" component={StudentTabs} />
-          <Stack.Screen name="Habits" component={HabitsScreen} />
-          <Stack.Screen name="Engagement" component={EngagementScreen} />
+          <Stack.Screen 
+            name="Habits" 
+            component={HabitsScreen}
+            options={({ route }: any) => ({
+              headerShown: true,
+              headerTitle: route.params?.selectedDisciplina 
+                ? `Formulário - ${route.params.selectedDisciplina}`
+                : 'Formulário',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            })}
+          />
+          <Stack.Screen 
+            name="Engagement" 
+            component={EngagementScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Engajamento',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="SelectSubject"
+            component={SelectSubjectScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Selecionar Matéria',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="PredictionResult"
+            component={PredictionResultScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Resultado da Predição',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="StudentPerformance"
+            component={StudentPerformanceScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Desempenho',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfileScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Editar Perfil',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePasswordScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Alterar Senha',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Notificações',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="About"
+            component={AboutScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Sobre',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
         </>
       ) : (
         /* TEACHER */
         <>
           <Stack.Screen name="TeacherClasses" component={TeacherTabs} />
-          <Stack.Screen name="TeacherClassOverview" component={TeacherClassOverviewScreen} />
+          <Stack.Screen 
+            name="TeacherClassOverview" 
+            component={TeacherClassOverviewScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Visão Geral da Turma',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
           <Stack.Screen
             name="ClassStudents"
             component={ClassStudentsScreen}
@@ -430,10 +614,31 @@ export default function RootNavigator() {
               headerTitle: 'Alunos da Turma',
               headerBackTitle: 'Voltar',
               headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
             }}
           />
-          <Stack.Screen name="ClassPerformance" component={ClassPerformance} />
-          <Stack.Screen name="SimulationResult" component={SimulationResultScreen} />
+          <Stack.Screen 
+            name="ClassPerformance" 
+            component={ClassPerformance}
+            options={{
+              headerShown: true,
+              headerTitle: 'Desempenho da Turma',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen 
+            name="SimulationResult" 
+            component={SimulationResultScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Resultado da Simulação',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
           <Stack.Screen
             name="StudentPerformance"
             component={StudentPerformanceScreen}
@@ -442,6 +647,62 @@ export default function RootNavigator() {
               headerTitle: 'Desempenho do Aluno',
               headerBackTitle: 'Voltar',
               headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="AddNota"
+            component={AddNotaScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Adicionar Nota',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfileScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Editar Perfil',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePasswordScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Alterar Senha',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="About"
+            component={AboutScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Sobre',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
+            }}
+          />
+          <Stack.Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Notificações',
+              headerBackTitle: 'Voltar',
+              headerTintColor: colors.primary,
+              headerRight: () => <LogoutButton onPress={logout} />,
             }}
           />
         </>

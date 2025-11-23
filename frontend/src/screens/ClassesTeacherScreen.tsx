@@ -161,26 +161,20 @@ export default function ClassesTeacherScreen() {
   // Handler para pressionar uma turma
   const handleClassPress = useCallback(
     (classItem: Class) => {
-      console.log('🔵 [DEBUG] handleClassPress chamado!', classItem.NomeDaDisciplina);
-      console.log('🔵 [DEBUG] ID:', classItem.IDDisciplina);
       
       try {
         // Método 1: Tentar usar getParent() e navigate
         const parentNavigation = navigation.getParent();
-        console.log('🔵 [DEBUG] Parent navigation:', parentNavigation ? 'encontrado' : 'não encontrado');
         
         if (parentNavigation) {
-          console.log('🔵 [DEBUG] Tentando navegar via parent...');
           (parentNavigation as NativeStackNavigationProp<RootStackParamList>).navigate('ClassStudents', {
             subjectId: classItem.IDDisciplina,
             subjectName: classItem.NomeDaDisciplina,
           });
-          console.log('✅ [DEBUG] Navegação via parent executada!');
           return;
         }
 
         // Método 2: Usar CommonActions para navegar no Stack root
-        console.log('🔵 [DEBUG] Tentando navegar via CommonActions...');
         navigation.dispatch(
           CommonActions.navigate({
             name: 'ClassStudents',
@@ -190,10 +184,8 @@ export default function ClassesTeacherScreen() {
             },
           })
         );
-        console.log('✅ [DEBUG] Navegação via CommonActions executada!');
       } catch (error: any) {
-        console.error('❌ [DEBUG] Erro ao navegar:', error);
-        console.error('❌ [DEBUG] Erro completo:', JSON.stringify(error, null, 2));
+        console.error('Erro ao navegar');
         Alert.alert('Erro', `Não foi possível abrir a turma: ${error.message || 'Erro desconhecido'}`);
       }
     },

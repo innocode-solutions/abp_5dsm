@@ -60,7 +60,7 @@ export class AlunoController {
         },
       });
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error("Error fetching students");
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -100,6 +100,33 @@ export class AlunoController {
                   DataFim: true,
                 },
               },
+              predictions: {
+                orderBy: { createdAt: "desc" },
+                select: {
+                  IDPrediction: true,
+                  TipoPredicao: true,
+                  Probabilidade: true,
+                  Classificacao: true,
+                  Explicacao: true,
+                  createdAt: true,
+                },
+              },
+              desempenhos: {
+                orderBy: { createdAt: "desc" },
+                // Retornar todos os desempenhos ordenados (mais recente primeiro)
+                // O frontend pode escolher qual usar
+                select: {
+                  IDDesempenho: true,
+                  IDPrediction: true,
+                  NotaPrevista: true,
+                  NotaPercentual: true,
+                  Classificacao: true,
+                  Probabilidade: true,
+                  StatusAprovacao: true,
+                  CategoriaNota: true,
+                  createdAt: true,
+                },
+              },
             },
             orderBy: { createdAt: "desc" },
           },
@@ -117,7 +144,7 @@ export class AlunoController {
 
       res.json(aluno);
     } catch (error) {
-      console.error("Error fetching student:", error);
+      console.error("Error fetching student");
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -186,7 +213,7 @@ export class AlunoController {
 
       res.status(201).json(aluno);
     } catch (error) {
-      console.error("Error creating student:", error);
+      console.error("Error creating student");
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
           return res
@@ -244,7 +271,7 @@ export class AlunoController {
 
       res.json(aluno);
     } catch (error) {
-      console.error("Error updating student:", error);
+      console.error("Error updating student");
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           return res.status(404).json({ error: "Student not found" });
@@ -268,7 +295,7 @@ export class AlunoController {
 
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting student:", error);
+      console.error("Error deleting student");
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           return res.status(404).json({ error: "Student not found" });
@@ -308,7 +335,7 @@ export class AlunoController {
 
       res.json(alunos);
     } catch (error) {
-      console.error("Error fetching students by course:", error);
+      console.error("Error fetching students by course");
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -350,7 +377,7 @@ export class AlunoController {
 
       res.json(matriculas);
     } catch (error) {
-      console.error("Error fetching student enrollments:", error);
+      console.error("Error fetching student enrollments");
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -395,7 +422,7 @@ export class AlunoController {
 
       return res.json(subjects);
     } catch (error) {
-      console.error("Erro ao buscar disciplinas do aluno:", error);
+      console.error("Erro ao buscar disciplinas do aluno");
       return res
         .status(500)
         .json({ error: "Erro interno ao buscar disciplinas." });
@@ -523,7 +550,7 @@ export class AlunoController {
 
       return res.json(result);
     } catch (error) {
-      console.error("Erro ao listar alunos por disciplina:", error);
+      console.error("Erro ao listar alunos por disciplina");
       return res.status(500).json({ error: "Erro interno do servidor" });
     }
   }

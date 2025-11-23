@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
+import { checkMLServiceHealth } from './mlService';
 
 export class HealthService {
   /**
@@ -26,7 +27,7 @@ export class HealthService {
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Database health check failed:', error);
+      console.error('Database health check failed');
       res.status(503).json({ 
         status: 'ERROR', 
         message: 'Database connection failed',
@@ -36,17 +37,54 @@ export class HealthService {
   }
 
   /**
+   * ML service health check
+   */
+  static async mlHealthCheck(req: Request, res: Response) {
+    try {
+      const mlHealth = await checkMLServiceHealth();
+      if (mlHealth.available) {
+        res.json({
+          status: 'OK',
+          message: mlHealth.message,
+          details: {
+            pythonAvailable: mlHealth.pythonAvailable,
+            scriptsAvailable: mlHealth.scriptsAvailable,
+            modelsAvailable: mlHealth.modelsAvailable
+          },
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(503).json({
+          status: 'ERROR',
+          message: mlHealth.message,
+          details: {
+            pythonAvailable: mlHealth.pythonAvailable,
+            scriptsAvailable: mlHealth.scriptsAvailable,
+            modelsAvailable: mlHealth.modelsAvailable
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('ML health check failed');
+      res.status(503).json({
+        status: 'ERROR',
+        message: 'ML service health check failed',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
    * Graceful shutdown handler
    */
   static async gracefulShutdown(signal: string) {
-    console.log(`Received ${signal}. Starting graceful shutdown...`);
     
     try {
       await prisma.$disconnect();
-      console.log('Database connections closed.');
       process.exit(0);
     } catch (error) {
-      console.error('Error during graceful shutdown:', error);
+      console.error('Error during graceful shutdown');
       process.exit(1);
     }
   }

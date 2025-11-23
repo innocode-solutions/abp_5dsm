@@ -7,44 +7,44 @@ import { getToken, clearTokens } from "../service/tokenStore";
 // ============================================================================
 
 function getApiUrl(): string {
-  // Se EXPO_PUBLIC_API_URL existir → usa ela primeiro
+  // Porta padrão do backend
+  const BACKEND_PORT = process.env.EXPO_PUBLIC_BACKEND_PORT || '8080';
+  
+  // Se EXPO_PUBLIC_API_URL existir → usa ela primeiro, mas SEMPRE força a porta correta
   if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+    const url = process.env.EXPO_PUBLIC_API_URL;
+    try {
+      const urlObj = new URL(url);
+      // SEMPRE força a porta correta, independente do que estiver na URL
+      urlObj.port = BACKEND_PORT;
+      return urlObj.toString();
+    } catch {
+      // Se a URL for inválida, ignora e usa a lógica padrão
+    }
   }
 
-  // Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual
+  // Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual com porta correta
   const machineIp = process.env.EXPO_PUBLIC_MACHINE_IP;
   if (machineIp) {
-    // ✅ Na web, tentar HTTPS primeiro, depois HTTP
-    if (Platform.OS === 'web') {
-      // Tentar HTTPS primeiro (porta 8443 padrão)
-      const httpsPort = process.env.EXPO_PUBLIC_HTTPS_PORT || '8443';
-      // Se falhar, o axios vai tentar HTTP automaticamente ou podemos usar HTTP direto
-      // Por enquanto, vamos usar HTTP mesmo na web para evitar problemas de certificado
-      return `http://${machineIp}:3333/api`;
-    }
-    return `http://${machineIp}:3333/api`;
+    return `http://${machineIp}:${BACKEND_PORT}/api`;
   }
 
-  // Android Emulator - sempre HTTP
+  // Android Emulator - sempre HTTP na porta correta
   if (Platform.OS === "android") {
-    return "http://10.0.2.2:3333/api";
+    return `http://10.0.2.2:${BACKEND_PORT}/api`;
   }
 
-  // iOS Simulator - sempre HTTP
+  // iOS Simulator - sempre HTTP na porta correta
   if (Platform.OS === "ios") {
-    return "http://localhost:3333/api";
+    return `http://localhost:${BACKEND_PORT}/api`;
   }
 
-  // Web - usar HTTP (HTTPS pode causar problemas com certificados self-signed)
-  // Se quiser usar HTTPS na web, descomente e configure certificados válidos:
-  // return "https://localhost:8443/api";
-  return "http://localhost:3333/api";
+  // Web - usar HTTP na porta correta
+  return `http://localhost:${BACKEND_PORT}/api`;
 }
 
 export const API_URL = getApiUrl();
 
-console.log(`🔗 API URL configurada: ${API_URL} (Platform: ${Platform.OS})`);
 
 export const apiConnection = axios.create({
   baseURL: API_URL,
@@ -61,45 +61,31 @@ apiConnection.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // 2. Log the request
-    console.log(`📤 Request: ${config.method?.toUpperCase()} ${config.url}`);
 
     return config;
   },
   (error: AxiosError) => {
-    console.error('❌ Request Error:', error.message);
+    console.error('Request Error');
     return Promise.reject(error);
   }
 );
 
-// Response interceptor: Log responses and handle errors
+// Response interceptor: Handle errors
 apiConnection.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Log successful responses
-    console.log(`✅ Response: ${response.status} ${response.config.url}`);
     return response;
   },
   async (error: AxiosError) => {
-    // Log detailed error information for debugging
-    if (error.code === 'ECONNABORTED') {
-      console.error(`⏱️ Timeout: A requisição para ${error.config?.url} excedeu o tempo limite`);
-      console.error(`   URL completa: ${error.config?.baseURL}${error.config?.url}`);
-      console.error(`   Verifique se o backend está rodando e acessível`);
-    } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-      console.error(`🔌 Connection Error: Não foi possível conectar ao servidor`);
-      console.error(`   URL: ${error.config?.baseURL}${error.config?.url}`);
-      console.error(`   Verifique se o backend está rodando e acessível`);
-    } else if (error.response) {
-      console.error(`❌ Response Error: ${error.response.status} ${error.response.statusText}`);
-      console.error(`   URL: ${error.config?.baseURL}${error.config?.url}`);
-      console.error(`   Data:`, error.response.data);
-    } else {
-      console.error(`❌ Error: ${error.message}`);
-    }
-
     // Handle unauthorized errors: clear tokens
     if (error.response?.status === 401) {
       await clearTokens();
+    }
+
+    // Only log critical errors
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.message === 'Network Error') {
+      console.error('Connection Error: Unable to connect to server');
+    } else if (error.response?.status && error.response.status >= 500) {
+      console.error('Server Error');
     }
 
     return Promise.reject(error);

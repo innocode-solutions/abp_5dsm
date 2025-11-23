@@ -66,7 +66,7 @@ export class DashboardController {
       });
 
     } catch (error) {
-      console.error('Erro ao buscar dashboard do professor:', error);
+      console.error('Erro ao buscar dashboard do professor');
       res.status(500).json({ error: 'Erro interno ao buscar dashboard' });
     }
   }
@@ -116,7 +116,7 @@ export class DashboardController {
       });
 
     } catch (error) {
-      console.error('Erro ao buscar resumo do dashboard:', error);
+      console.error('Erro ao buscar resumo do dashboard');
       res.status(500).json({ error: 'Erro interno ao buscar resumo' });
     }
   }

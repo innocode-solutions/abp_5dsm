@@ -33,7 +33,7 @@ if (useHttps) {
 }
 
 // Ports
-const HTTP_PORT = Number(process.env.HTTP_PORT) || 3333;
+const HTTP_PORT = Number(process.env.HTTP_PORT) || 8080;
 const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 8443;
 
 // ======== Security middleware ========
@@ -79,6 +79,7 @@ app.use((req, res, next) => {
 // ======== Health check endpoints ========
 app.get('/health', HealthService.healthCheck);
 app.get('/health/db', HealthService.databaseHealthCheck);
+app.get('/health/ml', HealthService.mlHealthCheck);
 
 // ======== API routes ========
 app.use('/api', routes);
@@ -148,8 +149,19 @@ HealthService.setupShutdownHandlers();
  });
 }*/
 
-app.listen(HTTP_PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${HTTP_PORT}`);
+// ======== Start HTTP Server ========
+const httpServer = http.createServer(app);
+initializeSocket(httpServer);
+
+httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor HTTP rodando em http://localhost:${HTTP_PORT}`);
+  console.log(`🌎 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Health: http://localhost:${HTTP_PORT}/health`);
+  console.log(`🗄️ DB Health: http://localhost:${HTTP_PORT}/health/db`);
+  console.log(`🤖 ML Health: http://localhost:${HTTP_PORT}/health/ml`);
+  console.log(`📚 API: http://localhost:${HTTP_PORT}/api`);
+  console.log(`🔌 WebSocket ativo na porta ${HTTP_PORT}`);
+  console.log(`💡 Frontend deve conectar em: http://localhost:${HTTP_PORT}/api`);
 });
 
 export default app;

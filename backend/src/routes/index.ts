@@ -12,6 +12,10 @@ import dashboardRoutesIES from './dashboardIESRoutes'; // dashboard da IES (admi
 
 import { AuthMiddleware } from '../middleware/authMiddleware';
 import alunoHabitoRoutes from './alunoHabitoRoutes';
+import feedbackRoutes from './feedbackRoutes';
+import notaRoutes from './notaRoutes';
+import adminRoutes from './adminRoutes';
+import notificacaoRoutes from './notificacaoRoutes';
 
 const router = Router();
 
@@ -36,6 +40,10 @@ router.use('/users', userRoutes);
 router.use('/periodos', periodoLetivoRoutes);
 router.use('/matriculas', matriculaRoutes);
 router.use('/predictions', predictionRoutes);
+router.use('/feedbacks', feedbackRoutes);
+router.use('/notas', notaRoutes);
+router.use('/admin', adminRoutes);
+router.use('/notificacoes', notificacaoRoutes);
 
 // ✅ Dashboards separados (IES e Professor)
 router.use('/dashboard/ies', dashboardRoutesIES); // Admin/IES
