@@ -58,7 +58,6 @@ export const authService = {
     try {
       disconnectSocket();
     } catch (error) {
-      console.warn('Erro ao desconectar WebSocket:', error);
     }
     
     await clearTokens();

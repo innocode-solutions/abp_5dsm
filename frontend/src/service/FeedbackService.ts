@@ -840,6 +840,14 @@ export function generatePerformanceFeedback(
       'Bom trabalho! Sua nota prevista está no caminho certo! 🎯 Com pequenos ajustes, você pode melhorar ainda mais!',
     ];
     
+    const approvedMessages = [
+      '🎉 Parabéns pela aprovação! Sua nota prevista acima de 60 pontos mostra que seus esforços estão dando resultado! Continue mantendo seus bons hábitos de estudo e busque melhorar ainda mais para alcançar notas ainda maiores!',
+      '✅ Excelente trabalho! Você está aprovado com nota acima de 60 pontos! Isso é resultado da sua dedicação e comprometimento. Continue assim e desafie-se a alcançar notas ainda melhores!',
+      '🌟 Muito bem! Você alcançou a aprovação com nota acima de 60 pontos! Seus hábitos de estudo estão funcionando. Mantenha esse ritmo e procure identificar áreas onde pode melhorar para elevar ainda mais seu desempenho!',
+      '💪 Parabéns! Sua nota prevista acima de 60 pontos confirma que você está no caminho certo! Continue mantendo seus pontos fortes e trabalhe nos aspectos que podem te levar a notas ainda maiores!',
+      '🎯 Ótimo resultado! Com nota acima de 60 pontos, você está aprovado! Isso mostra que sua estratégia de estudos está funcionando. Continue reforçando seus pontos positivos e busque melhorias contínuas!',
+    ];
+    
     const averageMessages = [
       'Sua nota prevista está na média. 💡 Com mais dedicação e organização, você tem potencial para melhorar significativamente!',
       'Sua nota prevista mostra que há espaço para crescimento! 🌟 Não desista - com foco e disciplina, você pode alcançar melhores resultados!',
@@ -847,9 +855,10 @@ export function generatePerformanceFeedback(
     ];
     
     const belowAverageMessages = [
-      'Sua nota prevista está abaixo do esperado, mas não desanime! 💪 Com foco, dedicação e organização, você pode melhorar muito!',
-      'Sua nota prevista indica que há desafios, mas você tem potencial! 🌱 Não desista - cada pequeno passo conta!',
-      'Sua nota prevista está baixa, mas isso não define você! 🎯 Com determinação e apoio, você pode superar qualquer desafio!',
+      '⚠️ ATENÇÃO: Sua nota prevista está CRÍTICA e abaixo do esperado! É URGENTE que você aumente seu engajamento, frequência às aulas e horas de estudo. Procure ajuda dos professores imediatamente!',
+      '🚨 ALERTA: Sua nota prevista está muito baixa! Você precisa tomar ações imediatas: aumentar horas de estudo, melhorar frequência e buscar apoio pedagógico. Não deixe para depois!',
+      '⚠️ SITUAÇÃO CRÍTICA: Sua nota prevista está abaixo do mínimo aceitável! É fundamental que você reorganize seus estudos AGORA, compareça a todas as aulas e busque ajuda. Seu futuro acadêmico depende disso!',
+      '🚨 URGENTE: Sua nota prevista está em risco! Você precisa aumentar drasticamente seu comprometimento: mais horas de estudo, frequência total às aulas e busca ativa de apoio. Aja agora!',
     ];
     
     if (nota >= 90) {
@@ -857,10 +866,11 @@ export function generatePerformanceFeedback(
     } else if (nota >= 80) {
       message = goodMessages[Math.floor(Math.random() * goodMessages.length)];
     } else if (nota >= 70) {
-      message = averageMessages[Math.floor(Math.random() * averageMessages.length)];
+      message = goodMessages[Math.floor(Math.random() * goodMessages.length)];
     } else if (nota >= 60) {
-      message = averageMessages[Math.floor(Math.random() * averageMessages.length)];
+      message = approvedMessages[Math.floor(Math.random() * approvedMessages.length)];
     } else {
+      // Nota < 60 (menor que 6.0) - mensagem crítica
       message = belowAverageMessages[Math.floor(Math.random() * belowAverageMessages.length)];
     }
     
@@ -882,16 +892,43 @@ export function generatePerformanceFeedback(
       ],
     ];
     
+    // Sugestões de melhoria para aprovados (nota >= 60)
+    const improvementSuggestions = [
+      [
+        'Continue mantendo suas horas de estudo - isso está funcionando!',
+        'Procure desafiar-se com exercícios mais complexos para elevar ainda mais sua nota',
+        'Mantenha sua frequência às aulas - consistência é a chave do sucesso',
+      ],
+      [
+        'Reforce seus pontos fortes e identifique áreas para crescimento',
+        'Participe de atividades extras e grupos de estudo para aprofundar conhecimentos',
+        'Estabeleça metas progressivas para alcançar notas ainda maiores',
+      ],
+      [
+        'Continue revisando o conteúdo regularmente - isso está te ajudando',
+        'Busque feedback dos professores sobre como melhorar ainda mais',
+        'Explore materiais complementares para aprofundar seu aprendizado',
+      ],
+    ];
+    
+    // Escolher sugestões baseado na nota
+    const selectedSuggestions = nota >= 60 
+      ? improvementSuggestions[Math.floor(Math.random() * improvementSuggestions.length)]
+      : genericSuggestions[Math.floor(Math.random() * genericSuggestions.length)];
+    
     return {
       title,
       message,
       features: [],
-      suggestions: genericSuggestions[Math.floor(Math.random() * genericSuggestions.length)],
+      suggestions: selectedSuggestions,
     };
   }
   
   // Parse da explicação
   const features = parsePerformanceExplanation(explanation);
+  
+  // Determinar se está aprovado (nota >= 6.0) - usado em vários lugares
+  const isApproved = notaPrevista !== undefined && notaPrevista >= 6.0;
   
   // Gera título e mensagem principal
   const titles = [
@@ -934,8 +971,24 @@ export function generatePerformanceFeedback(
     
     if (topFeature.influence === 'negativa') {
       // Escolhe uma mensagem negativa aleatória
-      const randomNegativeMsg = negativeMessages[Math.floor(Math.random() * negativeMessages.length)];
-      message = randomNegativeMsg;
+      // Se a nota prevista for baixa (< 6.0), usar tom mais crítico
+      const precisaMensagemCritica = notaPrevista !== undefined && notaPrevista < 6.0;
+      
+      if (precisaMensagemCritica) {
+        // Mensagens críticas quando nota < 6.0
+        const criticalNegativeMessages = [
+          `⚠️ CRÍTICO: Sua nota foi IMPACTADA GRAVEMENTE por ${topFeature.feature.toLowerCase()}. `,
+          `🚨 URGENTE: O principal fator que está AFETANDO CRITICAMENTE sua nota é ${topFeature.feature.toLowerCase()}. `,
+          `⚠️ ALERTA: Identificamos que ${topFeature.feature.toLowerCase()} está sendo um OBSTÁCULO CRÍTICO para seu desempenho. `,
+          `🚨 ATENÇÃO: Analisando seus dados, ${topFeature.feature.toLowerCase()} aparece como o ponto CRÍTICO que precisa de ação IMEDIATA. `,
+          `⚠️ SITUAÇÃO CRÍTICA: Entre os fatores analisados, ${topFeature.feature.toLowerCase()} é o que mais está COMPROMETENDO seu resultado. `,
+          `🚨 URGENTE: Seu desempenho está sendo LIMITADO CRITICAMENTE por ${topFeature.feature.toLowerCase()}. `,
+        ];
+        message = criticalNegativeMessages[Math.floor(Math.random() * criticalNegativeMessages.length)];
+      } else {
+        const randomNegativeMsg = negativeMessages[Math.floor(Math.random() * negativeMessages.length)];
+        message = randomNegativeMsg;
+      }
       
       if (topFeature.feature === 'Horas de Estudo') {
         // O valor vem em horas semanais do ML
@@ -974,11 +1027,23 @@ export function generatePerformanceFeedback(
         if (isNumeric && weeklyHours >= 50) {
           message += studyMessages.high[Math.floor(Math.random() * studyMessages.high.length)];
         } else if (isNumeric && weeklyHours < 20) {
-          message += studyMessages.veryLow[Math.floor(Math.random() * studyMessages.veryLow.length)];
+          if (precisaMensagemCritica) {
+            message += `⚠️ CRÍTICO: Com apenas ${weeklyHours} horas semanais (${dailyHours.toFixed(1)}h por dia), você está em RISCO DE REPROVAÇÃO! É URGENTE aumentar para pelo menos 35-42 horas semanais IMEDIATAMENTE!`;
+          } else {
+            message += studyMessages.veryLow[Math.floor(Math.random() * studyMessages.veryLow.length)];
+          }
         } else if (isNumeric && weeklyHours < 28) {
-          message += studyMessages.low[Math.floor(Math.random() * studyMessages.low.length)];
+          if (precisaMensagemCritica) {
+            message += `🚨 URGENTE: Suas ${weeklyHours} horas semanais (${dailyHours.toFixed(1)}h por dia) são INSUFICIENTES! Você precisa aumentar para pelo menos 35-42 horas semanais AGORA para evitar reprovação!`;
+          } else {
+            message += studyMessages.low[Math.floor(Math.random() * studyMessages.low.length)];
+          }
         } else {
-          message += studyMessages.medium[Math.floor(Math.random() * studyMessages.medium.length)];
+          if (precisaMensagemCritica) {
+            message += `⚠️ ATENÇÃO: Suas ${weeklyHours} horas semanais precisam ser OTIMIZADAS com urgência! Foque em qualidade e aumente para 35-42 horas semanais para melhorar seu desempenho crítico!`;
+          } else {
+            message += studyMessages.medium[Math.floor(Math.random() * studyMessages.medium.length)];
+          }
         }
       } else if (topFeature.feature === 'Frequência às Aulas') {
         const attendanceMessages = {
@@ -997,9 +1062,17 @@ export function generatePerformanceFeedback(
         };
         
         if (isNumeric && featureValue < 70) {
-          message += attendanceMessages.veryLow[Math.floor(Math.random() * attendanceMessages.veryLow.length)];
+          if (precisaMensagemCritica) {
+            message += `🚨 CRÍTICO: Sua frequência de ${featureValue}% está EM RISCO! Comparecer às aulas é FUNDAMENTAL para evitar reprovação. Você PRECISA aumentar para pelo menos 80% IMEDIATAMENTE!`;
+          } else {
+            message += attendanceMessages.veryLow[Math.floor(Math.random() * attendanceMessages.veryLow.length)];
+          }
         } else {
-          message += attendanceMessages.low[Math.floor(Math.random() * attendanceMessages.low.length)];
+          if (precisaMensagemCritica) {
+            message += `⚠️ URGENTE: Sua frequência de ${featureValue}% precisa melhorar! Aumente para pelo menos 80% para evitar reprovação!`;
+          } else {
+            message += attendanceMessages.low[Math.floor(Math.random() * attendanceMessages.low.length)];
+          }
         }
       } else if (topFeature.feature === 'Horas de Sono') {
         const sleepMessages = {
@@ -1051,8 +1124,21 @@ export function generatePerformanceFeedback(
         message += previousScoresMessages[Math.floor(Math.random() * previousScoresMessages.length)];
       } else {
         // Mensagem genérica mas contextual e variada
+        // Se a nota prevista for baixa (< 6.0), usar mensagens mais críticas
         const valueStr = isNumeric ? featureValue.toString() : featureValue;
-        const genericMessages = [
+        const notaPrevista = typeof topFeature.value === 'number' && topFeature.feature === 'Notas Anteriores' 
+          ? topFeature.value 
+          : null;
+        
+        // Verificar se precisa de mensagem crítica (nota < 6.0)
+        const precisaMensagemCritica = notaPrevista !== null && notaPrevista < 6.0;
+        
+        const genericMessages = precisaMensagemCritica ? [
+          `⚠️ CRÍTICO: Seu ${topFeature.feature.toLowerCase()} (${valueStr}) está impactando GRAVEMENTE seu desempenho. Você precisa tomar ações IMEDIATAS para melhorar isso!`,
+          `🚨 URGENTE: O ${topFeature.feature.toLowerCase()} (${valueStr}) está sendo um OBSTÁCULO CRÍTICO. Não ignore isso - busque ajuda e melhore AGORA!`,
+          `⚠️ ALERTA: Identificamos que seu ${topFeature.feature.toLowerCase()} (${valueStr}) está em situação CRÍTICA. Trabalhar nisso é URGENTE para evitar reprovação!`,
+          `🚨 ATENÇÃO: O ${topFeature.feature.toLowerCase()} (${valueStr}) está em estado CRÍTICO. Você precisa investir tempo e esforço IMEDIATOS nisso!`,
+        ] : [
           `Seu ${topFeature.feature.toLowerCase()} (${valueStr}) está impactando negativamente seu desempenho. Focar em melhorar isso pode fazer uma grande diferença!`,
           `O ${topFeature.feature.toLowerCase()} (${valueStr}) está sendo um desafio. Mas não se preocupe - com dedicação, você pode melhorar!`,
           `Identificamos que seu ${topFeature.feature.toLowerCase()} (${valueStr}) precisa de atenção. Trabalhar nisso te ajudará a alcançar melhores resultados!`,
@@ -1065,13 +1151,32 @@ export function generatePerformanceFeedback(
       }
     } else {
       // Influência positiva - mensagens mais encorajadoras
-      const randomPositiveMsg = positiveMessages[Math.floor(Math.random() * positiveMessages.length)];
-      message = randomPositiveMsg;
+      // Se nota >= 60, reforçar pontos positivos e destacar o que está funcionando
+      if (isApproved) {
+        // Mensagens que destacam os pontos positivos e encorajam melhorias
+        const approvedPositiveMessages = [
+          `🎉 Parabéns pela aprovação! ${topFeature.feature} está sendo um grande diferencial no seu sucesso! Continue mantendo esse ponto forte e busque melhorias em outras áreas para alcançar notas ainda maiores!`,
+          `✅ Excelente! Você está aprovado e ${topFeature.feature.toLowerCase()} é um dos fatores que está te levando ao sucesso! Continue reforçando esse aspecto positivo e identifique oportunidades de crescimento!`,
+          `🌟 Muito bem! Sua aprovação mostra que ${topFeature.feature.toLowerCase()} está funcionando muito bem! Mantenha esse padrão e desafie-se a melhorar em outras áreas também!`,
+          `💪 Parabéns! ${topFeature.feature} está contribuindo significativamente para sua aprovação! Continue valorizando esse ponto forte e trabalhe para elevar ainda mais seu desempenho!`,
+          `🎯 Ótimo trabalho! Você está aprovado e ${topFeature.feature.toLowerCase()} é um dos seus pontos fortes! Continue mantendo esse hábito positivo e busque melhorias contínuas!`,
+        ];
+        message = approvedPositiveMessages[Math.floor(Math.random() * approvedPositiveMessages.length)];
+      } else {
+        const randomPositiveMsg = positiveMessages[Math.floor(Math.random() * positiveMessages.length)];
+        message = randomPositiveMsg;
+      }
       
       if (topFeature.feature === 'Horas de Estudo' && isNumeric) {
         const weeklyHours = featureValue;
         const dailyHours = weeklyHours / 7;
-        const studyPositiveMessages = [
+        const studyPositiveMessages = isApproved ? [
+          `🎉 Parabéns pela aprovação! Estudar ${weeklyHours} horas por semana (${dailyHours.toFixed(1)}h por dia) foi fundamental para seu sucesso! Continue mantendo essa dedicação e considere desafiar-se com exercícios mais complexos para elevar ainda mais sua nota! 💪`,
+          `✅ Aprovado! Suas ${weeklyHours} horas semanais (${dailyHours.toFixed(1)}h por dia) de estudo estão rendendo frutos! Parabéns pela disciplina! Continue assim e busque identificar outras áreas onde pode melhorar para alcançar notas ainda maiores! 🌟`,
+          `🌟 Excelente! Com ${weeklyHours} horas semanais (${dailyHours.toFixed(1)}h por dia), você alcançou a aprovação! Continue mantendo esse comprometimento e explore técnicas de estudo mais avançadas para potencializar ainda mais seu aprendizado! 🎯`,
+          `💪 Incrível! Sua dedicação de ${weeklyHours} horas semanais te levou à aprovação! Mantenha esse ritmo e procure participar de atividades extras e grupos de estudo para aprofundar seus conhecimentos! 🚀`,
+          `⭐ Fantástico! Com ${weeklyHours} horas semanais, você está aprovado e investindo no seu futuro! Continue assim e estabeleça metas progressivas para continuar melhorando seu desempenho! 💎`,
+        ] : [
           `Estudar ${weeklyHours} horas por semana (${dailyHours.toFixed(1)}h por dia) está te levando ao sucesso! Continue mantendo essa dedicação! 💪`,
           `Suas ${weeklyHours} horas semanais (${dailyHours.toFixed(1)}h por dia) de estudo estão rendendo frutos! Parabéns pela disciplina! 🌟`,
           `Excelente! Com ${weeklyHours} horas semanais (${dailyHours.toFixed(1)}h por dia), você está no caminho certo! Continue assim! 🎯`,
@@ -1081,7 +1186,14 @@ export function generatePerformanceFeedback(
         ];
         message = studyPositiveMessages[Math.floor(Math.random() * studyPositiveMessages.length)];
       } else if (topFeature.feature === 'Frequência às Aulas' && isNumeric) {
-        const attendancePositiveMessages = [
+        const attendancePositiveMessages = isApproved ? [
+          `🎉 Parabéns pela aprovação! Sua frequência de ${featureValue}% foi essencial para seu sucesso! Comparecer às aulas regularmente é um dos segredos do sucesso! Continue mantendo essa frequência e participe ainda mais ativamente das discussões para elevar seu desempenho! 👏`,
+          `✅ Aprovado! Com ${featureValue}% de frequência, você aproveitou ao máximo as aulas e alcançou a aprovação! Continue assim e busque participar de atividades extras e grupos de estudo para aprofundar ainda mais seus conhecimentos! ⭐`,
+          `🌟 Parabéns! Sua frequência de ${featureValue}% mostra seu comprometimento e te levou à aprovação! Continue mantendo essa dedicação e procure desafiar-se com exercícios mais complexos para melhorar ainda mais! 🎉`,
+          `💪 Incrível! Com ${featureValue}% de frequência, você está aprovado! Sua presença faz toda diferença! Continue assim e explore materiais complementares para expandir seu aprendizado! 🌟`,
+          `⭐ Fantástico! Sua frequência de ${featureValue}% é um exemplo de dedicação que resultou em aprovação! Mantenha esse padrão e estabeleça metas progressivas para continuar melhorando! 💪`,
+          `🚀 Excelente! ${featureValue}% de frequência te levou à aprovação! Continue valorizando cada momento de aprendizado e busque feedback dos professores sobre como potencializar ainda mais seu desempenho! 🎯`,
+        ] : [
           `Sua frequência de ${featureValue}% está excelente! Comparecer às aulas regularmente é um dos segredos do sucesso! 👏`,
           `Ótimo! Com ${featureValue}% de frequência, você está aproveitando ao máximo as aulas. Continue assim! ⭐`,
           `Parabéns! Sua frequência de ${featureValue}% mostra seu comprometimento. Isso está fazendo toda a diferença! 🎉`,
@@ -1111,7 +1223,15 @@ export function generatePerformanceFeedback(
       } else {
         const article = getCorrectArticle(topFeature.feature);
         const featureLower = topFeature.feature.toLowerCase();
-        const genericPositiveMessages = [
+        const genericPositiveMessages = isApproved ? [
+          `🎉 Parabéns pela aprovação! Continue mantendo ${article} ${featureLower} - ele está fazendo toda a diferença no seu sucesso! Busque melhorias em outras áreas para elevar ainda mais sua nota! ✨`,
+          `✅ Aprovado! ${article.charAt(0).toUpperCase() + article.slice(1)} ${featureLower} está te ajudando a alcançar seus objetivos! Continue reforçando esse ponto forte e identifique oportunidades de crescimento! 🎊`,
+          `🌟 Ótimo trabalho! ${article.charAt(0).toUpperCase() + article.slice(1)} ${featureLower} está valendo a pena e te levou à aprovação! Continue investindo nesse aspecto e desafie-se a melhorar em outras áreas também! 💎`,
+          `💪 Excelente! ${article.charAt(0).toUpperCase() + article.slice(1)} ${featureLower} está sendo um diferencial positivo no seu sucesso! Continue assim e estabeleça metas progressivas para continuar melhorando! 🌟`,
+          `🚀 Que incrível! ${article.charAt(0).toUpperCase() + article.slice(1)} ${featureLower} está te colocando à frente e resultou em aprovação! Mantenha esse padrão e explore técnicas mais avançadas para potencializar seu aprendizado! 🎯`,
+          `⭐ Fantástico! ${article.charAt(0).toUpperCase() + article.slice(1)} ${featureLower} está sendo um ponto forte que te levou à aprovação! Continue valorizando isso e busque feedback para melhorias contínuas! 💪`,
+          `🎯 Muito bem! ${article.charAt(0).toUpperCase() + article.slice(1)} ${featureLower} está no caminho certo e contribuiu para sua aprovação! Continue mantendo esse hábito positivo e procure participar de atividades extras para aprofundar conhecimentos! 🌱`,
+        ] : [
           `Continue mantendo esse bom hábito! Ele está fazendo toda a diferença! ✨`,
           `Parabéns! ${article.charAt(0).toUpperCase() + article.slice(1)} ${featureLower} está te ajudando a alcançar seus objetivos! 🎊`,
           `Ótimo trabalho! Continue investindo nesse aspecto - está valendo a pena! 💎`,
@@ -1125,21 +1245,89 @@ export function generatePerformanceFeedback(
     }
     
     if (features.length > 1) {
-      message += ` Outros fatores importantes: ${features.slice(1, 3).map(f => f.feature.toLowerCase()).join(', ')}.`;
+      const otherFeatures = features.slice(1, 3).map(f => f.feature.toLowerCase()).join(', ');
+      if (isApproved) {
+        message += ` Outros fatores que também estão contribuindo para seu sucesso: ${otherFeatures}. Continue mantendo esses pontos fortes!`;
+      } else {
+        message += ` Outros fatores importantes: ${otherFeatures}.`;
+      }
     }
   } else {
-    // Fallback se não conseguir parsear
-    message = `Sua nota prevista é ${notaPrevista?.toFixed(1) || 'calculada'}. `;
-    message += explanation.substring(0, 200); // Primeiros 200 caracteres da explicação
+    // Fallback se não conseguir parsear - melhorar formatação
+    const notaFormatada = notaPrevista?.toFixed(1) || 'calculada';
+    const predictedScore = notaPrevista !== undefined ? notaPrevista * 10 : null;
+    
+    // Tentar extrair informações da explicação se estiver no formato antigo
+    const explanationLower = explanation.toLowerCase();
+    let statusInfo = '';
+    let categoriaInfo = '';
+    
+    // Verificar se a explicação contém informações de status e categoria
+    if (explanationLower.includes('status:') || explanationLower.includes('categoria:')) {
+      // Se já tem informações formatadas, usar a explicação melhorada do backend
+      message = explanation;
+    } else {
+      // Criar mensagem amigável baseada na nota
+      if (predictedScore !== null && predictedScore >= 60) {
+        const categoria = classificacao || 'bom';
+        message = `Parabéns! Sua nota prevista é ${notaFormatada}/10 (${predictedScore.toFixed(1)} pontos), o que indica que você está aprovado. Seu desempenho está classificado como ${categoria.toLowerCase()}. Continue mantendo seus bons hábitos de estudo!`;
+      } else if (predictedScore !== null && predictedScore < 60) {
+        const categoria = classificacao || 'insuficiente';
+        message = `Sua nota prevista é ${notaFormatada}/10 (${predictedScore.toFixed(1)} pontos), o que indica que você precisa melhorar. Seu desempenho está classificado como ${categoria.toLowerCase()}. É importante focar em melhorar seus hábitos de estudo para alcançar a aprovação.`;
+      } else {
+        message = `Sua nota prevista é ${notaFormatada}. ${explanation.substring(0, 200)}`;
+      }
+    }
   }
   
   const suggestions = generateSuggestions(features, 'performance');
+  
+  // Se nota é aprovada (>= 6.0), adicionar sugestões de melhoria construtivas
+  if (isApproved && suggestions.length < 5) {
+    const improvementSuggestions = [
+      'Continue mantendo seus pontos fortes - eles estão te levando ao sucesso!',
+      'Identifique áreas de crescimento para alcançar notas ainda maiores',
+      'Desafie-se com exercícios mais complexos para elevar seu desempenho',
+      'Mantenha a consistência nos seus hábitos de estudo que estão funcionando',
+      'Participe de atividades extras e grupos de estudo para aprofundar conhecimentos',
+      'Estabeleça metas progressivas para continuar melhorando',
+      'Busque feedback dos professores sobre como potencializar ainda mais seu aprendizado',
+      'Explore materiais complementares para expandir seu conhecimento',
+      'Continue revisando regularmente - a revisão constante está te ajudando',
+      'Mantenha sua motivação alta e celebre suas conquistas enquanto busca melhorias',
+    ];
+    
+    // Adicionar sugestões de melhoria até ter pelo menos 5 sugestões
+    const sugestoesAdicionais = improvementSuggestions.slice(0, Math.max(0, 5 - suggestions.length));
+    suggestions.push(...sugestoesAdicionais);
+  }
+  
+  // Se nota é baixa (< 6) e não há sugestões suficientes, adicionar sugestões críticas
+  const precisaMensagemCritica = notaPrevista !== undefined && notaPrevista < 6.0;
+  if (precisaMensagemCritica && suggestions.length < 3) {
+    const sugestoesCriticas = [
+      'Aumente suas horas de estudo diárias para pelo menos 3-4 horas',
+      'Compareça a TODAS as aulas - frequência é fundamental para o sucesso',
+      'Organize um cronograma de estudos rigoroso e siga-o diariamente',
+      'Busque ajuda dos professores e monitores IMEDIATAMENTE',
+      'Participe de grupos de estudo e atividades complementares',
+      'Revise o conteúdo das aulas no mesmo dia que foram ministradas',
+      'Faça exercícios práticos regularmente para fixar o aprendizado',
+      'Mantenha uma rotina de sono adequada (7-8 horas por noite)',
+      'Elimine distrações durante o tempo de estudo',
+      'Estabeleça metas diárias e semanais claras e mensuráveis'
+    ];
+    
+    // Adicionar sugestões críticas até ter pelo menos 5 sugestões
+    const sugestoesAdicionais = sugestoesCriticas.slice(0, Math.max(0, 5 - suggestions.length));
+    suggestions.push(...sugestoesAdicionais);
+  }
   
   return {
     title,
     message,
     features: features.slice(0, 3), // Top 3 features
-    suggestions,
+    suggestions: suggestions.slice(0, 8), // Limitar a 8 sugestões para não sobrecarregar
   };
 }
 
@@ -1262,26 +1450,46 @@ export function generateDropoutFeedback(
           'Reduzir faltas é essencial. A presença regular cria rotina, conexão e melhora significativamente o desempenho!',
         ];
         message += absenceMessages[Math.floor(Math.random() * absenceMessages.length)];
-      } else if (topFeature.feature === 'Participação em Aula') {
+      } else if (topFeature.feature === 'Participação em Aula' || topFeature.feature === 'RaisedHands' || topFeature.feature === 'raisedhands') {
+        const participationValue = typeof topFeature.value === 'number' ? topFeature.value : 0;
         const participationMessages = [
-          'Pouca participação pode indicar falta de interesse. Que tal se envolver mais? Fazer perguntas e responder ajuda muito!',
-          'Participar mais das aulas te ajudará a se sentir mais engajado. Não tenha medo de levantar a mão e interagir!',
-          'A participação ativa nas aulas faz toda a diferença. Tente fazer pelo menos uma pergunta ou comentário por aula!',
-          'Sua participação é fundamental! Interagir nas aulas não só ajuda no aprendizado, mas também te mantém conectado!',
-          'Participar ativamente transforma a experiência de aprendizado. Que tal começar com uma pergunta por dia?',
-          'A participação é uma via de mão dupla - você aprende mais e se sente mais parte da turma. Vamos aumentar isso!',
+          `Com apenas ${participationValue} participações, você está muito abaixo do ideal. Que tal se envolver mais? Fazer perguntas e responder ajuda muito!`,
+          `Sua participação de ${participationValue} vezes pode ser melhorada. Participar mais das aulas te ajudará a se sentir mais engajado. Não tenha medo de levantar a mão e interagir!`,
+          `A participação ativa nas aulas faz toda a diferença. Com ${participationValue} participações, tente fazer pelo menos uma pergunta ou comentário por aula!`,
+          `Sua participação de ${participationValue} vezes é fundamental! Interagir nas aulas não só ajuda no aprendizado, mas também te mantém conectado!`,
+          `Participar ativamente transforma a experiência de aprendizado. Com ${participationValue} participações, que tal começar com uma pergunta por dia?`,
+          `A participação é uma via de mão dupla - você aprende mais e se sente mais parte da turma. Com ${participationValue} participações, vamos aumentar isso!`,
         ];
         message += participationMessages[Math.floor(Math.random() * participationMessages.length)];
-      } else if (topFeature.feature === 'Materiais Acessados') {
+      } else if (topFeature.feature === 'Materiais Acessados' || topFeature.feature === 'VisITedResources' || topFeature.feature === 'VisitedResources') {
+        const materialsValue = typeof topFeature.value === 'number' ? topFeature.value : 0;
         const materialsMessages = [
-          'Acessar poucos materiais pode afetar seu aprendizado. Explore mais os recursos disponíveis - há muito conteúdo interessante!',
-          'Os materiais de estudo estão aí para te ajudar! Acesse mais vídeos, textos e exercícios para melhorar seu aprendizado.',
-          'Que tal explorar mais os materiais disponíveis? Quanto mais você acessa, mais opções de aprendizado você tem!',
-          'Os materiais são ferramentas poderosas! Cada recurso acessado abre novas formas de entender o conteúdo!',
-          'Explorar materiais diversifica seu aprendizado. Vídeos, textos e exercícios complementam o que você vê em sala!',
-          'Acesso a materiais é como ter uma biblioteca pessoal. Quanto mais você explora, mais rico fica seu conhecimento!',
+          `Com apenas ${materialsValue} materiais acessados, você está perdendo oportunidades de aprendizado. Explore mais os recursos disponíveis - há muito conteúdo interessante!`,
+          `Os materiais de estudo estão aí para te ajudar! Com ${materialsValue} acessos, tente aumentar para pelo menos 20-30 materiais para melhorar seu aprendizado.`,
+          `Que tal explorar mais os materiais disponíveis? Com ${materialsValue} acessos, quanto mais você acessa, mais opções de aprendizado você tem!`,
+          `Os materiais são ferramentas poderosas! Com ${materialsValue} acessos, cada recurso acessado abre novas formas de entender o conteúdo!`,
+          `Explorar materiais diversifica seu aprendizado. Com ${materialsValue} acessos, vídeos, textos e exercícios complementam o que você vê em sala!`,
+          `Acesso a materiais é como ter uma biblioteca pessoal. Com ${materialsValue} acessos, quanto mais você explora, mais rico fica seu conhecimento!`,
         ];
         message += materialsMessages[Math.floor(Math.random() * materialsMessages.length)];
+      } else if (topFeature.feature === 'Avisos Visualizados' || topFeature.feature === 'AnnouncementsView' || topFeature.feature === 'announcementsview') {
+        const announcementsValue = typeof topFeature.value === 'number' ? topFeature.value : 0;
+        const announcementsMessages = [
+          `Com apenas ${announcementsValue} avisos visualizados, você pode estar perdendo informações importantes. Tente acompanhar mais os comunicados da escola!`,
+          `Visualizar avisos te mantém informado sobre eventos e prazos. Com ${announcementsValue} visualizações, aumente para pelo menos 15-20 para não perder nada!`,
+          `Os avisos contêm informações valiosas! Com ${announcementsValue} visualizações, acompanhar regularmente te ajuda a se organizar melhor!`,
+          `Estar por dentro dos avisos é essencial! Com ${announcementsValue} visualizações, tente verificar os comunicados pelo menos uma vez por semana!`,
+        ];
+        message += announcementsMessages[Math.floor(Math.random() * announcementsMessages.length)];
+      } else if (topFeature.feature === 'Participações em Discussões' || topFeature.feature === 'Discussion' || topFeature.feature === 'discussion') {
+        const discussionValue = typeof topFeature.value === 'number' ? topFeature.value : 0;
+        const discussionMessages = [
+          `Com apenas ${discussionValue} participações em discussões, você está perdendo oportunidades de aprendizado colaborativo. Participe mais de fóruns e debates!`,
+          `Participar de discussões enriquece seu aprendizado. Com ${discussionValue} participações, tente aumentar para pelo menos 15-20 para trocar ideias com colegas!`,
+          `As discussões são espaços de aprendizado coletivo! Com ${discussionValue} participações, cada debate te ajuda a entender melhor o conteúdo!`,
+          `Participe mais de discussões! Com ${discussionValue} participações, você pode compartilhar ideias e aprender com seus colegas!`,
+        ];
+        message += discussionMessages[Math.floor(Math.random() * discussionMessages.length)];
       } else {
         const genericRiskMessages = [
           `Melhorar seu ${topFeature.feature.toLowerCase()} pode ajudar muito a reduzir o risco. Você consegue! 💪`,
@@ -1295,16 +1503,36 @@ export function generateDropoutFeedback(
         message += genericRiskMessages[Math.floor(Math.random() * genericRiskMessages.length)];
       }
     } else {
-      message = positiveRiskMessages[Math.floor(Math.random() * positiveRiskMessages.length)];
-      
+      // Se for "Faltas Escolares" com influência positiva, usar "presença" ao invés de "faltas escolares"
       if (topFeature.feature === 'Faltas Escolares') {
-        message += ' Continue comparecendo às aulas regularmente!';
-      } else if (topFeature.feature === 'Participação em Aula') {
-        message += ' Continue participando ativamente - isso está te mantendo engajado!';
-      } else if (topFeature.feature === 'Materiais Acessados') {
-        message += ' Continue explorando os materiais disponíveis!';
+        const presencePositiveMessages = [
+          `Ótima notícia! Sua presença está reduzindo seu risco de evasão! 🎉`,
+          `Parabéns! Sua presença está te ajudando a permanecer engajado! 👏`,
+          `Excelente! Sua presença está sendo um grande aliado na sua permanência! ⭐`,
+          `Incrível! Sua presença está sendo um diferencial positivo! Continue assim! 🌟`,
+          `Fantástico! Sua presença está te mantendo conectado com os estudos! 🚀`,
+          `Muito bem! Sua presença está sendo um ponto forte na sua jornada! 💎`,
+          `Que bom! Sua presença está te ajudando a se manter engajado! 💪`,
+        ];
+        message = presencePositiveMessages[Math.floor(Math.random() * presencePositiveMessages.length)];
+        const presenceMessages = [
+          ' Sua presença regular está fazendo toda a diferença! Continue assim!',
+          ' Sua presença nas aulas está te mantendo engajado! Parabéns!',
+          ' Sua presença constante é um ponto forte! Continue comparecendo regularmente!',
+          ' Sua presença faz toda diferença! Continue mantendo essa frequência!',
+        ];
+        message += presenceMessages[Math.floor(Math.random() * presenceMessages.length)];
       } else {
-        message += ' Continue mantendo esse bom hábito!';
+        // Para outras features com influência positiva, usar as mensagens padrão
+        message = positiveRiskMessages[Math.floor(Math.random() * positiveRiskMessages.length)];
+        
+        if (topFeature.feature === 'Participação em Aula') {
+          message += ' Continue participando ativamente - isso está te mantendo engajado!';
+        } else if (topFeature.feature === 'Materiais Acessados') {
+          message += ' Continue explorando os materiais disponíveis!';
+        } else {
+          message += ' Continue mantendo esse bom hábito!';
+        }
       }
     }
     
@@ -1313,8 +1541,34 @@ export function generateDropoutFeedback(
     }
   } else {
     // Fallback se não conseguir parsear
-    message = `Seu risco de evasão é ${classificacao || 'calculado'}. `;
-    message += explanation.substring(0, 200);
+    // Normalizar classificação para evitar problemas de formatação
+    let classificacaoNormalizada = 'calculado';
+    if (classificacao) {
+      try {
+        // Normalizar variações de "médio" e outras classificações
+        const classificacaoLower = classificacao.toLowerCase().trim();
+        if (classificacaoLower === 'medio' || classificacaoLower === 'médio') {
+          classificacaoNormalizada = 'médio';
+        } else if (classificacaoLower === 'baixo') {
+          classificacaoNormalizada = 'baixo';
+        } else if (classificacaoLower === 'alto') {
+          classificacaoNormalizada = 'alto';
+        } else {
+          // Manter original se não for uma das classificações conhecidas
+          classificacaoNormalizada = classificacao;
+        }
+      } catch (error) {
+        classificacaoNormalizada = 'calculado';
+      }
+    }
+    message = `Seu risco de evasão é ${classificacaoNormalizada}. `;
+    // Limitar explicação para evitar problemas
+    try {
+      const explicacaoLimitada = explanation ? explanation.substring(0, 200) : '';
+      message += explicacaoLimitada;
+    } catch (error) {
+      message += 'Analise seus dados de engajamento para mais detalhes.';
+    }
   }
   
   const suggestions = generateSuggestions(features, 'dropout');

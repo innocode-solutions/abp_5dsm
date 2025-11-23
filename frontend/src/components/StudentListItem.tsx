@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import { Student } from '../service/studentService';
 
 interface StudentListItemProps {
   student: Student;
+  onAddNota?: (studentId: string, studentName: string) => void;
 }
 
-function StudentListItem({ student }: StudentListItemProps) {
+function StudentListItem({ student, onAddNota }: StudentListItemProps) {
   const getRiskColor = (risk: 'baixo' | 'médio' | 'alto' | null) => {
     if (!risk) return colors.muted;
     switch (risk) {
@@ -57,6 +59,15 @@ function StudentListItem({ student }: StudentListItemProps) {
             </Text>
           </View>
         </View>
+        {onAddNota && (
+          <TouchableOpacity
+            style={styles.addNotaButton}
+            onPress={() => onAddNota(student.id, student.name)}
+          >
+            <Feather name="plus-circle" size={20} color={colors.primary} />
+            <Text style={styles.addNotaText}>Adicionar Nota</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -116,6 +127,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     textTransform: 'capitalize',
+  },
+  addNotaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    gap: 6,
+  },
+  addNotaText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
 

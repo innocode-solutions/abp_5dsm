@@ -5,31 +5,55 @@ import { Platform } from "react-native";
 // Tipo para o Socket
 type ISocket = ReturnType<typeof io>;
 
-// Função para obter a URL do Socket (mesma lógica do apiConnection)
+// Função para obter a URL do Socket
+// IMPORTANTE: Socket.io conecta na raiz do servidor, NÃO em /api
 function getSocketUrl(): string {
-  // Se EXPO_PUBLIC_API_URL existir → usa ela primeiro
+  const backendPort = process.env.EXPO_PUBLIC_BACKEND_PORT || '8080';
+  
+  // Se EXPO_PUBLIC_SOCKET_URL existir → remove /api e força porta correta
+  if (process.env.EXPO_PUBLIC_SOCKET_URL) {
+    try {
+      const socketUrl = process.env.EXPO_PUBLIC_SOCKET_URL;
+      // Remove /api do final se existir
+      const urlWithoutApi = socketUrl.replace(/\/api\/?$/, '');
+      const urlObj = new URL(urlWithoutApi);
+      // SEMPRE força a porta correta
+      urlObj.port = backendPort;
+      return urlObj.toString();
+    } catch {
+      // Se a URL for inválida, ignora e usa a lógica padrão
+    }
+  }
+
+  // Se EXPO_PUBLIC_API_URL existir, remove /api e força porta correta
   if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+    try {
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+      // Remove /api do final se existir
+      const urlWithoutApi = apiUrl.replace(/\/api\/?$/, '');
+      const urlObj = new URL(urlWithoutApi);
+      // SEMPRE força a porta correta
+      urlObj.port = backendPort;
+      return urlObj.toString();
+    } catch {
+      // Se a URL for inválida, ignora e usa a lógica padrão
+    }
   }
 
   // Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual
   const machineIp = process.env.EXPO_PUBLIC_MACHINE_IP;
   if (machineIp) {
-    // ✅ Mobile sempre usa HTTP
-    if (Platform.OS !== 'web') {
-      return `http://${machineIp}:3333/api`;
-    }
-    // Web pode usar HTTP (HTTPS requer certificados válidos)
-    return `http://${machineIp}:3333/api`;
+    // ✅ Socket.io conecta na raiz do servidor, não em /api
+    return `http://${machineIp}:${backendPort}`;
   }
 
   // Android Emulator
   if (Platform.OS === "android") {
-    return "http://10.0.2.2:3333/api";
+    return `http://10.0.2.2:${backendPort}`;
   }
 
   // iOS Simulator ou Web
-  return "http://localhost:3333/api";
+  return `http://localhost:${backendPort}`;
 }
 
 const SOCKET_URL = getSocketUrl();
@@ -78,55 +102,37 @@ export async function connectSocket(): Promise<ISocket> {
   });
 
   socket.on("connect", () => {
-    // ✅ Apenas log em desenvolvimento
-    if (__DEV__) {
-      console.log("✅ WebSocket conectado");
-    }
     reconnectAttempts = 0;
   });
 
   socket.on("disconnect", (reason: string) => {
-    // ✅ Apenas log em desenvolvimento
-    if (__DEV__) {
-      console.log("❌ WebSocket desconectado:", reason);
-    }
     if (reason === "io server disconnect") {
       socket?.connect();
     }
   });
 
   socket.on("connect_error", (error: Error) => {
-    // ✅ Silenciar erros de conexão - WebSocket é opcional
     reconnectAttempts++;
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      // ✅ Apenas log final em desenvolvimento
-      if (__DEV__) {
-        console.warn("⚠️ WebSocket não disponível (opcional)");
-      }
-      // ✅ Desabilitar reconexão automática após máximo de tentativas
       socket?.disconnect();
     }
   });
 
   socket.on("reconnect", (attemptNumber: number) => {
-    if (__DEV__) {
-      console.log(`🔄 WebSocket reconectado após ${attemptNumber} tentativas`);
-    }
     reconnectAttempts = 0;
   });
 
   socket.on("reconnect_attempt", (attemptNumber: number) => {
-    // ✅ Silenciar tentativas de reconexão
+    // Silenciar tentativas de reconexão
   });
 
   socket.on("reconnect_error", (error: Error) => {
-    // ✅ Silenciar erros de reconexão
+    // Silenciar erros de reconexão
   });
 
   socket.on("reconnect_failed", () => {
     // ✅ Apenas log em desenvolvimento
     if (__DEV__) {
-      console.warn("⚠️ WebSocket não disponível (opcional)");
     }
   });
 
@@ -147,7 +153,6 @@ export function disconnectSocket(): void {
       
       // ✅ Apenas log em desenvolvimento
       if (__DEV__) {
-        console.log("🔌 WebSocket desconectado");
       }
     } catch (error) {
       // ✅ Ignorar erros ao desconectar
@@ -162,7 +167,6 @@ export function disconnectSocket(): void {
 export async function subscribeToDiscipline(subjectId: string): Promise<void> {
   const sock = await connectSocket();
   sock.emit("subscribe:discipline", subjectId);
-  console.log(`📚 Inscrito na disciplina ${subjectId}`);
 }
 
 /**
@@ -173,7 +177,6 @@ export async function unsubscribeFromDiscipline(
 ): Promise<void> {
   if (socket?.connected) {
     socket.emit("unsubscribe:discipline", subjectId);
-    console.log(`📚 Inscrição cancelada na disciplina ${subjectId}`);
   }
 }
 
@@ -185,7 +188,6 @@ export async function onPredictionCreated(
 ): Promise<void> {
   const sock = await connectSocket();
   sock.on("prediction:created", (event: PredictionCreatedEvent) => {
-    console.log("📢 Evento prediction:created recebido:", event);
     callback(event);
   });
 }

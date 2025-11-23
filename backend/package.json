@@ -18,7 +18,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "add-notas-joao": "ts-node src/scripts/addNotasJoaoSilva.ts",
+    "create-aluno-completo": "ts-node src/scripts/createAlunoCompleto.ts"
   },
   "keywords": [],
   "author": "",

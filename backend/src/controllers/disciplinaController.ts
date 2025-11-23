@@ -53,7 +53,7 @@ export class DisciplinaController {
         }
       });
     } catch (error) {
-      console.error('Error fetching subjects:', error);
+      console.error('Error fetching subjects');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -99,7 +99,7 @@ export class DisciplinaController {
 
       res.json(disciplina);
     } catch (error) {
-      console.error('Error fetching subject:', error);
+      console.error('Error fetching subject');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -147,7 +147,7 @@ export class DisciplinaController {
 
       res.status(201).json(disciplina);
     } catch (error) {
-      console.error('Error creating subject:', error);
+      console.error('Error creating subject');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           return res.status(409).json({ error: 'Subject code already exists for this course' });
@@ -188,7 +188,7 @@ export class DisciplinaController {
 
       res.json(disciplina);
     } catch (error) {
-      console.error('Error updating subject:', error);
+      console.error('Error updating subject');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           return res.status(404).json({ error: 'Subject not found' });
@@ -212,7 +212,7 @@ export class DisciplinaController {
 
       res.status(204).send();
     } catch (error) {
-      console.error('Error deleting subject:', error);
+      console.error('Error deleting subject');
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
           return res.status(404).json({ error: 'Subject not found' });
@@ -250,7 +250,7 @@ export class DisciplinaController {
 
       res.json(disciplinas);
     } catch (error) {
-      console.error('Error fetching subjects by course:', error);
+      console.error('Error fetching subjects by course');
       res.status(500).json({ error: 'Internal server error' });
     }
   }

@@ -1,9 +1,14 @@
-import axios from 'axios';
 import { PrismaClient, TipoPredicao } from '@prisma/client';
+import { predictDropout, predictPerformance } from './mlService';
+import { 
+  notificarNovaPredicaoDesempenho, 
+  notificarNovaPredicaoEvasao,
+  notificarProfessorBaixoDesempenho,
+  notificarProfessorAltoRiscoEvasao,
+  notificarProfessorFormularioCompleto
+} from './notificacaoService';
 
 const prisma = new PrismaClient();
-const ML_BASE_URL = process.env.ML_BASE_URL || 'http://localhost:5000';
-const ML_TIMEOUT = parseInt(process.env.ML_TIMEOUT_MS || '10000');
 
 export interface MLPredictionResponse {
   prediction: string;
@@ -29,23 +34,10 @@ interface MLPerformanceResponse {
   grade_category: string;
   factors: Array<{
     feature: string;
-    value: number;
+    value: number | string;
     influence: string;
   }>;
   saved: boolean;
-}
-
-type AxiosErrorWithCode = {
-  isAxiosError: true
-  code?: string
-  response?: {
-    status?: number
-    data?: unknown
-  }
-}
-
-function isAxiosError(error: unknown): error is AxiosErrorWithCode {
-  return typeof error === 'object' && error !== null && 'isAxiosError' in error && Boolean((error as any).isAxiosError)
 }
 
 /**
@@ -171,42 +163,27 @@ function improveDropoutExplanation(
 
 async function callDropoutService(data: any): Promise<MLPredictionResponse> {
   try {
-    const response = await axios.post<MLDropoutResponse>(
-      `${ML_BASE_URL}/predict/dropout`,
-      data,
-      {
-        timeout: ML_TIMEOUT,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log('Dropout Service Raw Response:', response.data);
+    const response = await predictDropout(data);
 
     // Melhora o explain baseado nos dados de entrada para identificar features relevantes
-    const improvedExplanation = improveDropoutExplanation(response.data.explain, data, response.data.probability_dropout);
+    const improvedExplanation = improveDropoutExplanation(response.explain, data, response.probability_dropout);
 
     // Map dropout response to standardized format
     return {
-      prediction: response.data.class_dropout,
-      probability: response.data.probability_dropout,
+      prediction: response.class_dropout,
+      probability: response.probability_dropout,
       explanation: improvedExplanation
     };
-  } catch (error) {
-    if (isAxiosError(error)) {
-      const responseData = error.response?.data
-   if (error.response?.status === 422) {
-    console.error('ML Service Validation Error:', JSON.stringify(responseData, null, 2));
-    // Lança o erro para o controller/teste
-    throw new Error(`Dados inválidos para o serviço de ML: ${JSON.stringify(responseData)}`);
-   }
-      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-        throw new Error('Timeout ao conectar com o serviço de ML');
-      }
-      if (error.code === 'ECONNREFUSED') {
-        throw new Error('Serviço de ML indisponível');
-      }
+  } catch (error: any) {
+    if (error.message?.includes('Dados inválidos')) {
+      console.error('ML Service Validation Error');
+      throw new Error(`Dados inválidos para o serviço de ML: ${error.message}`);
+    }
+    if (error.message?.includes('Timeout')) {
+      throw new Error('Timeout ao processar predição de ML');
+    }
+    if (error.message?.includes('indisponível') || error.message?.includes('não encontrado')) {
+      throw new Error('Serviço de ML indisponível');
     }
     throw error;
   }
@@ -214,25 +191,14 @@ async function callDropoutService(data: any): Promise<MLPredictionResponse> {
 
 async function callPerformanceService(data: any): Promise<MLPredictionResponse> {
   try {
-    const response = await axios.post<MLPerformanceResponse>(
-      `${ML_BASE_URL}/predict/performance`,
-      data,
-      {
-        timeout: ML_TIMEOUT,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log('Performance Service Raw Response:', response.data);
+    const response = await predictPerformance(data);
 
     // Constrói explicação a partir dos factors (features mais relevantes)
     // Formato esperado pelo FeedbackService: "feature: value (influência positiva/negativa)"
     let explanation: string;
-    if (response.data.factors && response.data.factors.length > 0) {
+    if (response.factors && response.factors.length > 0) {
       // Usa os top 3 factors (já ordenados por relevância pelo ML)
-      const topFactors = response.data.factors.slice(0, 3);
+      const topFactors = response.factors.slice(0, 3);
       const factorsExplanation = topFactors
         .map(f => {
           // Normaliza a influência para o formato esperado
@@ -253,40 +219,131 @@ async function callPerformanceService(data: any): Promise<MLPredictionResponse> 
       
       explanation = factorsExplanation;
     } else {
-      // Fallback se não houver factors
-      explanation = `Nota prevista: ${response.data.predicted_score.toFixed(2)}, ` +
-        `Status: ${response.data.approval_status}, ` +
-        `Categoria: ${response.data.grade_category}.`;
+      // Fallback se não houver factors - criar mensagem mais amigável
+      const notaFormatada = (response.predicted_score / 10).toFixed(1);
+      const statusFormatado = response.approval_status?.toLowerCase() === 'approved' 
+        ? 'Aprovado' 
+        : response.approval_status?.toLowerCase() === 'rejected' 
+          ? 'Reprovado' 
+          : response.approval_status || 'Em análise';
+      
+      // Mapear categoria para português de forma mais amigável
+      const categoriaMap: Record<string, string> = {
+        'EXCELLENT': 'Excelente',
+        'VERY_GOOD': 'Muito Bom',
+        'GOOD': 'Bom',
+        'SUFFICIENT': 'Suficiente',
+        'INSUFFICIENT': 'Insuficiente',
+        'BOM': 'Bom',
+        'MUITO_BOM': 'Muito Bom',
+        'EXCELENTE': 'Excelente',
+        'SUFICIENTE': 'Suficiente',
+        'INSUFICIENTE': 'Insuficiente',
+      };
+      const categoriaFormatada = categoriaMap[response.grade_category?.toUpperCase() || ''] || response.grade_category || 'Não definida';
+      
+      // Criar mensagem mais natural e amigável
+      if (response.predicted_score >= 60) {
+        explanation = `Parabéns! Sua nota prevista é ${notaFormatada}/10 (${response.predicted_score.toFixed(1)} pontos), o que indica que você está ${statusFormatado.toLowerCase()}. Seu desempenho está classificado como ${categoriaFormatada.toLowerCase()}. Continue mantendo seus bons hábitos de estudo!`;
+      } else {
+        explanation = `Sua nota prevista é ${notaFormatada}/10 (${response.predicted_score.toFixed(1)} pontos), o que indica que você está ${statusFormatado.toLowerCase()}. Seu desempenho está classificado como ${categoriaFormatada.toLowerCase()}. É importante focar em melhorar seus hábitos de estudo para alcançar a aprovação.`;
+      }
     }
 
     return {
-      prediction: response.data.approval_status,
-      probability: response.data.confidence,
+      prediction: response.approval_status,
+      probability: response.confidence,
       explanation: explanation,
-      predicted_score: response.data.predicted_score, // 0-100
-      approval_status: response.data.approval_status,
-      grade_category: response.data.grade_category
+      predicted_score: response.predicted_score, // 0-100
+      approval_status: response.approval_status,
+      grade_category: response.grade_category
     };
-  } catch (error) {
-    if (isAxiosError(error)) {
-      // Log the validation errors from ML service
-      const responseData = error.response?.data
-      if (error.response?.status === 422) {
-        console.error('ML Service Validation Error:', JSON.stringify(responseData, null, 2));
-        throw new Error(`Dados inválidos para o serviço de ML: ${JSON.stringify(responseData)}`);
-      }
-      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-        throw new Error('Timeout ao conectar com o serviço de ML');
-      }
-      if (error.code === 'ECONNREFUSED') {
-        throw new Error('Serviço de ML indisponível');
-      }
+  } catch (error: any) {
+    if (error.message?.includes('Dados inválidos')) {
+      console.error('ML Service Validation Error');
+      throw new Error(`Dados inválidos para o serviço de ML: ${error.message}`);
+    }
+    if (error.message?.includes('Timeout')) {
+      throw new Error('Timeout ao processar predição de ML');
+    }
+    if (error.message?.includes('indisponível') || error.message?.includes('não encontrado')) {
+      throw new Error('Serviço de ML indisponível');
     }
     if (error instanceof Error) {
       throw error;
     }
     throw new Error('Erro desconhecido ao chamar serviço de ML');
   }
+}
+
+/**
+ * Salva um desempenho baseado em uma predição de desempenho
+ */
+export async function saveDesempenho(
+  IDMatricula: string,
+  IDPrediction: string,
+  mlResponse: MLPredictionResponse
+) {
+  // Calcular nota prevista (0-10) e percentual (0-100)
+  const predictedScore = mlResponse.predicted_score !== undefined 
+    ? mlResponse.predicted_score 
+    : mlResponse.probability * 100;
+  
+  const notaPrevista = predictedScore / 10; // Converter de 0-100 para 0-10
+  const notaPercentual = predictedScore; // Manter em 0-100
+  
+  // Determinar categoria da nota baseado no predicted_score
+  let categoriaNota: string | null = null;
+  if (predictedScore >= 90) categoriaNota = 'EXCELENTE';
+  else if (predictedScore >= 80) categoriaNota = 'MUITO_BOM';
+  else if (predictedScore >= 70) categoriaNota = 'BOM';
+  else if (predictedScore >= 60) categoriaNota = 'SUFICIENTE';
+  else categoriaNota = 'INSUFICIENTE';
+  
+  // Determinar status de aprovação
+  let statusAprovacao: string | null = null;
+  if (mlResponse.approval_status) {
+    statusAprovacao = mlResponse.approval_status.toLowerCase() === 'approved' ? 'aprovado' : 'reprovado';
+  } else {
+    // Se não tiver approval_status, usar probabilidade
+    statusAprovacao = mlResponse.probability >= 0.7 ? 'aprovado' : 
+                     mlResponse.probability >= 0.5 ? 'em risco' : 'reprovado';
+  }
+  
+  // Normalizar classificação
+  const classificacao = mlResponse.prediction || mlResponse.grade_category || 'desconhecido';
+  
+  const desempenho = await prisma.desempenho.create({
+    data: {
+      IDMatricula,
+      IDPrediction,
+      NotaPrevista: Math.round(notaPrevista * 100) / 100, // Arredondar para 2 casas decimais
+      NotaPercentual: Math.round(notaPercentual * 100) / 100,
+      Classificacao: classificacao,
+      Probabilidade: mlResponse.probability,
+      StatusAprovacao: statusAprovacao,
+      CategoriaNota: categoriaNota,
+      Observacoes: mlResponse.explanation || null
+    },
+    include: {
+      matricula: {
+        include: {
+          disciplina: true,
+          periodo: true,
+          aluno: {
+            select: {
+              IDAluno: true,
+              Nome: true,
+              IDUser: true
+            }
+          }
+        }
+      },
+      prediction: true
+    }
+  });
+  
+  return desempenho;
 }
 
 export async function savePrediction(
@@ -300,7 +357,7 @@ export async function savePrediction(
     throw new Error('Resposta inválida do serviço de ML');
   }
 
-  return await prisma.prediction.create({
+  const prediction = await prisma.prediction.create({
     data: {
       IDMatricula,
       TipoPredicao: tipo,
@@ -319,19 +376,142 @@ export async function savePrediction(
       }
     }
   });
+
+  // Se for predição de desempenho, criar registro de desempenho
+  if (tipo === TipoPredicao.DESEMPENHO) {
+    try {
+      const desempenho = await saveDesempenho(IDMatricula, prediction.IDPrediction, mlResponse);
+      
+      if (!desempenho) {
+        console.error('Erro: Desempenho retornou null após salvar');
+        throw new Error('Falha ao salvar desempenho - retorno vazio');
+      }
+      
+      // Verificar se foi salvo corretamente fazendo uma query
+      const desempenhoVerificado = await prisma.desempenho.findUnique({
+        where: { IDDesempenho: desempenho.IDDesempenho },
+        include: {
+          matricula: {
+            include: {
+              disciplina: true,
+              aluno: {
+                select: {
+                  IDUser: true,
+                  Nome: true
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      if (desempenhoVerificado) {
+        // Criar notificação para o aluno
+        if (desempenhoVerificado.matricula?.aluno?.IDUser) {
+          try {
+            await notificarNovaPredicaoDesempenho(
+              desempenhoVerificado.matricula.aluno.IDUser,
+              desempenhoVerificado.matricula.disciplina.NomeDaDisciplina,
+              desempenhoVerificado.NotaPrevista,
+              IDMatricula
+            );
+          } catch (notifError) {
+            console.error('Erro ao criar notificação de desempenho:', notifError);
+            // Não falhar a predição se houver erro ao criar notificação
+          }
+        }
+      } else {
+        console.error('Erro: Desempenho não encontrado no banco após salvar');
+      }
+
+      // Notificar professores se o desempenho for baixo (< 6.0)
+      if (desempenhoVerificado && desempenhoVerificado.NotaPrevista < 6.0 && desempenhoVerificado.matricula?.aluno) {
+        try {
+          await notificarProfessorBaixoDesempenho(
+            desempenhoVerificado.matricula.disciplina.IDDisciplina,
+            desempenhoVerificado.matricula.aluno.Nome || 'Aluno',
+            desempenhoVerificado.matricula.disciplina.NomeDaDisciplina,
+            desempenhoVerificado.NotaPrevista,
+            IDMatricula
+          );
+        } catch (notifError) {
+          console.error('⚠️ Erro ao notificar professores sobre baixo desempenho:', notifError);
+        }
+      }
+
+      // Notificar professores que um formulário foi completado
+      if (desempenhoVerificado && desempenhoVerificado.matricula?.aluno) {
+        try {
+          await notificarProfessorFormularioCompleto(
+            desempenhoVerificado.matricula.disciplina.IDDisciplina,
+            desempenhoVerificado.matricula.aluno.Nome || 'Aluno',
+            desempenhoVerificado.matricula.disciplina.NomeDaDisciplina,
+            'DESEMPENHO',
+            IDMatricula
+          );
+        } catch (notifError) {
+          console.error('⚠️ Erro ao notificar professores sobre formulário completo:', notifError);
+        }
+      }
+    } catch (error: any) {
+      console.error('Erro ao salvar desempenho');
+      // Não falhar a predição se houver erro ao salvar desempenho
+    }
+  } else if (tipo === TipoPredicao.EVASAO) {
+    // Criar notificação para predição de evasão
+    try {
+      if (prediction.matricula && prediction.matricula.aluno) {
+        const risco = mlResponse.probability < 0.33 ? 'baixo' : 
+                      mlResponse.probability < 0.66 ? 'médio' : 'alto';
+        
+        // Notificar o aluno
+        await notificarNovaPredicaoEvasao(
+          prediction.matricula.aluno.IDUser,
+          prediction.matricula.disciplina.NomeDaDisciplina,
+          risco,
+          mlResponse.probability,
+          IDMatricula
+        );
+
+        // Notificar professores se o risco for médio ou alto
+        if (mlResponse.probability >= 0.4) {
+          await notificarProfessorAltoRiscoEvasao(
+            prediction.matricula.disciplina.IDDisciplina,
+            prediction.matricula.aluno.Nome,
+            prediction.matricula.disciplina.NomeDaDisciplina,
+            risco,
+            mlResponse.probability,
+            IDMatricula
+          );
+        }
+
+        // Notificar professores que um formulário foi completado
+        await notificarProfessorFormularioCompleto(
+          prediction.matricula.disciplina.IDDisciplina,
+          prediction.matricula.aluno.Nome,
+          prediction.matricula.disciplina.NomeDaDisciplina,
+          'EVASAO',
+          IDMatricula
+        );
+      }
+    } catch (notifError) {
+      console.error('⚠️ Erro ao criar notificação de evasão:', notifError);
+      // Não falhar a predição se houver erro ao criar notificação
+    }
+  }
+
+  return prediction;
 }
 
 export async function callMLService(
   tipoPredicao: 'EVASAO' | 'DESEMPENHO',
   dados: any
 ): Promise<MLPredictionResponse> {
-  console.log(`Calling ML service for ${tipoPredicao} with data:`, dados);
 
   const response = tipoPredicao === 'EVASAO' 
     ? await callDropoutService(dados)
     : await callPerformanceService(dados);
 
-  console.log('Standardized ML Response:', response);
 
   return response;
 }

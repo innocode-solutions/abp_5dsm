@@ -14,11 +14,15 @@ import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { CommonActions } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation';
 import colors from '../theme/colors';
+
+type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<SettingsScreenNavigationProp>();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = async () => {
@@ -91,25 +95,37 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Configurações</Text>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
             <Feather name="user" size={20} color={colors.text} />
             <Text style={styles.settingText}>Editar Perfil</Text>
             <Feather name="chevron-right" size={20} color={colors.muted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('ChangePassword')}
+          >
             <Feather name="lock" size={20} color={colors.text} />
             <Text style={styles.settingText}>Alterar Senha</Text>
             <Feather name="chevron-right" size={20} color={colors.muted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('Notifications')}
+          >
             <Feather name="bell" size={20} color={colors.text} />
             <Text style={styles.settingText}>Notificações</Text>
             <Feather name="chevron-right" size={20} color={colors.muted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => navigation.navigate('About')}
+          >
             <Feather name="info" size={20} color={colors.text} />
             <Text style={styles.settingText}>Sobre</Text>
             <Feather name="chevron-right" size={20} color={colors.muted} />
@@ -150,11 +166,9 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+    // @ts-ignore - boxShadow é necessário para React Native Web
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
   },
   avatarContainer: {
     width: 80,
@@ -191,11 +205,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+    // @ts-ignore - boxShadow é necessário para React Native Web
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
   },
   settingText: {
     flex: 1,
@@ -211,11 +223,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
     elevation: 3,
+    // @ts-ignore - boxShadow é necessário para React Native Web
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
   },
   logoutText: {
     color: '#fff',

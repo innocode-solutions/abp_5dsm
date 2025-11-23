@@ -22,7 +22,7 @@ export class PredictionController {
 
       res.json(predictions);
     } catch (error) {
-      console.error('Erro ao buscar predições:', error);
+      console.error('Erro ao buscar predições');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -50,7 +50,7 @@ export class PredictionController {
 
       res.json(prediction);
     } catch (error) {
-      console.error('Erro ao buscar predição:', error);
+      console.error('Erro ao buscar predição');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -89,7 +89,7 @@ export class PredictionController {
 
       res.status(201).json(prediction);
     } catch (error) {
-      console.error('Erro ao criar predição:', error);
+      console.error('Erro ao criar predição');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -168,7 +168,7 @@ export class PredictionController {
         }
       });
     } catch (error) {
-      console.error('Erro ao criar predição com ML:', error);
+      console.error('Erro ao criar predição com ML');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -200,7 +200,7 @@ export class PredictionController {
 
       res.json(prediction);
     } catch (error) {
-      console.error('Erro ao atualizar predição:', error);
+      console.error('Erro ao atualizar predição');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -215,7 +215,7 @@ export class PredictionController {
 
       res.status(204).send();
     } catch (error) {
-      console.error('Erro ao deletar predição:', error);
+      console.error('Erro ao deletar predição');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -239,7 +239,7 @@ export class PredictionController {
 
       res.json(predictions);
     } catch (error) {
-      console.error('Erro ao buscar predições por matrícula:', error);
+      console.error('Erro ao buscar predições por matrícula');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -263,7 +263,7 @@ export class PredictionController {
 
       res.json(predictions);
     } catch (error) {
-      console.error('Erro ao buscar predições por tipo:', error);
+      console.error('Erro ao buscar predições por tipo');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -397,7 +397,7 @@ export class PredictionController {
         }
       });
     } catch (error) {
-      console.error('Erro ao criar predição para aluno:', error);
+      console.error('Erro ao criar predição para aluno');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }

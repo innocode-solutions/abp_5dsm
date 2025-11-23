@@ -124,7 +124,7 @@ export class AuthController {
         expiresIn: "1h",
       });
     } catch (err: any) {
-      console.error("Erro ao realizar login:", err);
+      console.error("Erro ao realizar login");
       
       // Handle Prisma database connection errors
       if (err?.code === 'P1001' || err?.name === 'PrismaClientInitializationError') {
@@ -176,7 +176,7 @@ export class AuthController {
         });
       }
 
-      console.error("Erro ao solicitar redefinição de senha:", err);
+      console.error("Erro ao solicitar redefinição de senha");
       res
         .status(500)
         .json({ error: "Erro interno ao solicitar redefinição de senha" });
@@ -220,7 +220,7 @@ export class AuthController {
         return res.status(400).json({ error: "Código inválido ou expirado" });
       }
 
-      console.error("Erro ao verificar código de redefinição:", err);
+      console.error("Erro ao verificar código de redefinição");
       res.status(500).json({ error: "Erro interno ao verificar código" });
     }
   }
@@ -262,7 +262,7 @@ export class AuthController {
 
       res.json(user);
     } catch (err) {
-      console.error("Erro ao verificar usuário:", err);
+      console.error("Erro ao verificar usuário");
       res.status(500).json({ error: "Erro interno ao verificar usuário" });
     }
   }
@@ -316,7 +316,7 @@ export class AuthController {
       if (err instanceof PasswordResetInvalidError) {
         return res.status(400).json({ error: "Código inválido ou expirado" });
       }
-      console.error("Erro ao redefinir senha:", err);
+      console.error("Erro ao redefinir senha");
       res.status(500).json({ error: "Erro interno ao redefinir senha" });
     }
   }
@@ -365,7 +365,7 @@ export class AuthController {
 
       res.json({ message: "Senha redefinida com sucesso" });
     } catch (err) {
-      console.error("Erro ao redefinir senha:", err);
+      console.error("Erro ao redefinir senha");
       res.status(500).json({ error: "Erro interno ao redefinir senha" });
     }
   }
@@ -398,7 +398,7 @@ export class AuthController {
 
       res.json({ message: "Senha atualizada com sucesso" });
     } catch (err) {
-      console.error("Erro ao atualizar senha:", err);
+      console.error("Erro ao atualizar senha");
       res.status(500).json({ error: "Erro interno ao atualizar senha" });
     }
   }

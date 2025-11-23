@@ -131,6 +131,7 @@ model User {
   // Relacionamento um-para-muitos com Aluno
   alunos        Aluno[]
   resetRequests PasswordResetRequest[]
+  notificacoes  Notificacao[]
 
   @@map("users")
 }
@@ -181,7 +182,7 @@ model Matricula {
   IDDisciplina String
   IDPeriodo    String
   Status       StatusMatricula @default(ENROLLED)
-  Nota         Float? // Nota do aluno na disciplina
+  Nota         Float? // Nota do aluno na disciplina (pode ser calculada a partir das notas individuais)
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
@@ -190,10 +191,12 @@ model Matricula {
   disciplina  Disciplina    @relation(fields: [IDDisciplina], references: [IDDisciplina], onDelete: Cascade)
   periodo     PeriodoLetivo @relation(fields: [IDPeriodo], references: [IDPeriodo], onDelete: Cascade)
   predictions Prediction[]
+  notas       Nota[]
+  desempenhos Desempenho[]
 
   // Constraint única
   @@unique([IDAluno, IDDisciplina, IDPeriodo])
-  // Índices para acelerar “alunos por disciplina/período”
+  // Índices para acelerar "alunos por disciplina/período"
   @@index([IDDisciplina, IDPeriodo], name: "idx_matriculas_disciplina_periodo")
   @@index([IDAluno], name: "idx_matriculas_aluno")
   @@map("matriculas")
@@ -217,8 +220,90 @@ model Prediction {
 
   // Relacionamentos
   matricula Matricula @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
+  desempenho Desempenho?
 
-  // Índice para pegar “a última predição por matrícula e tipo”
+  // Índice para pegar "a última predição por matrícula e tipo"
   @@index([IDMatricula, TipoPredicao, createdAt], name: "idx_predictions_matricula_tipo_created")
   @@map("predictions")
+}
+
+model Nota {
+  IDNota        String   @id @default(uuid())
+  IDMatricula   String
+  Valor         Float    // Valor da nota (0-10 ou 0-100)
+  Tipo          String?  // Tipo de avaliação: "P1", "P2", "Trabalho", "Prova Final", "Atividade", etc.
+  DataAvaliacao DateTime @default(now()) // Data em que a nota foi atribuída
+  Observacoes    String?  // Observações sobre a nota
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relacionamentos
+  matricula Matricula @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
+
+  // Índices
+  @@index([IDMatricula], name: "idx_notas_matricula")
+  @@index([IDMatricula, DataAvaliacao], name: "idx_notas_matricula_data")
+  @@map("notas")
+}
+
+model Desempenho {
+  IDDesempenho  String   @id @default(uuid())
+  IDMatricula   String
+  IDPrediction  String?  @unique // Relaciona com a Prediction que gerou este desempenho
+  NotaPrevista  Float    // Nota prevista pelo algoritmo (0-10)
+  NotaPercentual Float   // Nota em percentual (0-100)
+  Classificacao String   // Classificação: "baixo", "médio", "alto", "insuficiente", "suficiente", etc.
+  Probabilidade Float    // Probabilidade de aprovação (0-1)
+  StatusAprovacao String? // Status de aprovação: "aprovado", "reprovado", "em risco"
+  CategoriaNota  String? // Categoria da nota: "INSUFICIENTE", "SUFICIENTE", "BOM", "MUITO_BOM", "EXCELENTE"
+  Observacoes    String? // Observações adicionais sobre o desempenho
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relacionamentos
+  matricula Matricula @relation(fields: [IDMatricula], references: [IDMatricula], onDelete: Cascade)
+  prediction Prediction? @relation(fields: [IDPrediction], references: [IDPrediction], onDelete: SetNull)
+
+  // Índices para consultas otimizadas
+  @@index([IDMatricula], name: "idx_desempenho_matricula")
+  @@index([IDMatricula, createdAt], name: "idx_desempenho_matricula_data")
+  @@index([IDPrediction], name: "idx_desempenho_prediction")
+  @@map("desempenhos")
+}
+
+enum TipoNotificacao {
+  DESEMPENHO
+  EVASAO
+  NOTA
+  SISTEMA
+  ALERTA
+}
+
+enum StatusNotificacao {
+  NAO_LIDA
+  LIDA
+  ARQUIVADA
+}
+
+model Notificacao {
+  IDNotificacao  String            @id @default(uuid())
+  IDUser         String
+  Tipo           TipoNotificacao
+  Titulo         String
+  Mensagem       String
+  Status         StatusNotificacao @default(NAO_LIDA)
+  Link           String?           // Link opcional para navegação (ex: "/alunos/123")
+  DadosAdicionais Json?            // Dados extras em JSON (ex: IDMatricula, IDPrediction)
+  createdAt      DateTime          @default(now())
+  lidaEm         DateTime?         // Data em que foi marcada como lida
+  updatedAt      DateTime          @updatedAt
+
+  // Relacionamentos
+  user User @relation(fields: [IDUser], references: [IDUser], onDelete: Cascade)
+
+  // Índices para consultas otimizadas
+  @@index([IDUser, Status], name: "idx_notificacoes_user_status")
+  @@index([IDUser, createdAt], name: "idx_notificacoes_user_data")
+  @@index([Status], name: "idx_notificacoes_status")
+  @@map("notificacoes")
 }

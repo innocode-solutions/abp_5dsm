@@ -38,6 +38,8 @@ export interface StudentDetails {
   };
   matriculas: Array<{
     IDMatricula: string;
+    Status?: 'ENROLLED' | 'DROPPED' | 'COMPLETED';
+    Nota?: number | null; // Média das notas reais
     disciplina: {
       IDDisciplina: string;
       NomeDaDisciplina: string;
@@ -51,6 +53,17 @@ export interface StudentDetails {
       TipoPredicao: 'DESEMPENHO' | 'EVASAO';
       Probabilidade: number;
       Classificacao: string;
+      createdAt: string;
+    }>;
+    desempenhos?: Array<{
+      IDDesempenho: string;
+      IDPrediction: string | null;
+      NotaPrevista: number;
+      NotaPercentual: number;
+      Classificacao: string;
+      Probabilidade: number;
+      StatusAprovacao: string | null;
+      CategoriaNota: string | null;
       createdAt: string;
     }>;
   }>;
@@ -72,7 +85,15 @@ export async function getStudentIdByUserId(): Promise<string | null> {
     }
     return null;
   } catch (error: any) {
-    console.error('Erro ao buscar ID do aluno:', error);
+    // Melhor tratamento de erro para Network Error
+    if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      console.error('🔌 Erro de rede ao buscar ID do aluno');
+      console.error('   Verifique se o backend está rodando');
+      console.error('   URL tentada:', error.config?.url);
+      console.error('   Base URL:', error.config?.baseURL);
+    } else {
+      console.error('Erro ao buscar ID do aluno:', error);
+    }
     return null;
   }
 }

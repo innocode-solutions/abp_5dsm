@@ -3,16 +3,15 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   ActivityIndicator,
   RefreshControl,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation';
-import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
 import { getStudentDetails, StudentDetails } from '../service/studentService';
 
@@ -22,9 +21,11 @@ interface SubjectGrade {
   disciplina: string;
   nota: number;
   risco?: string;
+  usandoMedia?: boolean;
 }
 
 export default function StudentPerformanceScreen({ route }: Props) {
+  const navigation = useNavigation();
   const { studentId, studentName, subjectId } = route.params;
   const [student, setStudent] = useState<StudentDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +50,15 @@ export default function StudentPerformanceScreen({ route }: Props) {
     loadStudentData();
   }, [loadStudentData]);
 
+  // Recarregar dados quando a tela receber foco (quando voltar da tela de resultados)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadStudentData();
+    });
+
+    return unsubscribe;
+  }, [navigation, loadStudentData]);
+
   const onRefresh = () => {
     setRefreshing(true);
     loadStudentData();
@@ -57,17 +67,55 @@ export default function StudentPerformanceScreen({ route }: Props) {
   // Calcular notas por disciplina
   const subjectGrades: SubjectGrade[] = student?.matriculas
     .map((matricula) => {
-      // Buscar predição de desempenho para esta matrícula
-      const performancePred = matricula.predictions?.find(
-        (p) => p.TipoPredicao === 'DESEMPENHO'
-      );
-      const dropoutPred = matricula.predictions?.find(
-        (p) => p.TipoPredicao === 'EVASAO'
-      );
+      // Priorizar desempenho da tabela desempenhos (mais preciso)
+      let nota = 0;
+      let usandoMedia = false;
+      
+      // Se temos desempenhos, usar o mais recente (já vem ordenado do backend)
+      if (matricula.desempenhos && matricula.desempenhos.length > 0) {
+        // Ordenar por data para garantir que pegamos o mais recente
+        const desempenhosOrdenados = [...matricula.desempenhos].sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Mais recente primeiro
+        });
+        const desempenho = desempenhosOrdenados[0]; // Mais recente
+        nota = desempenho.NotaPrevista; // Nota já está em escala 0-10
+      } else if (matricula.predictions && matricula.predictions.length > 0) {
+        // Fallback: usar predições se não houver desempenho
+        const performancePreds = matricula.predictions
+          .filter((p) => p.TipoPredicao === 'DESEMPENHO')
+          .sort((a, b) => {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA; // Mais recente primeiro
+          });
+        
+        const performancePred = performancePreds[0];
+        if (performancePred) {
+          // Usar NotaPrevista do desempenho se disponível, senão converter probabilidade (fallback)
+          nota = matricula.desempenhos && matricula.desempenhos.length > 0
+            ? matricula.desempenhos[0].NotaPrevista
+            : Math.round(performancePred.Probabilidade * 1000) / 10;
+        }
+      } else {
+        // Se não há predição, usar a média das notas reais da matrícula
+        if (matricula.Nota !== null && matricula.Nota !== undefined) {
+          nota = matricula.Nota; // Média já calculada no backend
+          usandoMedia = true;
+        }
+      }
 
-      const nota = performancePred
-        ? Math.round(performancePred.Probabilidade * 1000) / 10
-        : 0;
+      // Buscar predição de evasão (mais recente)
+      const dropoutPreds = matricula.predictions
+        ?.filter((p) => p.TipoPredicao === 'EVASAO')
+        .sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Mais recente primeiro
+        });
+      
+      const dropoutPred = dropoutPreds?.[0];
 
       // Determinar risco de evasão
       let risco: string | undefined;
@@ -82,6 +130,7 @@ export default function StudentPerformanceScreen({ route }: Props) {
         disciplina: matricula.disciplina.NomeDaDisciplina,
         nota,
         risco,
+        usandoMedia,
       };
     })
     .filter((sg) => sg.nota > 0) || [];
@@ -183,7 +232,7 @@ export default function StudentPerformanceScreen({ route }: Props) {
                 <View style={styles.subjectInfo}>
                   <Text style={styles.subjectName}>{item.disciplina}</Text>
                   <Text style={styles.subjectGrade}>
-                    Nota: {item.nota.toFixed(1)}
+                    {item.usandoMedia ? 'Média: ' : 'Nota prevista: '}{item.nota.toFixed(1)}
                   </Text>
                 </View>
                 {item.risco && (

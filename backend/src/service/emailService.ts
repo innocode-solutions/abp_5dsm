@@ -56,13 +56,8 @@ export async function sendPasswordResetEmail({ to, name, otp, expiresAt }: Passw
   `
 
   if (!transporter) {
-    console.info('[emailService] SMTP não configurado. Conteúdo do e-mail:', {
-      to,
-      subject,
-      otp,
-      expiresAt: expiresAt.toISOString()
-    })
-    return
+    // SMTP não configurado - apenas retorna sucesso sem enviar
+    return;
   }
 
   await transporter.sendMail({

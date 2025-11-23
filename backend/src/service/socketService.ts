@@ -18,9 +18,14 @@ export interface PredictionCreatedEvent {
  * Inicializa o servidor Socket.io
  */
 export function initializeSocket(server: HttpServer | HttpsServer): SocketServer {
+  // Em desenvolvimento, aceitar todas as origens (necessário para React Native)
+  const corsOrigin = process.env.NODE_ENV === 'production'
+    ? (process.env.FRONTEND_URL || 'http://localhost:8080')
+    : true; // Permite todas as origens em desenvolvimento
+
   io = new SocketServer(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: corsOrigin,
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -53,26 +58,18 @@ export function initializeSocket(server: HttpServer | HttpsServer): SocketServer
 
   io.on('connection', (socket) => {
     const user = (socket as any).user;
-    console.log(`✅ Cliente WebSocket conectado: ${user.email} (${user.role})`);
 
     // Permite que o cliente se inscreva em eventos de uma disciplina específica
     socket.on('subscribe:discipline', (subjectId: string) => {
       socket.join(`discipline:${subjectId}`);
-      console.log(`📚 Cliente ${user.email} se inscreveu na disciplina ${subjectId}`);
     });
 
     // Permite que o cliente cancele a inscrição de uma disciplina
     socket.on('unsubscribe:discipline', (subjectId: string) => {
       socket.leave(`discipline:${subjectId}`);
-      console.log(`📚 Cliente ${user.email} cancelou inscrição na disciplina ${subjectId}`);
-    });
-
-    socket.on('disconnect', () => {
-      console.log(`❌ Cliente WebSocket desconectado: ${user.email}`);
     });
   });
 
-  console.log('✅ Socket.io inicializado com sucesso');
   return io;
 }
 
@@ -81,7 +78,6 @@ export function initializeSocket(server: HttpServer | HttpsServer): SocketServer
  */
 export function emitPredictionCreated(event: PredictionCreatedEvent): void {
   if (!io) {
-    console.warn('⚠️ Socket.io não está inicializado. Evento não será emitido.');
     return;
   }
 
@@ -93,8 +89,6 @@ export function emitPredictionCreated(event: PredictionCreatedEvent): void {
     IDPrediction: event.IDPrediction,
     createdAt: event.createdAt,
   });
-
-  console.log(`📢 Evento prediction:created emitido para disciplina ${event.IDDisciplina}`);
 }
 
 /**

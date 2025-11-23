@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Alert,
   ActivityIndicator,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -10,20 +9,32 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { HabitService } from "../service/HabitService";
 import { PredictionService } from "../service/PredictionService";
 import { useHabit } from "../context/HabitContext";
 import { useAuth } from "../context/AuthContext";
 import colors from "../theme/colors";
-import { generatePerformanceFeedback } from "../service/FeedbackService";
+import { RootStackParamList } from "../navigation";
 import { Feather } from "@expo/vector-icons";
+import { getStudentIdByUserId, getStudentDetails } from "../service/studentService";
+import { 
+  saveMatriculasToCache, 
+  getMatriculasFromCache, 
+  clearMatriculasCache,
+  CachedMatricula 
+} from "../service/matriculaCacheService";
+
+type Props = NativeStackScreenProps<RootStackParamList, "Habits">;
 
 export interface HabitData {
   sono: number;
   horasEstudo: number;
   motivacao: number;
   frequencia: number;
-  Previous_Scores?: number;
+  // Previous_Scores removido para evitar viés - não é mais necessário
   Distance_from_Home?: string;
   Gender?: string;
   Parental_Education_Level?: string;
@@ -60,17 +71,66 @@ const PICKER_OPTIONS = {
   peer: [{ label: "Positiva", value: "Positive" }, { label: "Negativa", value: "Negative" }, { label: "Neutra", value: "Neutral" }],
   yesNo: [{ label: "Sim", value: "Yes" }, { label: "Não", value: "No" }],
   resources: [{ label: "Ruim", value: "Poor" }, { label: "Médio", value: "Average" }, { label: "Bom", value: "Good" }],
+  // Classificações para campos numéricos
+  horasEstudo: [
+    { label: "Muito Baixo (0-10h)", value: "5", numeric: 5 },
+    { label: "Baixo (11-20h)", value: "15", numeric: 15 },
+    { label: "Médio (21-35h)", value: "28", numeric: 28 },
+    { label: "Alto (36-50h)", value: "43", numeric: 43 },
+    { label: "Muito Alto (51-84h)", value: "67", numeric: 67 },
+  ],
+  horasSono: [
+    { label: "Muito Pouco (0-4h)", value: "2", numeric: 2 },
+    { label: "Pouco (5-6h)", value: "5.5", numeric: 5.5 },
+    { label: "Adequado (7-8h)", value: "7.5", numeric: 7.5 },
+    { label: "Bom (9-10h)", value: "9.5", numeric: 9.5 },
+    { label: "Muito (11-12h)", value: "11.5", numeric: 11.5 },
+  ],
+  motivacao: [
+    { label: "Muito Baixa (0-2)", value: "1", numeric: 1 },
+    { label: "Baixa (3-4)", value: "3.5", numeric: 3.5 },
+    { label: "Média (5-6)", value: "5.5", numeric: 5.5 },
+    { label: "Alta (7-8)", value: "7.5", numeric: 7.5 },
+    { label: "Muito Alta (9-10)", value: "9.5", numeric: 9.5 },
+  ],
+  frequencia: [
+    { label: "Muito Baixa (0-40%)", value: "20", numeric: 20 },
+    { label: "Baixa (41-60%)", value: "50", numeric: 50 },
+    { label: "Média (61-80%)", value: "70", numeric: 70 },
+    { label: "Alta (81-95%)", value: "88", numeric: 88 },
+    { label: "Muito Alta (96-100%)", value: "98", numeric: 98 },
+  ],
+  notasAnteriores: [
+    { label: "Insuficiente (0-59)", value: "45", numeric: 45 },
+    { label: "Regular (60-69)", value: "65", numeric: 65 },
+    { label: "Bom (70-79)", value: "75", numeric: 75 },
+    { label: "Muito Bom (80-89)", value: "85", numeric: 85 },
+    { label: "Excelente (90-100)", value: "95", numeric: 95 },
+  ],
 };
 
-const HabitScreen: React.FC = () => {
+const HabitScreen: React.FC<Props> = ({ navigation, route }) => {
   const { submitHabits, loading } = useHabit();
   const { user } = useAuth();
+  
+  // Receber matéria selecionada da tela anterior (opcional)
+  const initialMatriculaId = route.params?.selectedMatriculaId;
+  const initialDisciplina = route.params?.selectedDisciplina;
+  
+  // Estados para seleção de matéria
+  const [matriculas, setMatriculas] = useState<CachedMatricula[]>([]);
+  const [selectedMatriculaId, setSelectedMatriculaId] = useState<string | undefined>(initialMatriculaId);
+  const [selectedDisciplina, setSelectedDisciplina] = useState<string | undefined>(initialDisciplina);
+  const [loadingMatriculas, setLoadingMatriculas] = useState(false);
+  const [matriculasLoaded, setMatriculasLoaded] = useState(false);
+  
+  const [showAdditionalFields, setShowAdditionalFields] = useState(false);
 
   const [horasEstudo, setHorasEstudo] = useState("");
   const [horasSono, setHorasSono] = useState("");
   const [motivacao, setMotivacao] = useState("");
   const [frequencia, setFrequencia] = useState("");
-  const [previousScores, setPreviousScores] = useState("");
+  // Previous_Scores removido para evitar viés - não é mais necessário
   const [distanceFromHome, setDistanceFromHome] = useState("");
   const [gender, setGender] = useState("");
   const [parentalEducationLevel, setParentalEducationLevel] = useState("");
@@ -91,39 +151,253 @@ const HabitScreen: React.FC = () => {
   const [predictionResult, setPredictionResult] = useState<any>(null);
   const [predictionError, setPredictionError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [currentSection, setCurrentSection] = useState<'basic' | 'additional'>('basic');
+  
+  // Estado para última predição de desempenho
+  
+  // Estados para controlar o modo de entrada (classificação ou valor) de cada campo
+  const [horasEstudoMode, setHorasEstudoMode] = useState<'classification' | 'value'>('classification');
+  const [horasSonoMode, setHorasSonoMode] = useState<'classification' | 'value'>('classification');
+  const [motivacaoMode, setMotivacaoMode] = useState<'classification' | 'value'>('classification');
+  const [frequenciaMode, setFrequenciaMode] = useState<'classification' | 'value'>('classification');
+  // Previous_Scores removido para evitar viés - não é mais necessário
+  
+  // Estados para valores de classificação
+  const [horasEstudoClassification, setHorasEstudoClassification] = useState("");
+  const [horasSonoClassification, setHorasSonoClassification] = useState("");
+  const [motivacaoClassification, setMotivacaoClassification] = useState("");
+  const [frequenciaClassification, setFrequenciaClassification] = useState("");
+  // Previous_Scores removido para evitar viés - não é mais necessário
+
+  // Função auxiliar para encontrar a classificação mais próxima de um valor numérico
+  const findClosestClassification = (value: number, options: Array<{ value: string; numeric?: number }>) => {
+    if (!value && value !== 0) return null;
+    return options.reduce((prev, curr) => {
+      const prevDiff = Math.abs((prev.numeric || 0) - value);
+      const currDiff = Math.abs((curr.numeric || 0) - value);
+      return currDiff < prevDiff ? curr : prev;
+    });
+  };
+
+  // Função para obter cor da categoria
+  const getCategoryColor = (classificacao: string): string => {
+    const upper = classificacao.toUpperCase();
+    if (upper.includes('EXCELENTE') || upper.includes('MUITO BOM')) return '#4CAF50';
+    if (upper.includes('BOM')) return '#8BC34A';
+    if (upper.includes('REGULAR')) return '#FFC107';
+    if (upper.includes('INSUFICIENTE') || upper.includes('REPROVADO')) return '#F44336';
+    return colors.primary || '#4A90E2';
+  };
 
   const loadHabits = async () => {
     if (!user?.IDUser) return;
     try {
-      const data: HabitData = await HabitService.getHabits();
+      const data = await HabitService.getHabits() as HabitData;
       if (data) {
-        setHorasEstudo(data.horasEstudo?.toString() || "");
-        setHorasSono(data.sono?.toString() || "");
-        setMotivacao(data.motivacao?.toString() || "");
-        setFrequencia(data.frequencia?.toString() || "");
-        setPreviousScores(data.Previous_Scores?.toString() || "");
-        setDistanceFromHome(data.Distance_from_Home || "");
-        setGender(data.Gender || "");
-        setParentalEducationLevel(data.Parental_Education_Level || "");
-        setParentalInvolvement(data.Parental_Involvement || "");
-        setSchoolType(data.School_Type || "");
-        setPeerInfluence(data.Peer_Influence || "");
-        setExtracurricularActivities(data.Extracurricular_Activities || "");
-        setLearningDisabilities(data.Learning_Disabilities || "");
-        setInternetAccess(data.Internet_Access || "");
-        setAccessToResources(data.Access_to_Resources || "");
-        setTeacherQuality(data.Teacher_Quality || "");
-        setFamilyIncome(data.Family_Income || "");
-        setTutoringSessions(data.Tutoring_Sessions || "");
-        setPhysicalActivity(data.Physical_Activity || "");
+        // Carregar campos básicos e restaurar classificações
+        if (data.horasEstudo !== undefined && data.horasEstudo !== null) {
+          const horasEstudoStr = data.horasEstudo.toString();
+          setHorasEstudo(horasEstudoStr);
+          const closest = findClosestClassification(data.horasEstudo, PICKER_OPTIONS.horasEstudo);
+          if (closest) {
+            setHorasEstudoClassification(closest.value);
+            setHorasEstudoMode('classification');
+          }
+        }
+        
+        if (data.sono !== undefined && data.sono !== null) {
+          const horasSonoStr = data.sono.toString();
+          setHorasSono(horasSonoStr);
+          const closest = findClosestClassification(data.sono, PICKER_OPTIONS.horasSono);
+          if (closest) {
+            setHorasSonoClassification(closest.value);
+            setHorasSonoMode('classification');
+          }
+        }
+        
+        if (data.motivacao !== undefined && data.motivacao !== null) {
+          const motivacaoStr = data.motivacao.toString();
+          setMotivacao(motivacaoStr);
+          const closest = findClosestClassification(data.motivacao, PICKER_OPTIONS.motivacao);
+          if (closest) {
+            setMotivacaoClassification(closest.value);
+            setMotivacaoMode('classification');
+          }
+        }
+        
+        if (data.frequencia !== undefined && data.frequencia !== null) {
+          const frequenciaStr = data.frequencia.toString();
+          setFrequencia(frequenciaStr);
+          const closest = findClosestClassification(data.frequencia, PICKER_OPTIONS.frequencia);
+          if (closest) {
+            setFrequenciaClassification(closest.value);
+            setFrequenciaMode('classification');
+          }
+        }
+        
+        // Previous_Scores removido para evitar viés - não é mais necessário
+        
+        // IMPORTANTE: NÃO ativar o toggle automaticamente ao carregar dados
+        // O toggle só deve ser ativado quando o usuário clicar explicitamente
+        // Limpar todos os campos adicionais primeiro
+        setDistanceFromHome("");
+        setGender("");
+        setParentalEducationLevel("");
+        setParentalInvolvement("");
+        setSchoolType("");
+        setPeerInfluence("");
+        setExtracurricularActivities("");
+        setLearningDisabilities("");
+        setInternetAccess("");
+        setAccessToResources("");
+        setTeacherQuality("");
+        setFamilyIncome("");
+        setTutoringSessions("");
+        setPhysicalActivity("");
+        
+        // Carregar valores dos campos adicionais (mas manter o toggle DESATIVADO)
+        // Os valores ficam disponíveis caso o usuário ative o toggle depois
+        if (data.Distance_from_Home && data.Distance_from_Home.trim() !== '') {
+          setDistanceFromHome(data.Distance_from_Home);
+        }
+        if (data.Gender && data.Gender.trim() !== '') {
+          setGender(data.Gender);
+        }
+        if (data.Parental_Education_Level && data.Parental_Education_Level.trim() !== '') {
+          setParentalEducationLevel(data.Parental_Education_Level);
+        }
+        if (data.Parental_Involvement && data.Parental_Involvement.trim() !== '') {
+          setParentalInvolvement(data.Parental_Involvement);
+        }
+        if (data.School_Type && data.School_Type.trim() !== '') {
+          setSchoolType(data.School_Type);
+        }
+        if (data.Peer_Influence && data.Peer_Influence.trim() !== '') {
+          setPeerInfluence(data.Peer_Influence);
+        }
+        if (data.Extracurricular_Activities && data.Extracurricular_Activities.trim() !== '') {
+          setExtracurricularActivities(data.Extracurricular_Activities);
+        }
+        if (data.Learning_Disabilities && data.Learning_Disabilities.trim() !== '') {
+          setLearningDisabilities(data.Learning_Disabilities);
+        }
+        if (data.Internet_Access && data.Internet_Access.trim() !== '') {
+          setInternetAccess(data.Internet_Access);
+        }
+        if (data.Access_to_Resources && data.Access_to_Resources.trim() !== '') {
+          setAccessToResources(data.Access_to_Resources);
+        }
+        if (data.Teacher_Quality && data.Teacher_Quality.trim() !== '') {
+          setTeacherQuality(data.Teacher_Quality);
+        }
+        if (data.Family_Income && data.Family_Income.trim() !== '') {
+          setFamilyIncome(data.Family_Income);
+        }
+        if (data.Tutoring_Sessions && data.Tutoring_Sessions.trim() !== '') {
+          setTutoringSessions(data.Tutoring_Sessions);
+        }
+        if (data.Physical_Activity && data.Physical_Activity.trim() !== '') {
+          setPhysicalActivity(data.Physical_Activity);
+        }
+        
+        // IMPORTANTE: NÃO ativar o toggle automaticamente
+        // O toggle deve permanecer DESATIVADO até que o usuário clique nele
+        setShowAdditionalFields(false);
       }
     } catch (err: any) {
-      console.log("Erro ao carregar hábitos:", err.message || err);
     }
   };
 
-  useEffect(() => { loadHabits().catch(console.error); }, [user]);
+  useEffect(() => { 
+    loadHabits().catch(console.error);
+    loadMatriculas().catch(console.error);
+  }, [user]);
+  
+  // Carregar matrículas disponíveis (com cache)
+  const loadMatriculas = async (forceRefresh: boolean = false) => {
+    if (!user?.IDUser) return;
+    
+    try {
+      setLoadingMatriculas(true);
+      const studentId = await getStudentIdByUserId();
+      if (!studentId) return;
+      
+      // Tentar buscar do cache primeiro (se não for refresh forçado)
+      if (!forceRefresh && !matriculasLoaded) {
+        const cachedMatriculas = await getMatriculasFromCache(studentId);
+        if (cachedMatriculas && cachedMatriculas.length > 0) {
+          setMatriculas(cachedMatriculas);
+          setMatriculasLoaded(true);
+          
+          // Selecionar matrícula se necessário
+          if (!selectedMatriculaId && cachedMatriculas.length > 0) {
+            setSelectedMatriculaId(cachedMatriculas[0].IDMatricula);
+            setSelectedDisciplina(cachedMatriculas[0].disciplina.NomeDaDisciplina);
+          }
+          
+          setLoadingMatriculas(false);
+          return; // Usar cache, não fazer requisição
+        }
+      }
+      
+      // Se não há cache ou é refresh forçado, buscar da API
+      const studentData = await getStudentDetails(studentId);
+      
+      // Filtrar apenas matrículas ativas
+      const matriculasAtivas: CachedMatricula[] = studentData.matriculas
+        .filter(m => !m.Status || m.Status === 'ENROLLED')
+        .map(m => ({
+          IDMatricula: m.IDMatricula,
+          disciplina: m.disciplina,
+          periodo: m.periodo
+        }));
+      
+      // Salvar no cache
+      await saveMatriculasToCache(studentId, matriculasAtivas);
+      
+      setMatriculas(matriculasAtivas);
+      setMatriculasLoaded(true);
+      
+      // Se não temos matrícula selecionada inicialmente e há matrículas, selecionar a primeira
+      if (!initialMatriculaId && matriculasAtivas.length > 0) {
+        setSelectedMatriculaId(matriculasAtivas[0].IDMatricula);
+        setSelectedDisciplina(matriculasAtivas[0].disciplina.NomeDaDisciplina);
+      } else if (initialMatriculaId) {
+        // Se temos matrícula inicial, garantir que ela está na lista
+        const matriculaInicial = matriculasAtivas.find(m => m.IDMatricula === initialMatriculaId);
+        if (matriculaInicial) {
+          setSelectedMatriculaId(initialMatriculaId);
+          setSelectedDisciplina(initialDisciplina || matriculaInicial.disciplina.NomeDaDisciplina);
+        } else if (matriculasAtivas.length > 0) {
+          // Se a matrícula inicial não está mais disponível, usar a primeira
+          setSelectedMatriculaId(matriculasAtivas[0].IDMatricula);
+          setSelectedDisciplina(matriculasAtivas[0].disciplina.NomeDaDisciplina);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar matrículas:', error);
+      // Em caso de erro, tentar usar cache mesmo que expirado
+      const cachedMatriculas = await getMatriculasFromCache(await getStudentIdByUserId() || '');
+      if (cachedMatriculas) {
+        setMatriculas(cachedMatriculas);
+      }
+    } finally {
+      setLoadingMatriculas(false);
+    }
+  };
+  
+  // Função para carregar a última predição de desempenho
+
+  // Recarregar dados quando a tela receber foco
+  useFocusEffect(
+    React.useCallback(() => {
+      loadHabits().catch(console.error);
+      // Só recarregar matrículas se ainda não foram carregadas (usa cache se disponível)
+      if (!matriculasLoaded) {
+        loadMatriculas().catch(console.error);
+      }
+    }, [user, matriculasLoaded])
+  );
+  
 
   const validateBasic = (): boolean => {
     setValidationError(null); // Limpa erros anteriores
@@ -136,6 +410,7 @@ const HabitScreen: React.FC = () => {
     if (num(horasSono, 0, 12)) { setValidationError("Horas de sono devem estar entre 0 e 12."); return false; }
     if (num(motivacao, 0, 10)) { setValidationError("Motivação deve estar entre 0 e 10."); return false; }
     if (num(frequencia, 0, 100)) { setValidationError("Frequência deve estar entre 0 e 100%."); return false; }
+    // Previous_Scores removido para evitar viés - não é mais necessário
     setValidationError(null); // Limpa erro se tudo estiver ok
     return true;
   };
@@ -143,7 +418,7 @@ const HabitScreen: React.FC = () => {
   const validateAll = (): boolean => {
     if (!validateBasic()) return false;
     const required = [
-      { v: previousScores, n: "Notas Anteriores" },
+      // Previous_Scores removido para evitar viés - não é mais necessário
       { v: distanceFromHome, n: "Distância de Casa" },
       { v: gender, n: "Gênero" },
       { v: parentalEducationLevel, n: "Nível Educacional dos Pais" },
@@ -161,7 +436,7 @@ const HabitScreen: React.FC = () => {
     ];
     const missing = required.filter(f => !f.v).map(f => f.n);
     if (missing.length) { setValidationError(`Campos obrigatórios: ${missing.join(", ")}`); return false; }
-    if (Number(previousScores) < 0 || Number(previousScores) > 100) { setValidationError("Notas anteriores devem estar entre 0 e 100."); return false; }
+    // Previous_Scores removido - não é mais necessário
     setValidationError(null);
     return true;
   };
@@ -174,12 +449,38 @@ const HabitScreen: React.FC = () => {
     if (!validateBasic()) return;
     try {
       setValidationError(null);
-      await submitHabits({ 
+      // Criar objeto limpo APENAS com campos básicos
+      // Previous_Scores removido para evitar viés - não é mais necessário
+      // Não incluir nenhum campo adicional para garantir independência
+      const basicData: HabitData = {
         horasEstudo: Number(horasEstudo), 
         sono: Number(horasSono), 
         motivacao: Number(motivacao), 
-        frequencia: Number(frequencia) 
-      });
+        frequencia: Number(frequencia),
+        // Explicitamente NÃO incluir campos adicionais
+      };
+      
+      await submitHabits(basicData);
+      
+      // Limpar campos adicionais após salvar básico para manter independência
+      setDistanceFromHome("");
+      setGender("");
+      setParentalEducationLevel("");
+      setParentalInvolvement("");
+      setSchoolType("");
+      setPeerInfluence("");
+      setExtracurricularActivities("");
+      setLearningDisabilities("");
+      setInternetAccess("");
+      setAccessToResources("");
+      setTeacherQuality("");
+      setFamilyIncome("");
+      setTutoringSessions("");
+      setPhysicalActivity("");
+      
+      // Recarregar dados do servidor para garantir sincronização
+      await loadHabits();
+      
       setSuccessMessage("Hábitos básicos salvos com sucesso!");
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
@@ -197,27 +498,90 @@ const HabitScreen: React.FC = () => {
     if (!validateAll()) return;
     try {
       setValidationError(null);
-      await submitHabits({
-        horasEstudo: Number(horasEstudo), 
-        sono: Number(horasSono), 
-        motivacao: Number(motivacao), 
-        frequencia: Number(frequencia),
-        Previous_Scores: Number(previousScores), 
-        Distance_from_Home: distanceFromHome, 
-        Gender: gender,
-        Parental_Education_Level: parentalEducationLevel, 
-        Parental_Involvement: parentalInvolvement, 
-        School_Type: schoolType,
-        Peer_Influence: peerInfluence, 
-        Extracurricular_Activities: extracurricularActivities, 
-        Learning_Disabilities: learningDisabilities,
-        Internet_Access: internetAccess, 
-        Access_to_Resources: accessToResources, 
-        Teacher_Quality: teacherQuality,
-        Family_Income: familyIncome, 
-        Tutoring_Sessions: tutoringSessions, 
-        Physical_Activity: physicalActivity,
-      } as any);
+      
+      // Criar objeto apenas com campos realmente preenchidos
+      // IMPORTANTE: Sempre enviar os valores ATUAIS do formulário, mesmo que sejam 0
+      const dadosParaSalvar: any = {};
+      
+      // Campos básicos - SEMPRE enviar se o campo não estiver vazio
+      if (horasEstudo && horasEstudo.trim() !== '') {
+        const horasEstudoNum = Number(horasEstudo);
+        if (!isNaN(horasEstudoNum)) {
+          dadosParaSalvar.horasEstudo = horasEstudoNum;
+        }
+      }
+      if (horasSono && horasSono.trim() !== '') {
+        const horasSonoNum = Number(horasSono);
+        if (!isNaN(horasSonoNum)) {
+          dadosParaSalvar.sono = horasSonoNum;
+        }
+      }
+      if (motivacao && motivacao.trim() !== '') {
+        const motivacaoNum = Number(motivacao);
+        if (!isNaN(motivacaoNum)) {
+          dadosParaSalvar.motivacao = motivacaoNum;
+        }
+      }
+      if (frequencia && frequencia.trim() !== '') {
+        const frequenciaNum = Number(frequencia);
+        if (!isNaN(frequenciaNum)) {
+          dadosParaSalvar.frequencia = frequenciaNum;
+        }
+      }
+      
+      // Previous_Scores removido para evitar viés - não é mais necessário
+      
+      
+      // Adicionar campos adicionais APENAS se realmente preenchidos
+      if (distanceFromHome && distanceFromHome.trim() !== '') {
+        dadosParaSalvar.Distance_from_Home = distanceFromHome;
+      }
+      if (gender && gender.trim() !== '') {
+        dadosParaSalvar.Gender = gender;
+      }
+      if (parentalEducationLevel && parentalEducationLevel.trim() !== '') {
+        dadosParaSalvar.Parental_Education_Level = parentalEducationLevel;
+      }
+      if (parentalInvolvement && parentalInvolvement.trim() !== '') {
+        dadosParaSalvar.Parental_Involvement = parentalInvolvement;
+      }
+      if (schoolType && schoolType.trim() !== '') {
+        dadosParaSalvar.School_Type = schoolType;
+      }
+      if (peerInfluence && peerInfluence.trim() !== '') {
+        dadosParaSalvar.Peer_Influence = peerInfluence;
+      }
+      if (extracurricularActivities && extracurricularActivities.trim() !== '') {
+        dadosParaSalvar.Extracurricular_Activities = extracurricularActivities;
+      }
+      if (learningDisabilities && learningDisabilities.trim() !== '') {
+        dadosParaSalvar.Learning_Disabilities = learningDisabilities;
+      }
+      if (internetAccess && internetAccess.trim() !== '') {
+        dadosParaSalvar.Internet_Access = internetAccess;
+      }
+      if (accessToResources && accessToResources.trim() !== '') {
+        dadosParaSalvar.Access_to_Resources = accessToResources;
+      }
+      if (teacherQuality && teacherQuality.trim() !== '') {
+        dadosParaSalvar.Teacher_Quality = teacherQuality;
+      }
+      if (familyIncome && familyIncome.trim() !== '') {
+        dadosParaSalvar.Family_Income = familyIncome;
+      }
+      if (tutoringSessions && tutoringSessions.trim() !== '') {
+        dadosParaSalvar.Tutoring_Sessions = tutoringSessions;
+      }
+      if (physicalActivity && physicalActivity.trim() !== '') {
+        dadosParaSalvar.Physical_Activity = physicalActivity;
+      }
+      
+      
+      await submitHabits(dadosParaSalvar);
+      
+      // Recarregar dados do servidor para garantir sincronização
+      await loadHabits();
+      
       setSuccessMessage("Todos os dados foram salvos com sucesso!");
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
@@ -227,44 +591,127 @@ const HabitScreen: React.FC = () => {
     }
   };
 
-  const handlePredictPerformance = async () => {
+  const handlePredictPerformance = async (useDefaultValues: boolean = false) => {
+    
     if (!user?.IDUser) {
+      console.error('❌ Usuário não autenticado');
       Alert.alert("Erro", "Usuário não autenticado.");
       return;
     }
-    if (!validateAll()) {
-      Alert.alert("Atenção", "Por favor, preencha todos os campos para obter uma predição precisa.");
+    
+    // Validar se uma matéria foi selecionada
+    if (!selectedMatriculaId) {
+      Alert.alert("Atenção", "Por favor, selecione uma matéria antes de calcular o desempenho.");
       return;
     }
+    
+    // Validar campos básicos
+    const basicValid = validateBasic();
+    if (!basicValid) {
+      Alert.alert("Atenção", "Por favor, preencha todos os campos básicos.");
+      return;
+    }
+    
+    // Se campos adicionais estiverem ativados, validar apenas campos básicos
+    // O backend aplicará valores padrão para campos não preenchidos
+    if (!useDefaultValues) {
+      // Não validar campos adicionais aqui - o backend tratará valores faltantes
+    }
+    
     setPredictionLoading(true);
     setPredictionError(null);
-    setPredictionResult(null);
     setValidationError(null);
+    
     try {
-      const result = await PredictionService.predictPerformance({
-        horasEstudo: Number(horasEstudo), 
-        sono: Number(horasSono), 
-        motivacao: Number(motivacao), 
-        frequencia: Number(frequencia),
-        Previous_Scores: Number(previousScores), 
-        Distance_from_Home: distanceFromHome, 
-        Gender: gender,
-        Parental_Education_Level: parentalEducationLevel, 
-        Parental_Involvement: parentalInvolvement, 
-        School_Type: schoolType,
-        Peer_Influence: peerInfluence, 
-        Extracurricular_Activities: extracurricularActivities, 
-        Learning_Disabilities: learningDisabilities,
-        Internet_Access: internetAccess, 
-        Access_to_Resources: accessToResources, 
-        Teacher_Quality: teacherQuality,
-        Family_Income: familyIncome, 
-        Tutoring_Sessions: tutoringSessions, 
-        Physical_Activity: physicalActivity,
-      });
-      setPredictionResult(result);
+      // Preparar dados para predição
+      // IMPORTANTE: SEMPRE enviar os valores ATUAIS do formulário, mesmo que já existam dados salvos
+      // Isso garante que a predição use os valores mais recentes que o usuário preencheu, não valores antigos salvos
+      const predictionData: any = {};
+      
+      // Campos básicos - SEMPRE enviar os valores atuais do formulário
+      // Usar valores do estado atual, não valores salvos
+      if (horasEstudo && horasEstudo.trim() !== '') {
+        const horasEstudoNum = Number(horasEstudo);
+        if (!isNaN(horasEstudoNum)) {
+          predictionData.horasEstudo = horasEstudoNum;
+        }
+      }
+      if (horasSono && horasSono.trim() !== '') {
+        const horasSonoNum = Number(horasSono);
+        if (!isNaN(horasSonoNum)) {
+          predictionData.sono = horasSonoNum;
+        }
+      }
+      if (motivacao && motivacao.trim() !== '') {
+        const motivacaoNum = Number(motivacao);
+        if (!isNaN(motivacaoNum)) {
+          predictionData.motivacao = motivacaoNum;
+        }
+      }
+      if (frequencia && frequencia.trim() !== '') {
+        const frequenciaNum = Number(frequencia);
+        if (!isNaN(frequenciaNum)) {
+          predictionData.frequencia = frequenciaNum;
+        }
+      }
+      // Previous_Scores removido para evitar viés - não é mais necessário
+      
+      
+          // IMPORTANTE: Só enviar campos adicionais se o toggle estiver ATIVADO
+          // Se o toggle estiver desativado, NÃO enviar nenhum campo adicional (nem valores padrão)
+          if (showAdditionalFields) {
+            // Se campos adicionais estão ativados, enviar apenas os que foram preenchidos
+            if (!useDefaultValues) {
+              // Apenas adiciona campos que foram realmente preenchidos pelo usuário
+              if (distanceFromHome && distanceFromHome.trim() !== '') predictionData.Distance_from_Home = distanceFromHome;
+              if (gender && gender.trim() !== '') predictionData.Gender = gender;
+              if (parentalEducationLevel && parentalEducationLevel.trim() !== '') predictionData.Parental_Education_Level = parentalEducationLevel;
+              if (parentalInvolvement && parentalInvolvement.trim() !== '') predictionData.Parental_Involvement = parentalInvolvement;
+              if (schoolType && schoolType.trim() !== '') predictionData.School_Type = schoolType;
+              if (peerInfluence && peerInfluence.trim() !== '') predictionData.Peer_Influence = peerInfluence;
+              if (extracurricularActivities && extracurricularActivities.trim() !== '') predictionData.Extracurricular_Activities = extracurricularActivities;
+              if (learningDisabilities && learningDisabilities.trim() !== '') predictionData.Learning_Disabilities = learningDisabilities;
+              if (internetAccess && internetAccess.trim() !== '') predictionData.Internet_Access = internetAccess;
+              if (accessToResources && accessToResources.trim() !== '') predictionData.Access_to_Resources = accessToResources;
+              if (teacherQuality && teacherQuality.trim() !== '') predictionData.Teacher_Quality = teacherQuality;
+              if (familyIncome && familyIncome.trim() !== '') predictionData.Family_Income = familyIncome;
+              if (tutoringSessions && tutoringSessions.trim() !== '') predictionData.Tutoring_Sessions = tutoringSessions;
+              if (physicalActivity && physicalActivity.trim() !== '') predictionData.Physical_Activity = physicalActivity;
+            } else {
+            }
+          } else {
+            // Não adicionar nenhum campo adicional quando o toggle está desativado
+          }
+      
+      
+      // Validar se temos uma matrícula selecionada ANTES de calcular
+      if (!selectedMatriculaId) {
+        Alert.alert("Atenção", "Por favor, selecione uma matéria antes de calcular o desempenho.");
+        setPredictionLoading(false);
+        return;
+      }
+      
+      // Se temos uma matrícula selecionada, usar ela para salvar a predição
+      const result = await PredictionService.predictPerformance(
+        predictionData,
+        selectedMatriculaId // Passar IDMatricula - obrigatório agora
+      );
+      
+      // Pequeno delay para garantir que o loading seja visível
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Invalidar cache de matrículas após criar nova predição
+      // (a predição pode ter mudado o estado da matrícula)
+      await clearMatriculasCache();
+      setMatriculasLoaded(false);
+      
+      // Navegar para a tela de resultados
+      navigation.navigate("PredictionResult", { predictionResult: result });
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err?.message || "Erro ao gerar predição de desempenho.";
+      console.error('❌ Erro ao processar predição:', err);
+      console.error('   Response:', err?.response?.data);
+      console.error('   Message:', err?.message);
+      const errorMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || "Erro ao gerar predição de desempenho.";
       setPredictionError(errorMsg);
       Alert.alert("Erro", errorMsg);
     } finally {
@@ -285,96 +732,349 @@ const HabitScreen: React.FC = () => {
     </View>
   );
 
-  const getCategoryInfo = (classificacao: string) => {
-    const map: Record<string, { label: string; description: string; color: string; showTips: boolean }> = {
-      'INSUFICIENTE': { label: 'Abaixo do Esperado', description: 'Sua nota está abaixo de 60 pontos. Isso significa que você precisa melhorar em algumas áreas. Não desanime! Use essa informação para focar nos pontos que precisam de mais atenção.', color: '#F44336', showTips: true },
-      'REGULAR': { label: 'Regular', description: 'Desempenho regular. Você está entre 60 e 69 pontos. Continue se esforçando!', color: '#FF9800', showTips: false },
-      'BOM': { label: 'Bom', description: 'Desempenho bom! Você está entre 70 e 79 pontos.', color: '#FFC107', showTips: false },
-      'MUITO BOM': { label: 'Muito Bom', description: 'Desempenho muito bom! Você está entre 80 e 89 pontos.', color: '#8BC34A', showTips: false },
-      'EXCELENTE': { label: 'Excelente', description: 'Desempenho excepcional! Você está acima de 90 pontos.', color: '#4CAF50', showTips: false },
-    };
-    return map[classificacao] || { label: classificacao, description: '', color: '#666', showTips: false };
-  };
+  // Componente para campos com opção de classificação ou valor
+  const renderFieldWithOptions = (
+    label: string,
+    description: string,
+    value: string,
+    setValue: (v: string) => void,
+    classificationValue: string,
+    setClassificationValue: (v: string) => void,
+    mode: 'classification' | 'value',
+    setMode: (m: 'classification' | 'value') => void,
+    options: Array<{ label: string; value: string; numeric?: number }>,
+    placeholder: string
+  ) => {
+    // Se estiver em modo classificação e houver valor selecionado, converter para numérico
+    const numericValue = mode === 'classification' && classificationValue 
+      ? options.find(opt => opt.value === classificationValue)?.numeric?.toString() || ''
+      : value;
 
-  return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Hábitos de Estudo e Dados Pessoais</Text>
-        <Text style={styles.subtitle}>Preencha todos os campos para obter predições mais precisas</Text>
-
-        <View style={styles.sectionTabs}>
-          <TouchableOpacity style={[styles.tab, currentSection === 'basic' && styles.tabActive]} onPress={() => setCurrentSection('basic')}>
-            <Text style={[styles.tabText, currentSection === 'basic' && styles.tabTextActive]}>Campos Básicos</Text>
+    return (
+      <View style={styles.fieldContainer}>
+        <Text style={styles.label}>{label}</Text>
+        {description && <Text style={styles.description}>{description}</Text>}
+        
+        {/* Toggle entre Classificação e Valor */}
+        <View style={styles.modeToggle}>
+          <TouchableOpacity
+            style={[styles.modeButton, mode === 'classification' && styles.modeButtonActive]}
+            onPress={() => {
+              setMode('classification');
+              // Se houver valor numérico, tentar encontrar classificação correspondente
+              if (value && !classificationValue) {
+                const num = Number(value);
+                const closest = options.reduce((prev, curr) => {
+                  const prevDiff = Math.abs((prev.numeric || 0) - num);
+                  const currDiff = Math.abs((curr.numeric || 0) - num);
+                  return currDiff < prevDiff ? curr : prev;
+                });
+                setClassificationValue(closest.value);
+                setValue(closest.numeric?.toString() || '');
+              }
+            }}
+          >
+            <Feather name="list" size={16} color={mode === 'classification' ? '#fff' : colors.muted || '#666'} />
+            <Text style={[styles.modeButtonText, mode === 'classification' && styles.modeButtonTextActive]}>Classificação</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.tab, currentSection === 'additional' && styles.tabActive]} onPress={() => setCurrentSection('additional')}>
-            <Text style={[styles.tabText, currentSection === 'additional' && styles.tabTextActive]}>Dados Adicionais</Text>
+          
+          <TouchableOpacity
+            style={[styles.modeButton, mode === 'value' && styles.modeButtonActive]}
+            onPress={() => {
+              setMode('value');
+              // Se houver classificação selecionada, manter o valor numérico
+              if (classificationValue && !value) {
+                const selected = options.find(opt => opt.value === classificationValue);
+                if (selected?.numeric) {
+                  setValue(selected.numeric.toString());
+                }
+              }
+            }}
+          >
+            <Feather name="hash" size={16} color={mode === 'value' ? '#fff' : colors.muted || '#666'} />
+            <Text style={[styles.modeButtonText, mode === 'value' && styles.modeButtonTextActive]}>Valor</Text>
           </TouchableOpacity>
         </View>
 
-        {currentSection === 'basic' && (
-          <View>
-            <Text style={styles.sectionTitle}>Hábitos Básicos</Text>
-            <Text style={styles.label}>Horas de Estudo Semanais:</Text>
-            <Text style={styles.description}>Quantas horas você estuda por semana? (Ex: 35 horas = ~5h por dia)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={horasEstudo} onChangeText={setHorasEstudo} placeholder="Ex: 35" />
-            <Text style={styles.label}>Horas de Sono (0-12):</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={horasSono} onChangeText={setHorasSono} placeholder="Ex: 8" />
-            <Text style={styles.label}>Nível de Motivação (0-10):</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={motivacao} onChangeText={setMotivacao} placeholder="Ex: 7" />
-            <Text style={styles.label}>Frequência às Aulas (%):</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={frequencia} onChangeText={setFrequencia} placeholder="Ex: 85" />
-            <TouchableOpacity style={[styles.button, loading && { opacity: 0.6 }]} onPress={handleSubmit} disabled={loading}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Salvar Hábitos Básicos</Text>}
-            </TouchableOpacity>
+        {/* Renderizar baseado no modo */}
+        {mode === 'classification' ? (
+          <View style={styles.pickerContainer}>
+            {!classificationValue && <Text style={styles.pickerPlaceholder}>{placeholder}</Text>}
+            <View style={styles.pickerOptions}>
+              {options.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[styles.pickerOption, classificationValue === item.value && styles.pickerOptionSelected]}
+                  onPress={() => {
+                    setClassificationValue(item.value);
+                    setValue(item.numeric?.toString() || '');
+                  }}
+                >
+                  <Text style={[styles.pickerOptionText, classificationValue === item.value && styles.pickerOptionTextSelected]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ) : (
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            value={value}
+            onChangeText={(text) => {
+              setValue(text);
+              // Limpar classificação quando o usuário digita manualmente
+              if (classificationValue) {
+                setClassificationValue('');
+              }
+            }}
+            placeholder={placeholder}
+          />
+        )}
+      </View>
+    );
+  };
+
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Formulário</Text>
+          <Text style={styles.subtitle}>
+            Selecione a matéria e preencha os campos para calcular o desempenho.
+          </Text>
+        </View>
+
+        {/* Seletor de Matéria */}
+        {matriculas.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Selecione a Matéria</Text>
+            {loadingMatriculas ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.subjectSelector}
+                contentContainerStyle={styles.subjectSelectorContent}
+              >
+                {matriculas.map((matricula) => {
+                  const isSelected = matricula.IDMatricula === selectedMatriculaId;
+                  return (
+                    <TouchableOpacity
+                      key={matricula.IDMatricula}
+                      style={[
+                        styles.subjectButton,
+                        isSelected && styles.subjectButtonSelected
+                      ]}
+                      onPress={() => {
+                        setSelectedMatriculaId(matricula.IDMatricula);
+                        setSelectedDisciplina(matricula.disciplina.NomeDaDisciplina);
+                        // Recarregar última predição para a matéria selecionada
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.subjectButtonText,
+                          isSelected && styles.subjectButtonTextSelected
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {matricula.disciplina.NomeDaDisciplina}
+                      </Text>
+                      {matricula.disciplina.CodigoDaDisciplina && (
+                        <Text
+                          style={[
+                            styles.subjectButtonCode,
+                            isSelected && styles.subjectButtonCodeSelected
+                          ]}
+                        >
+                          {matricula.disciplina.CodigoDaDisciplina}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {selectedDisciplina && (
+              <View style={styles.selectedSubjectInfo}>
+                <Feather name="check-circle" size={16} color={colors.success} />
+                <Text style={styles.selectedSubjectText}>
+                  Calculando para: {selectedDisciplina}
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
-        {currentSection === 'additional' && (
-          <View>
-            <Text style={styles.sectionTitle}>Dados Adicionais para Predição</Text>
-            <Text style={styles.label}>Notas Anteriores (0-100):</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={previousScores} onChangeText={setPreviousScores} placeholder="Ex: 80" />
-            <Text style={styles.label}>Distância de Casa:</Text>
-            {renderPicker(distanceFromHome, setDistanceFromHome, PICKER_OPTIONS.distance, "Selecione a distância")}
-            <Text style={styles.label}>Gênero:</Text>
-            {renderPicker(gender, setGender, PICKER_OPTIONS.gender, "Selecione o gênero")}
-            <Text style={styles.label}>Nível Educacional dos Pais:</Text>
-            {renderPicker(parentalEducationLevel, setParentalEducationLevel, PICKER_OPTIONS.education, "Selecione o nível educacional")}
-            <Text style={styles.label}>Envolvimento dos Pais:</Text>
-            {renderPicker(parentalInvolvement, setParentalInvolvement, PICKER_OPTIONS.level, "Selecione o nível de envolvimento")}
-            <Text style={styles.label}>Tipo de Escola:</Text>
-            {renderPicker(schoolType, setSchoolType, PICKER_OPTIONS.school, "Selecione o tipo de escola")}
-            <Text style={styles.label}>Influência dos Colegas:</Text>
-            <Text style={styles.description}>Como seus colegas de classe influenciam seu comportamento e desempenho escolar.</Text>
-            {renderPicker(peerInfluence, setPeerInfluence, PICKER_OPTIONS.peer, "Selecione a influência")}
-            <Text style={styles.label}>Atividades Extracurriculares:</Text>
-            {renderPicker(extracurricularActivities, setExtracurricularActivities, PICKER_OPTIONS.yesNo, "Selecione")}
-            <Text style={styles.label}>Deficiências de Aprendizagem:</Text>
-            {renderPicker(learningDisabilities, setLearningDisabilities, PICKER_OPTIONS.yesNo, "Selecione")}
-            <Text style={styles.label}>Acesso à Internet:</Text>
-            {renderPicker(internetAccess, setInternetAccess, PICKER_OPTIONS.yesNo, "Selecione")}
-            <Text style={styles.label}>Acesso a Recursos:</Text>
-            {renderPicker(accessToResources, setAccessToResources, PICKER_OPTIONS.resources, "Selecione o acesso")}
-            <Text style={styles.label}>Qualidade do Professor:</Text>
-            {renderPicker(teacherQuality, setTeacherQuality, PICKER_OPTIONS.resources, "Selecione a qualidade")}
-            <Text style={styles.label}>Renda Familiar:</Text>
-            {renderPicker(familyIncome, setFamilyIncome, PICKER_OPTIONS.level, "Selecione a renda")}
-            <Text style={styles.label}>Sessões de Tutoria:</Text>
-            {renderPicker(tutoringSessions, setTutoringSessions, PICKER_OPTIONS.yesNo, "Selecione")}
-            <Text style={styles.label}>Atividade Física:</Text>
-            {renderPicker(physicalActivity, setPhysicalActivity, PICKER_OPTIONS.level, "Selecione o nível")}
-            <TouchableOpacity style={[styles.button, loading && { opacity: 0.6 }]} onPress={handleSaveAll} disabled={loading}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Salvar Todos os Dados</Text>}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Campos Básicos</Text>
+          
+          {renderFieldWithOptions(
+            "Horas de Estudo Semanais:",
+            "Quantas horas você estuda por semana? (Ex: 35 horas = ~5h por dia)",
+            horasEstudo,
+            setHorasEstudo,
+            horasEstudoClassification,
+            setHorasEstudoClassification,
+            horasEstudoMode,
+            setHorasEstudoMode,
+            PICKER_OPTIONS.horasEstudo,
+            "Selecione ou digite o valor"
+          )}
+          
+          {renderFieldWithOptions(
+            "Horas de Sono:",
+            "Quantas horas você dorme por noite?",
+            horasSono,
+            setHorasSono,
+            horasSonoClassification,
+            setHorasSonoClassification,
+            horasSonoMode,
+            setHorasSonoMode,
+            PICKER_OPTIONS.horasSono,
+            "Selecione ou digite o valor"
+          )}
+          
+          {renderFieldWithOptions(
+            "Nível de Motivação:",
+            "Como você avalia sua motivação para estudar?",
+            motivacao,
+            setMotivacao,
+            motivacaoClassification,
+            setMotivacaoClassification,
+            motivacaoMode,
+            setMotivacaoMode,
+            PICKER_OPTIONS.motivacao,
+            "Selecione ou digite o valor"
+          )}
+          
+          {renderFieldWithOptions(
+            "Frequência às Aulas (%):",
+            "Qual sua porcentagem de presença nas aulas?",
+            frequencia,
+            setFrequencia,
+            frequenciaClassification,
+            setFrequenciaClassification,
+            frequenciaMode,
+            setFrequenciaMode,
+            PICKER_OPTIONS.frequencia,
+            "Selecione ou digite o valor"
+          )}
+          
+          {/* Previous_Scores removido para evitar viés - não é mais necessário */}
+
+          {/* Toggle para Campos Adicionais */}
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => {
+                setShowAdditionalFields(!showAdditionalFields);
+                // Se desativar, limpar campos adicionais
+                if (showAdditionalFields) {
+                  setDistanceFromHome("");
+                  setGender("");
+                  setParentalEducationLevel("");
+                  setParentalInvolvement("");
+                  setSchoolType("");
+                  setPeerInfluence("");
+                  setExtracurricularActivities("");
+                  setLearningDisabilities("");
+                  setInternetAccess("");
+                  setAccessToResources("");
+                  setTeacherQuality("");
+                  setFamilyIncome("");
+                  setTutoringSessions("");
+                  setPhysicalActivity("");
+                }
+              }}
+            >
+              <View style={[styles.toggleSwitch, showAdditionalFields && styles.toggleSwitchActive]}>
+                <View style={[styles.toggleThumb, showAdditionalFields && styles.toggleThumbActive]} />
+              </View>
+              <Text style={styles.toggleLabel}>Incluir Campos Adicionais</Text>
             </TouchableOpacity>
+            <Text style={styles.toggleDescription}>
+              {showAdditionalFields 
+                ? "Campos adicionais ativados. Preencha para uma predição mais precisa."
+                : "Ative para preencher dados pessoais, familiares e ambientais."}
+            </Text>
           </View>
-        )}
 
-        {validationError && <Text style={styles.errorText}>{validationError}</Text>}
-        {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
+          {/* Campos Adicionais (mostrar apenas se toggle estiver ativo) */}
+          {showAdditionalFields && (
+            <View style={styles.additionalSection}>
+              <Text style={styles.additionalSectionTitle}>Campos Adicionais</Text>
+              
+              <Text style={styles.label}>Distância de Casa:</Text>
+              {renderPicker(distanceFromHome, setDistanceFromHome, PICKER_OPTIONS.distance, "Selecione a distância")}
+              
+              <Text style={styles.label}>Gênero:</Text>
+              {renderPicker(gender, setGender, PICKER_OPTIONS.gender, "Selecione o gênero")}
+              
+              <Text style={styles.label}>Nível Educacional dos Pais:</Text>
+              {renderPicker(parentalEducationLevel, setParentalEducationLevel, PICKER_OPTIONS.education, "Selecione o nível educacional")}
+              
+              <Text style={styles.label}>Envolvimento dos Pais:</Text>
+              {renderPicker(parentalInvolvement, setParentalInvolvement, PICKER_OPTIONS.level, "Selecione o nível de envolvimento")}
+              
+              <Text style={styles.label}>Tipo de Escola:</Text>
+              {renderPicker(schoolType, setSchoolType, PICKER_OPTIONS.school, "Selecione o tipo de escola")}
+              
+              <Text style={styles.label}>Influência dos Colegas:</Text>
+              <Text style={styles.description}>Como seus colegas de classe influenciam seu comportamento e desempenho escolar.</Text>
+              {renderPicker(peerInfluence, setPeerInfluence, PICKER_OPTIONS.peer, "Selecione a influência")}
+              
+              <Text style={styles.label}>Atividades Extracurriculares:</Text>
+              {renderPicker(extracurricularActivities, setExtracurricularActivities, PICKER_OPTIONS.yesNo, "Selecione")}
+              
+              <Text style={styles.label}>Deficiências de Aprendizagem:</Text>
+              {renderPicker(learningDisabilities, setLearningDisabilities, PICKER_OPTIONS.yesNo, "Selecione")}
+              
+              <Text style={styles.label}>Acesso à Internet:</Text>
+              {renderPicker(internetAccess, setInternetAccess, PICKER_OPTIONS.yesNo, "Selecione")}
+              
+              <Text style={styles.label}>Acesso a Recursos:</Text>
+              {renderPicker(accessToResources, setAccessToResources, PICKER_OPTIONS.resources, "Selecione o acesso")}
+              
+              <Text style={styles.label}>Qualidade do Professor:</Text>
+              {renderPicker(teacherQuality, setTeacherQuality, PICKER_OPTIONS.resources, "Selecione a qualidade")}
+              
+              <Text style={styles.label}>Renda Familiar:</Text>
+              {renderPicker(familyIncome, setFamilyIncome, PICKER_OPTIONS.level, "Selecione a renda")}
+              
+              <Text style={styles.label}>Sessões de Tutoria:</Text>
+              {renderPicker(tutoringSessions, setTutoringSessions, PICKER_OPTIONS.yesNo, "Selecione")}
+              
+              <Text style={styles.label}>Atividade Física:</Text>
+              {renderPicker(physicalActivity, setPhysicalActivity, PICKER_OPTIONS.level, "Selecione o nível")}
+            </View>
+          )}
 
-        <TouchableOpacity style={[styles.predictButton, (predictionLoading || loading) && { opacity: 0.6 }]} onPress={handlePredictPerformance} disabled={predictionLoading || loading}>
-          {predictionLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Prever Desempenho</Text>}
-        </TouchableOpacity>
+          {validationError && <Text style={styles.errorText}>{validationError}</Text>}
+          {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
+          
+          <TouchableOpacity 
+            style={[styles.predictButton, (predictionLoading || loading) && { opacity: 0.6 }]} 
+            onPress={() => {
+              // Se toggle está desativado, não usar valores padrão (não enviar campos adicionais)
+              // Se toggle está ativado mas campos não preenchidos, usar valores padrão apenas para predição
+              const usarDefaults = showAdditionalFields && (
+                !distanceFromHome && !gender && !parentalEducationLevel && !parentalInvolvement &&
+                !schoolType && !peerInfluence && !extracurricularActivities && !learningDisabilities &&
+                !internetAccess && !accessToResources && !teacherQuality && !familyIncome &&
+                !tutoringSessions && !physicalActivity
+              );
+              handlePredictPerformance(usarDefaults);
+            }} 
+            disabled={predictionLoading || loading}
+          >
+            {predictionLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Prever Desempenho</Text>}
+          </TouchableOpacity>
+        </View>
 
         {predictionError && (
           <View style={styles.errorContainer}>
@@ -382,107 +1082,36 @@ const HabitScreen: React.FC = () => {
             <Text style={styles.errorText}>{predictionError}</Text>
           </View>
         )}
-
-        {predictionResult?.success && (() => {
-          const cat = getCategoryInfo(predictionResult.prediction?.classificacao || '');
-          return (
-            <View style={styles.resultContainer}>
-              <Text style={styles.resultTitle}>Resultado da Predição</Text>
-              <View style={styles.scoreCard}>
-                <Text style={styles.scoreLabel}>Nota Prevista</Text>
-                <Text style={styles.scoreValue}>{(predictionResult.prediction?.notaPrevista || 0).toFixed(1)}</Text>
-              </View>
-              <View style={[styles.infoCard, { borderLeftWidth: 4, borderLeftColor: cat.color }]}>
-                <Text style={styles.infoLabel}>Classificação:</Text>
-                <Text style={[styles.infoValue, { color: cat.color, fontWeight: 'bold' }]}>{cat.label}</Text>
-                {cat.description ? <Text style={[styles.description, { marginTop: 8 }]}>{cat.description}</Text> : null}
-                {cat.showTips && (
-                  <View style={{ marginTop: 12 }}>
-                    <Text style={[styles.infoLabel, { marginBottom: 8 }]}>Dicas para melhorar:</Text>
-                    <Text style={styles.description}>• Aumente suas horas de estudo</Text>
-                    <Text style={styles.description}>• Melhore sua frequência nas aulas</Text>
-                    <Text style={styles.description}>• Participe mais ativamente das aulas</Text>
-                    <Text style={styles.description}>• Peça ajuda aos professores quando necessário</Text>
-                    <Text style={styles.description}>• Considere fazer reforço escolar</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.infoCard}>
-                <Text style={styles.infoLabel}>Confiança:</Text>
-                <Text style={styles.infoValue}>{predictionResult.prediction?.probabilidade || 0}%</Text>
-              </View>
-              {(() => {
-                const feedback = generatePerformanceFeedback(
-                  predictionResult.prediction?.explicacao || '',
-                  predictionResult.prediction?.notaPrevista,
-                  predictionResult.prediction?.classificacao
-                );
-                
-                return (
-                  <View style={styles.feedbackContainer}>
-                    <View style={styles.feedbackHeader}>
-                      <Feather name="info" size={20} color={colors.primary || "#4A90E2"} />
-                      <Text style={styles.feedbackTitle}>{feedback.title}</Text>
-                    </View>
-                    <Text style={styles.feedbackMessage}>{feedback.message}</Text>
-                    
-                    {feedback.features.length > 0 && (
-                      <View style={styles.featuresContainer}>
-                        <Text style={styles.featuresTitle}>Principais fatores:</Text>
-                        {feedback.features.map((feature, idx) => (
-                          <View key={idx} style={styles.featureItem}>
-                            <Feather 
-                              name={feature.influence === 'positiva' ? 'arrow-up-circle' : 'arrow-down-circle'} 
-                              size={16} 
-                              color={feature.influence === 'positiva' ? '#4CAF50' : '#F44336'} 
-                            />
-                            <Text style={styles.featureText}>
-                              <Text style={styles.featureName}>{feature.feature}</Text>
-                              {': '}
-                              <Text style={[
-                                styles.featureValue,
-                                { color: feature.influence === 'positiva' ? '#4CAF50' : '#F44336' }
-                              ]}>
-                                {feature.value} ({feature.influence})
-                              </Text>
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                    
-                    {feedback.suggestions.length > 0 && (
-                      <View style={styles.suggestionsContainer}>
-                        <Text style={styles.suggestionsTitle}>💡 Sugestões para melhorar:</Text>
-                        {feedback.suggestions.map((suggestion, idx) => (
-                          <View key={idx} style={styles.suggestionItem}>
-                            <Text style={styles.suggestionText}>• {suggestion}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                );
-              })()}
-            </View>
-          );
-        })()}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg || "#f5f5f5" },
-  container: { padding: 20 },
+  safe: { flex: 1, backgroundColor: colors.bg || "#f5f5f5", paddingTop: 0 },
+  scrollContent: { paddingBottom: 80, paddingTop: 10 }, // Aumentar paddingBottom para tab bar
+  selectionContainer: { flex: 1, justifyContent: "center", padding: 20 },
+  header: { padding: 20, paddingBottom: 10 },
+  backButton: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  backButtonText: { fontSize: 16, color: colors.primary || "#4A90E2", marginLeft: 8 },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 8, textAlign: "center", color: colors.text || "#333" },
-  subtitle: { fontSize: 14, color: colors.muted || "#666", marginBottom: 20, textAlign: "center" },
-  sectionTabs: { flexDirection: "row", marginBottom: 20, backgroundColor: "#fff", borderRadius: 8, padding: 4 },
-  tab: { flex: 1, padding: 12, borderRadius: 6, alignItems: "center" },
-  tabActive: { backgroundColor: colors.primary || "#4A90E2" },
-  tabText: { fontSize: 14, color: colors.text || "#333", fontWeight: "600" },
-  tabTextActive: { color: "#fff" },
-  sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 16, color: colors.text || "#333" },
+  subtitle: { fontSize: 14, color: colors.muted || "#666", marginBottom: 10, textAlign: "center" },
+  selectionCard: { backgroundColor: "#fff", borderRadius: 12, padding: 24, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  selectionIconContainer: { alignItems: "center", marginBottom: 16 },
+  selectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 8, textAlign: "center", color: colors.text || "#333" },
+  selectionDescription: { fontSize: 14, color: colors.muted || "#666", textAlign: "center", lineHeight: 20 },
+  section: { backgroundColor: "#fff", marginHorizontal: 20, marginTop: 20, padding: 20, borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 16, color: colors.text || "#333", borderBottomWidth: 2, borderBottomColor: colors.primary || "#4A90E2", paddingBottom: 8 },
+  additionalSection: { marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: "#E5E7EB" },
+  additionalSectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 16, color: colors.text || "#333" },
+  toggleContainer: { marginTop: 24, marginBottom: 16, padding: 16, backgroundColor: "#F9FAFB", borderRadius: 8, borderWidth: 1, borderColor: "#E5E7EB" },
+  toggleButton: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  toggleSwitch: { width: 50, height: 28, borderRadius: 14, backgroundColor: "#D1D5DB", marginRight: 12, justifyContent: "center", padding: 2 },
+  toggleSwitchActive: { backgroundColor: colors.primary || "#4A90E2" },
+  toggleThumb: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#fff", alignSelf: "flex-start" },
+  toggleThumbActive: { alignSelf: "flex-end" },
+  toggleLabel: { fontSize: 16, fontWeight: "600", color: colors.text || "#333", flex: 1 },
+  toggleDescription: { fontSize: 13, color: colors.muted || "#666", marginLeft: 62 },
   label: { fontSize: 16, fontWeight: "600", marginTop: 15, marginBottom: 5, color: colors.text || "#333" },
   description: { fontSize: 13, color: colors.muted || "#666", marginBottom: 8, fontStyle: "italic" },
   input: { height: 40, borderColor: "#ccc", borderWidth: 1, borderRadius: 5, paddingHorizontal: 10, backgroundColor: "#fff", marginBottom: 8 },
@@ -493,6 +1122,12 @@ const styles = StyleSheet.create({
   pickerOptionSelected: { borderColor: colors.primary || "#4A90E2", backgroundColor: "#E3F2FD" },
   pickerOptionText: { fontSize: 14, color: colors.text || "#333" },
   pickerOptionTextSelected: { color: colors.primary || "#4A90E2", fontWeight: "600" },
+  fieldContainer: { marginBottom: 16 },
+  modeToggle: { flexDirection: "row", marginBottom: 12, backgroundColor: "#F3F4F6", borderRadius: 8, padding: 4 },
+  modeButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 10, borderRadius: 6, gap: 6 },
+  modeButtonActive: { backgroundColor: colors.primary || "#4A90E2" },
+  modeButtonText: { fontSize: 14, color: colors.muted || "#666", fontWeight: "600" },
+  modeButtonTextActive: { color: "#fff" },
   button: { backgroundColor: colors.primary || "#4A90E2", padding: 15, borderRadius: 8, alignItems: "center", marginTop: 20 },
   buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
   predictButton: { backgroundColor: "#28a745", padding: 15, borderRadius: 8, alignItems: "center", marginTop: 12 },
@@ -522,6 +1157,63 @@ const styles = StyleSheet.create({
   suggestionsTitle: { fontSize: 14, fontWeight: "600", color: colors.text || "#333", marginBottom: 8 },
   suggestionItem: { marginBottom: 4 },
   suggestionText: { fontSize: 14, color: colors.text || "#333", lineHeight: 20 },
+  // Estilos para seletor de matéria
+  subjectSelector: { marginTop: 12 },
+  subjectSelectorContent: { paddingHorizontal: 4 },
+  subjectButton: {
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 6,
+    minWidth: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  subjectButtonSelected: {
+    borderColor: colors.primary || "#4A90E2",
+    backgroundColor: "#E3F2FD",
+  },
+  subjectButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text || "#333",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  subjectButtonTextSelected: {
+    color: colors.primary || "#4A90E2",
+  },
+  subjectButtonCode: {
+    fontSize: 11,
+    color: colors.muted || "#666",
+    textAlign: "center",
+  },
+  subjectButtonCodeSelected: {
+    color: colors.primary || "#4A90E2",
+  },
+  selectedSubjectInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#F0F9FF",
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.success || "#10B981",
+  },
+  selectedSubjectText: {
+    fontSize: 14,
+    color: colors.text || "#333",
+    marginLeft: 8,
+    fontWeight: "500",
+  },
 });
 
 export default HabitScreen;

@@ -19,10 +19,12 @@ A solução busca **antecipar problemas de aprendizagem** e fornecer **insights 
 ## 🔧 Como funciona  
 1. O aluno se cadastra e escolhe a disciplina do semestre.  
 2. Ele preenche um formulário com dados de hábitos, frequência, sono, motivação e engajamento.  
-3. Os dados vão para o **Backend (Node.js/TS)**, que autentica, valida e consulta o **Serviço de ML (FastAPI)**.  
-4. O **FastAPI** roda os modelos treinados em **scikit-learn** e retorna probabilidades, classes e fatores explicativos.  
+3. Os dados vão para o **Backend (Node.js/TS)**, que autentica, valida e executa os modelos Python diretamente.  
+4. O **Backend** executa scripts Python (via `child_process`) que rodam os modelos treinados em **scikit-learn** e retornam probabilidades, classes e fatores explicativos.  
 5. O **Backend Node.js** salva os resultados no banco e devolve a resposta final para o app.  
-6. Professores e IES acessam dashboards com dados agregados.  
+6. Professores e IES acessam dashboards com dados agregados.
+
+**Nota**: Os modelos ML estão integrados no backend em `backend/src/ml/`. Não é necessário rodar um serviço Python separado.  
 
 ---
 
@@ -66,8 +68,8 @@ A solução busca **antecipar problemas de aprendizagem** e fornecer **insights 
 ## 🏗️ Arquitetura  
 
 - **App Mobile**: React Native (aluno/professor/IES).  
-- **Backend Node.js (TS)**: autenticação, CRUD, dashboards, integração com ML.  
-- **Serviço ML (FastAPI/Python)**: carrega modelos `.pkl` e responde a previsões.  
+- **Backend Node.js (TS)**: autenticação, CRUD, dashboards, execução direta de modelos ML.  
+- **Modelos ML (Python)**: scripts Python integrados no backend que carregam modelos `.pkl` e executam previsões.  
 - **Banco de Dados (Postgres/SQLite)**: armazena usuários, cursos, disciplinas, matrículas e previsões.  
 - **Segurança**: JWT, bcrypt, HTTPS, controle de acesso por perfil.  
 
@@ -79,10 +81,11 @@ A solução busca **antecipar problemas de aprendizagem** e fornecer **insights 
 ## 📂 Estrutura do Projeto  
 
 ```
-/backend        # Node.js + TS (CRUD, auth, dashboards)
-/ml-service     # FastAPI + Python (previsões ML)
-/mobile         # App em React Native
-/dashboards     # Web dashboards (IES/Professor)
+/backend        # Node.js + TS (CRUD, auth, dashboards, modelos ML integrados)
+  /src
+    /ml         # Scripts Python, modelos .pkl e datasets
+    /service    # Serviços incluindo mlService.ts
+/frontend       # App em React Native
 /docs           # Documentação e decisões
 ```
 
@@ -90,8 +93,8 @@ A solução busca **antecipar problemas de aprendizagem** e fornecer **insights 
 
 ## 🛠️ Stack Tecnológica  
 
-- **Backend**: Node.js (Express/NestJS), TypeScript, Prisma/Sequelize.  
-- **ML Service**: Python, FastAPI, scikit-learn, pandas, joblib.  
+- **Backend**: Node.js (Express), TypeScript, Prisma.  
+- **ML**: Python (executado via child_process), scikit-learn, pandas, joblib, shap.  
 - **Banco**: SQLite (dev) / PostgreSQL (prod).  
 - **Mobile**: React Native.  
 - **Infraestrutura**: Docker, docker-compose, Railway/Render/Heroku.  

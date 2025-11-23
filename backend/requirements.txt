@@ -1,0 +1,15 @@
+# Machine Learning & Data Science (usados no código)
+joblib==1.5.2
+pandas==2.3.2
+scikit-learn==1.7.2
+scipy==1.15.3
+shap==0.48.0
+
+# Visualização (usados no código de análise)
+matplotlib==3.10.6
+seaborn==0.13.2
+
+# Testes
+pytest==9.0.0
+httpx==0.28.1
+

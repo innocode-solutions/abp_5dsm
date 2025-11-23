@@ -332,7 +332,7 @@ export default function TeacherReportsScreen() {
         }
       }
     } catch (err: any) {
-      console.error('Erro ao exportar CSV:', err);
+      console.error('Erro ao exportar CSV');
       Alert.alert('Erro', `Erro ao exportar relatório: ${err.message}`);
     } finally {
       setExporting(false);

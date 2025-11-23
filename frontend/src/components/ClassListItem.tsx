@@ -11,11 +11,9 @@ interface ClassListItemProps {
 
 function ClassListItem({ classItem, onPress }: ClassListItemProps) {
   const handlePress = () => {
-    console.log('🟢 [DEBUG] ClassListItem onPress chamado!', classItem.NomeDaDisciplina);
     if (onPress) {
       onPress();
     } else {
-      console.warn('⚠️ [DEBUG] onPress não foi fornecido!');
     }
   };
 

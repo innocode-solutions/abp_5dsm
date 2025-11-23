@@ -177,7 +177,7 @@ export class DashboardController {
         top3CursosRisco
       })
     } catch (error) {
-      console.error('Erro ao gerar overview da IES:', error)
+      console.error('Erro ao gerar overview da IES')
       return res
         .status(500)
         .json({ error: 'Erro interno ao gerar overview da IES' })
@@ -343,7 +343,7 @@ export class DashboardController {
         porDisciplina: agregadoPorDisciplina
       })
     } catch (error) {
-      console.error('Erro ao gerar agregados da IES:', error)
+      console.error('Erro ao gerar agregados da IES')
       return res.status(500).json({ error: 'Erro interno ao gerar agregados da IES' })
     }
   }

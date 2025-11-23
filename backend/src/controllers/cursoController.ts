@@ -47,7 +47,7 @@ export class CursoController {
         }
       });
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      console.error('Error fetching courses');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -81,7 +81,7 @@ export class CursoController {
 
       res.json(curso);
     } catch (error) {
-      console.error('Error fetching course:', error);
+      console.error('Error fetching course');
       res.status(500).json({ error: 'Internal server error' });
     }
   }
