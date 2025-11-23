@@ -28,6 +28,10 @@ jest.mock('bcrypt', () => ({
 
 const { prisma } = require('../src/config/database')
 
+// Variáveis tipadas para os mocks do bcrypt
+const mockedHash = bcrypt.hash as jest.Mock<Promise<string>, [data: string | Buffer, saltOrRounds: string | number]>
+const mockedCompare = bcrypt.compare as jest.Mock<Promise<boolean>, [data: string | Buffer, encrypted: string]>
+
 const PasswordResetStatus = {
   PENDING: 'PENDING',
   USED: 'USED',
@@ -51,8 +55,8 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
     prisma.passwordResetRequest.create.mockReset()
     prisma.passwordResetRequest.findFirst.mockReset()
     prisma.passwordResetRequest.update.mockReset()
-    bcrypt.hash.mockClear()
-    bcrypt.compare.mockReset()
+    mockedHash.mockClear()
+    mockedCompare.mockReset()
   })
 
   afterEach(() => {
@@ -99,7 +103,7 @@ describe('PasswordResetService.generateAndStoreOtp', () => {
       data: { status: PasswordResetStatus.EXPIRED }
     })
 
-    expect(bcrypt.hash).toHaveBeenCalledWith('123456', 12)
+    expect(mockedHash).toHaveBeenCalledWith('123456', 12)
 
     expect(prisma.passwordResetRequest.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -178,13 +182,13 @@ describe('PasswordResetService.verifyOtp', () => {
       attempts: 1
     }
     prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(request)
-    bcrypt.compare.mockResolvedValueOnce(false)
+    mockedCompare.mockResolvedValueOnce(false)
 
     await expect(
       PasswordResetService.verifyOtp(user.Email, '000000')
     ).rejects.toThrow('INVALID_OR_EXPIRED')
 
-    expect(bcrypt.compare).toHaveBeenCalledWith('000000', request.otpHash)
+    expect(mockedCompare).toHaveBeenCalledWith('000000', request.otpHash)
     expect(prisma.passwordResetRequest.update).toHaveBeenCalledWith({
       where: { id: request.id },
       data: expect.objectContaining({
@@ -217,7 +221,7 @@ describe('PasswordResetService.verifyOtp', () => {
       attempts: 2
     }
     prisma.passwordResetRequest.findFirst.mockResolvedValueOnce(request)
-    bcrypt.compare.mockResolvedValueOnce(true)
+    mockedCompare.mockResolvedValueOnce(true)
 
     const result = await PasswordResetService.verifyOtp(user.Email, '123456')
 
