@@ -402,7 +402,7 @@ const HabitScreen: React.FC<Props> = ({ navigation, route }) => {
   const validateBasic = (): boolean => {
     setValidationError(null); // Limpa erros anteriores
     const num = (v: string, min: number, max: number) => {
-      if (!v || v.trim() === '') return true; // Campo vazio
+      if (!v || v.trim() === '') return false; // Campo vazio é válido (usará valor padrão)
       const n = Number(v);
       return isNaN(n) || n < min || n > max; // Fora do range
     };
@@ -605,17 +605,12 @@ const HabitScreen: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
     
-    // Validar campos básicos
+    // Validar campos básicos (permite campos vazios - usarão valores padrão)
     const basicValid = validateBasic();
     if (!basicValid) {
-      Alert.alert("Atenção", "Por favor, preencha todos os campos básicos.");
+      // A validação só falha se os valores preenchidos estiverem fora do range
+      // Campos vazios são permitidos e usarão valores padrão
       return;
-    }
-    
-    // Se campos adicionais estiverem ativados, validar apenas campos básicos
-    // O backend aplicará valores padrão para campos não preenchidos
-    if (!useDefaultValues) {
-      // Não validar campos adicionais aqui - o backend tratará valores faltantes
     }
     
     setPredictionLoading(true);
@@ -628,31 +623,73 @@ const HabitScreen: React.FC<Props> = ({ navigation, route }) => {
       // Isso garante que a predição use os valores mais recentes que o usuário preencheu, não valores antigos salvos
       const predictionData: any = {};
       
-      // Campos básicos - SEMPRE enviar os valores atuais do formulário
+      // Valores padrão quando campos estiverem vazios
+      const DEFAULT_VALUES = {
+        horasEstudo: 28,      // Médio (21-35h)
+        sono: 7.5,            // Adequado (7-8h)
+        motivacao: 5.5,        // Média (5-6)
+        frequencia: 70,       // Média (61-80%)
+        // Campos adicionais - valores padrão
+        Distance_from_Home: "Near",           // Perto
+        Gender: "Male",                        // Masculino
+        Parental_Education_Level: "High School", // Ensino Médio
+        Parental_Involvement: "Medium",        // Médio
+        School_Type: "Public",                 // Pública
+        Peer_Influence: "Neutral",             // Neutra
+        Extracurricular_Activities: "Yes",      // Sim
+        Learning_Disabilities: "No",           // Não
+        Internet_Access: "Yes",                // Sim
+        Access_to_Resources: "Average",        // Médio
+        Teacher_Quality: "Average",            // Médio
+        Family_Income: "Medium",               // Médio
+        Tutoring_Sessions: "No",              // Não
+        Physical_Activity: "Medium",           // Médio
+      };
+      
+      // Campos básicos - SEMPRE enviar valores (usar padrão se vazio)
       // Usar valores do estado atual, não valores salvos
       if (horasEstudo && horasEstudo.trim() !== '') {
         const horasEstudoNum = Number(horasEstudo);
         if (!isNaN(horasEstudoNum)) {
           predictionData.horasEstudo = horasEstudoNum;
+        } else {
+          predictionData.horasEstudo = DEFAULT_VALUES.horasEstudo;
         }
+      } else {
+        predictionData.horasEstudo = DEFAULT_VALUES.horasEstudo;
       }
+      
       if (horasSono && horasSono.trim() !== '') {
         const horasSonoNum = Number(horasSono);
         if (!isNaN(horasSonoNum)) {
           predictionData.sono = horasSonoNum;
+        } else {
+          predictionData.sono = DEFAULT_VALUES.sono;
         }
+      } else {
+        predictionData.sono = DEFAULT_VALUES.sono;
       }
+      
       if (motivacao && motivacao.trim() !== '') {
         const motivacaoNum = Number(motivacao);
         if (!isNaN(motivacaoNum)) {
           predictionData.motivacao = motivacaoNum;
+        } else {
+          predictionData.motivacao = DEFAULT_VALUES.motivacao;
         }
+      } else {
+        predictionData.motivacao = DEFAULT_VALUES.motivacao;
       }
+      
       if (frequencia && frequencia.trim() !== '') {
         const frequenciaNum = Number(frequencia);
         if (!isNaN(frequenciaNum)) {
           predictionData.frequencia = frequenciaNum;
+        } else {
+          predictionData.frequencia = DEFAULT_VALUES.frequencia;
         }
+      } else {
+        predictionData.frequencia = DEFAULT_VALUES.frequencia;
       }
       // Previous_Scores removido para evitar viés - não é mais necessário
       
@@ -660,29 +697,52 @@ const HabitScreen: React.FC<Props> = ({ navigation, route }) => {
           // IMPORTANTE: Só enviar campos adicionais se o toggle estiver ATIVADO
           // Se o toggle estiver desativado, NÃO enviar nenhum campo adicional (nem valores padrão)
           if (showAdditionalFields) {
-            // Se campos adicionais estão ativados, enviar apenas os que foram preenchidos
-            if (!useDefaultValues) {
-              // Apenas adiciona campos que foram realmente preenchidos pelo usuário
-              if (distanceFromHome && distanceFromHome.trim() !== '') predictionData.Distance_from_Home = distanceFromHome;
-              if (gender && gender.trim() !== '') predictionData.Gender = gender;
-              if (parentalEducationLevel && parentalEducationLevel.trim() !== '') predictionData.Parental_Education_Level = parentalEducationLevel;
-              if (parentalInvolvement && parentalInvolvement.trim() !== '') predictionData.Parental_Involvement = parentalInvolvement;
-              if (schoolType && schoolType.trim() !== '') predictionData.School_Type = schoolType;
-              if (peerInfluence && peerInfluence.trim() !== '') predictionData.Peer_Influence = peerInfluence;
-              if (extracurricularActivities && extracurricularActivities.trim() !== '') predictionData.Extracurricular_Activities = extracurricularActivities;
-              if (learningDisabilities && learningDisabilities.trim() !== '') predictionData.Learning_Disabilities = learningDisabilities;
-              if (internetAccess && internetAccess.trim() !== '') predictionData.Internet_Access = internetAccess;
-              if (accessToResources && accessToResources.trim() !== '') predictionData.Access_to_Resources = accessToResources;
-              if (teacherQuality && teacherQuality.trim() !== '') predictionData.Teacher_Quality = teacherQuality;
-              if (familyIncome && familyIncome.trim() !== '') predictionData.Family_Income = familyIncome;
-              if (tutoringSessions && tutoringSessions.trim() !== '') predictionData.Tutoring_Sessions = tutoringSessions;
-              if (physicalActivity && physicalActivity.trim() !== '') predictionData.Physical_Activity = physicalActivity;
-            } else {
+            // Se campos adicionais estão ativados, usar valores preenchidos ou padrão
+            // Sempre enviar todos os campos adicionais (preenchidos ou com valores padrão)
+            // Garantir que sempre sejam strings não vazias
+            const getValueOrDefault = (value: string, defaultValue: string): string => {
+              return (value && value.trim() !== '') ? value.trim() : defaultValue;
+            };
+            
+            predictionData.Distance_from_Home = getValueOrDefault(distanceFromHome, DEFAULT_VALUES.Distance_from_Home);
+            predictionData.Gender = getValueOrDefault(gender, DEFAULT_VALUES.Gender);
+            predictionData.Parental_Education_Level = getValueOrDefault(parentalEducationLevel, DEFAULT_VALUES.Parental_Education_Level);
+            predictionData.Parental_Involvement = getValueOrDefault(parentalInvolvement, DEFAULT_VALUES.Parental_Involvement);
+            predictionData.School_Type = getValueOrDefault(schoolType, DEFAULT_VALUES.School_Type);
+            predictionData.Peer_Influence = getValueOrDefault(peerInfluence, DEFAULT_VALUES.Peer_Influence);
+            predictionData.Extracurricular_Activities = getValueOrDefault(extracurricularActivities, DEFAULT_VALUES.Extracurricular_Activities);
+            predictionData.Learning_Disabilities = getValueOrDefault(learningDisabilities, DEFAULT_VALUES.Learning_Disabilities);
+            predictionData.Internet_Access = getValueOrDefault(internetAccess, DEFAULT_VALUES.Internet_Access);
+            predictionData.Access_to_Resources = getValueOrDefault(accessToResources, DEFAULT_VALUES.Access_to_Resources);
+            predictionData.Teacher_Quality = getValueOrDefault(teacherQuality, DEFAULT_VALUES.Teacher_Quality);
+            predictionData.Family_Income = getValueOrDefault(familyIncome, DEFAULT_VALUES.Family_Income);
+            predictionData.Tutoring_Sessions = getValueOrDefault(tutoringSessions, DEFAULT_VALUES.Tutoring_Sessions);
+            predictionData.Physical_Activity = getValueOrDefault(physicalActivity, DEFAULT_VALUES.Physical_Activity);
+            
+            // Verificar se todos os campos obrigatórios estão presentes
+            const requiredFields = [
+              'Distance_from_Home', 'Gender', 'Parental_Education_Level', 'Parental_Involvement',
+              'School_Type', 'Peer_Influence', 'Extracurricular_Activities', 'Learning_Disabilities',
+              'Internet_Access', 'Access_to_Resources', 'Teacher_Quality', 'Family_Income',
+              'Tutoring_Sessions', 'Physical_Activity'
+            ];
+            
+            const missingFields = requiredFields.filter(field => {
+              const value = predictionData[field];
+              return !value || value === '' || value === null || value === undefined;
+            });
+            
+            if (missingFields.length > 0) {
+              console.error('❌ Campos obrigatórios faltando após aplicar valores padrão:', missingFields);
+              console.error('📊 Dados atuais:', predictionData);
             }
           } else {
             // Não adicionar nenhum campo adicional quando o toggle está desativado
           }
       
+      // Debug: Log dos dados que serão enviados
+      console.log('📊 Dados para predição:', JSON.stringify(predictionData, null, 2));
+      console.log('🔘 Toggle de campos adicionais:', showAdditionalFields);
       
       // Validar se temos uma matrícula selecionada ANTES de calcular
       if (!selectedMatriculaId) {
@@ -1060,15 +1120,8 @@ const HabitScreen: React.FC<Props> = ({ navigation, route }) => {
           <TouchableOpacity 
             style={[styles.predictButton, (predictionLoading || loading) && { opacity: 0.6 }]} 
             onPress={() => {
-              // Se toggle está desativado, não usar valores padrão (não enviar campos adicionais)
-              // Se toggle está ativado mas campos não preenchidos, usar valores padrão apenas para predição
-              const usarDefaults = showAdditionalFields && (
-                !distanceFromHome && !gender && !parentalEducationLevel && !parentalInvolvement &&
-                !schoolType && !peerInfluence && !extracurricularActivities && !learningDisabilities &&
-                !internetAccess && !accessToResources && !teacherQuality && !familyIncome &&
-                !tutoringSessions && !physicalActivity
-              );
-              handlePredictPerformance(usarDefaults);
+              // Sempre usar valores padrão quando campos estiverem vazios
+              handlePredictPerformance(false);
             }} 
             disabled={predictionLoading || loading}
           >

@@ -363,7 +363,7 @@ function StudentTabs() {
       />
       <StudentTab.Screen
         name="Formulário"
-        component={StudentHabitScreen}
+        component={HabitsScreen}
         options={{
           headerTitle: 'Formulário',
           tabBarLabel: 'Formulário',

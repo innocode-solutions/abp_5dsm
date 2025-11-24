@@ -20,7 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'StudentPerformance'>;
 interface SubjectGrade {
   disciplina: string;
   nota: number;
-  risco?: string;
+  risco: string; // Sempre terá valor (padrão: "médio")
   usandoMedia?: boolean;
 }
 
@@ -68,7 +68,7 @@ export default function StudentPerformanceScreen({ route }: Props) {
   const subjectGrades: SubjectGrade[] = student?.matriculas
     .map((matricula) => {
       // Priorizar desempenho da tabela desempenhos (mais preciso)
-      let nota = 0;
+      let nota = 5.0; // Valor padrão quando não há desempenho selecionado
       let usandoMedia = false;
       
       // Se temos desempenhos, usar o mais recente (já vem ordenado do backend)
@@ -80,7 +80,7 @@ export default function StudentPerformanceScreen({ route }: Props) {
           return dateB - dateA; // Mais recente primeiro
         });
         const desempenho = desempenhosOrdenados[0]; // Mais recente
-        nota = desempenho.NotaPrevista; // Nota já está em escala 0-10
+        nota = desempenho.NotaPrevista || 5.0; // Nota já está em escala 0-10, usar padrão se null/undefined
       } else if (matricula.predictions && matricula.predictions.length > 0) {
         // Fallback: usar predições se não houver desempenho
         const performancePreds = matricula.predictions
@@ -95,8 +95,8 @@ export default function StudentPerformanceScreen({ route }: Props) {
         if (performancePred) {
           // Usar NotaPrevista do desempenho se disponível, senão converter probabilidade (fallback)
           nota = matricula.desempenhos && matricula.desempenhos.length > 0
-            ? matricula.desempenhos[0].NotaPrevista
-            : Math.round(performancePred.Probabilidade * 1000) / 10;
+            ? (matricula.desempenhos[0].NotaPrevista || 5.0)
+            : Math.round(performancePred.Probabilidade * 1000) / 10 || 5.0;
         }
       } else {
         // Se não há predição, usar a média das notas reais da matrícula
@@ -104,6 +104,7 @@ export default function StudentPerformanceScreen({ route }: Props) {
           nota = matricula.Nota; // Média já calculada no backend
           usandoMedia = true;
         }
+        // Se não houver nota, mantém o valor padrão de 5.0
       }
 
       // Buscar predição de evasão (mais recente)
@@ -117,8 +118,8 @@ export default function StudentPerformanceScreen({ route }: Props) {
       
       const dropoutPred = dropoutPreds?.[0];
 
-      // Determinar risco de evasão
-      let risco: string | undefined;
+      // Determinar risco de evasão (valor padrão: "médio" se não houver predição)
+      let risco: string = 'médio'; // Valor padrão quando não há seleção
       if (dropoutPred) {
         const prob = dropoutPred.Probabilidade;
         if (prob < 0.33) risco = 'baixo';
@@ -132,8 +133,7 @@ export default function StudentPerformanceScreen({ route }: Props) {
         risco,
         usandoMedia,
       };
-    })
-    .filter((sg) => sg.nota > 0) || [];
+    }) || [];
 
   // Calcular frequência geral
   // Por enquanto não temos este dado no backend, então calculamos baseado nas matrículas
@@ -154,7 +154,7 @@ export default function StudentPerformanceScreen({ route }: Props) {
     return 'book';
   };
 
-  const getRiskColor = (risco?: string) => {
+  const getRiskColor = (risco: string) => {
     switch (risco) {
       case 'alto':
         return '#DC2626';
@@ -235,20 +235,18 @@ export default function StudentPerformanceScreen({ route }: Props) {
                     {item.usandoMedia ? 'Média: ' : 'Nota prevista: '}{item.nota.toFixed(1)}
                   </Text>
                 </View>
-                {item.risco && (
-                  <View
-                    style={[
-                      styles.riskBadge,
-                      { backgroundColor: getRiskColor(item.risco) + '20' },
-                    ]}
+                <View
+                  style={[
+                    styles.riskBadge,
+                    { backgroundColor: getRiskColor(item.risco) + '20' },
+                  ]}
+                >
+                  <Text
+                    style={[styles.riskText, { color: getRiskColor(item.risco) }]}
                   >
-                    <Text
-                      style={[styles.riskText, { color: getRiskColor(item.risco) }]}
-                    >
-                      {item.risco.charAt(0).toUpperCase() + item.risco.slice(1)} risco
-                    </Text>
-                  </View>
-                )}
+                    {item.risco.charAt(0).toUpperCase() + item.risco.slice(1)} risco
+                  </Text>
+                </View>
               </View>
             ))
           ) : (
