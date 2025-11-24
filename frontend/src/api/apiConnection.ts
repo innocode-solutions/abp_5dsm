@@ -9,7 +9,7 @@ import { getToken, clearTokens } from "../service/tokenStore";
 function getApiUrl(): string {
   // Porta padrão do backend (SEMPRE 8080, nunca 3000)
   const BACKEND_PORT = process.env.EXPO_PUBLIC_BACKEND_PORT || '8080';
-  
+
   // PRIORIDADE 1: Se EXPO_PUBLIC_MACHINE_IP existir → monta a URL manual (desenvolvimento local)
   // Isso tem prioridade sobre EXPO_PUBLIC_API_URL para garantir que use o IP local
   const machineIp = process.env.EXPO_PUBLIC_MACHINE_IP;
@@ -18,28 +18,22 @@ function getApiUrl(): string {
     console.log('🔗 Usando IP local:', url);
     return url;
   }
-  
+
+  // PRIORIDADE 2: Se EXPO_PUBLIC_API_URL existir → usa ela diretamente (produção/Railway)
+  // O Railway fornece a URL completa com protocolo, domínio e porta corretos
   // PRIORIDADE 2: Se EXPO_PUBLIC_API_URL existir → usa ela diretamente (produção/Railway)
   // O Railway fornece a URL completa com protocolo, domínio e porta corretos
   if (process.env.EXPO_PUBLIC_API_URL) {
     const url = process.env.EXPO_PUBLIC_API_URL;
-    try {
-      const urlObj = new URL(url);
-      // Garante que termina com /api
-      if (!urlObj.pathname.endsWith('/api')) {
-        urlObj.pathname = urlObj.pathname.endsWith('/') 
-          ? `${urlObj.pathname}api` 
-          : `${urlObj.pathname}/api`;
-      }
-      // FORÇA a porta 8080 se não estiver especificada ou se for 3000
-      if (!urlObj.port || urlObj.port === '3000') {
-        urlObj.port = BACKEND_PORT;
-      }
-      console.log('🔗 Usando API URL:', urlObj.toString());
-      return urlObj.toString();
-    } catch {
-      // Se a URL for inválida, ignora e usa a lógica padrão
-    }
+    // Garante que termina com /api
+    const finalUrl = url.endsWith('/')
+      ? `${url}api`
+      : url.endsWith('/api')
+        ? url
+        : `${url}/api`;
+
+    console.log('🔗 Usando API URL:', finalUrl);
+    return finalUrl;
   }
 
   // PRIORIDADE 3: Android Emulator - sempre HTTP na porta 8080

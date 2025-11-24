@@ -417,7 +417,7 @@ export default function StudentDashboardScreen() {
                         styles.feedbackProfessor,
                         isCritical && styles.feedbackProfessorCritical,
                         isPositive && styles.feedbackProfessorPositive
-                      ]}>{feedback.professor}</Text>
+                      ]}>{feedback.tipo === 'DESEMPENHO' ? 'Predição de Desempenho' : 'Predição de Evasão'}</Text>
                     </View>
                   </View>
                   <View style={[
@@ -436,7 +436,7 @@ export default function StudentDashboardScreen() {
                           ? (isPositive ? 'check-circle' : (isCritical ? 'alert-triangle' : 'info'))
                           : (isCritical ? 'trending-down' : 'check-circle')
                       } 
-                      size={32} 
+                      size={24} 
                       color={
                         isCritical 
                           ? '#E53935' 
@@ -575,16 +575,17 @@ const styles = StyleSheet.create({
   },
   feedbackCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 2,
+    width: '100%',
   },
   feedbackCardCritical: {
     borderWidth: 2,
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   feedbackDiscipline: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.text,
     flex: 1,
@@ -617,21 +618,21 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   feedbackTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 6,
     marginTop: 4,
   },
   feedbackTitleCritical: {
     color: '#E53935',
   },
   feedbackDescription: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
     color: colors.text,
-    marginBottom: 8,
-    lineHeight: 22,
+    marginBottom: 6,
+    lineHeight: 20,
   },
   feedbackDescriptionCritical: {
     color: '#C62828',
@@ -702,13 +703,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   feedbackImagePlaceholder: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 8,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
+    marginLeft: 10,
+    flexShrink: 0,
   },
   feedbackImagePlaceholderSuccess: {
     backgroundColor: '#c8e6c9', // Verde mais vibrante e em evidência
