@@ -34,9 +34,9 @@ type AlunoHabitoExtended = AlunoHabito & {
  * Converte dados de hábitos do aluno para o formato esperado pelo modelo de EVASÃO
  */
 export function mapToDropoutData(habito: AlunoHabitoExtended) {
-  if (!habito.raisedhands || !habito.VisITedResources || !habito.AnnouncementsView || 
-      !habito.Discussion || !habito.ParentAnsweringSurvey || 
-      !habito.ParentschoolSatisfaction || !habito.StudentAbsenceDays) {
+  if (!habito.raisedhands || !habito.VisITedResources || !habito.AnnouncementsView ||
+    !habito.Discussion || !habito.ParentAnsweringSurvey ||
+    !habito.ParentschoolSatisfaction || !habito.StudentAbsenceDays) {
     throw new Error('Campos obrigatórios para predição de evasão não estão preenchidos');
   }
 
@@ -120,9 +120,10 @@ export function mapToPerformanceData(habito: AlunoHabitoExtended) {
   // Não fazemos conversão - o valor já vem em horas semanais do frontend
 
   // REMOVER Previous_Scores para evitar viés - o modelo não deve usar notas anteriores
+  // MAS o modelo atual EXIGE esse campo. Enviando valor neutro (70.0) se não estiver preenchido.
   return {
     Hours_Studied: hoursStudied,
-    // Previous_Scores removido para evitar viés
+    Previous_Scores: habito.Previous_Scores ?? 70.0,
     Sleep_Hours: habito.sono!,
     Distance_from_Home: habito.Distance_from_Home!,
     Attendance: habito.frequencia!,
@@ -148,7 +149,7 @@ export function mapToPerformanceData(habito: AlunoHabitoExtended) {
  */
 export function hasCompleteDropoutData(habito: AlunoHabitoExtended | null): boolean {
   if (!habito) return false;
-  
+
   return !!(
     habito.raisedhands !== null &&
     habito.VisITedResources !== null &&
@@ -165,7 +166,7 @@ export function hasCompleteDropoutData(habito: AlunoHabitoExtended | null): bool
  */
 export function hasCompletePerformanceData(habito: AlunoHabitoExtended | null): boolean {
   if (!habito) return false;
-  
+
   return !!(
     habito.horasEstudo !== null &&
     habito.sono !== null &&

@@ -11,13 +11,10 @@ import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { getStudentDetails, getStudentIdByUserId } from '../service/studentService';
 import { getMyFeedbacks, ApiFeedback } from '../service/feedbackApiService';
-import Carousel from '../components/Carousel';
 import { Feather } from '@expo/vector-icons';
 import { generatePerformanceFeedback, generateDropoutFeedback } from '../service/FeedbackService';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const MAX_CARD_WIDTH = 900; // Largura máxima para desktop
-const CARD_WIDTH = Math.min(SCREEN_WIDTH - 40, MAX_CARD_WIDTH);
+// Layout otimizado para mobile - cards ocupam toda a largura disponível
 
 interface Feedback {
   disciplina: string;
@@ -140,7 +137,7 @@ export default function StudentFeedbacksScreen() {
           feedbacksPorDisciplina.set(apiFeedback.disciplina, {
             disciplina: apiFeedback.disciplina,
             descricao: formattedFeedback.message,
-            professor: `${apiFeedback.tipo === 'DESEMPENHO' ? 'Desempenho' : 'Risco de Evasão'} - ${apiFeedback.disciplina}`,
+            professor: `Predição de ${apiFeedback.tipo === 'DESEMPENHO' ? 'Desempenho' : 'Evasão'}`,
             data: dataFormatada,
             tipo: apiFeedback.tipo,
             probabilidade: apiFeedback.probabilidade, // Incluir probabilidade para determinar cores
@@ -204,7 +201,7 @@ export default function StudentFeedbacksScreen() {
             feedbacksPorDisciplina.set(matricula.disciplina.NomeDaDisciplina, {
               disciplina: matricula.disciplina.NomeDaDisciplina,
               descricao: feedback.message,
-              professor: `Desempenho - ${matricula.disciplina.NomeDaDisciplina}`,
+              professor: `Predição de Desempenho`,
               data: dataFormatada,
               tipo: 'DESEMPENHO',
               probabilidade: performancePred.Probabilidade, // Incluir probabilidade
@@ -233,7 +230,7 @@ export default function StudentFeedbacksScreen() {
             feedbacksPorDisciplina.set(matricula.disciplina.NomeDaDisciplina, {
               disciplina: matricula.disciplina.NomeDaDisciplina,
               descricao: feedback.message,
-              professor: `Risco de Evasão - ${matricula.disciplina.NomeDaDisciplina}`,
+              professor: `Predição de Evasão`,
               data: dataFormatada,
               tipo: 'EVASAO',
               probabilidade: dropoutPred.Probabilidade, // Incluir probabilidade
@@ -413,159 +410,72 @@ export default function StudentFeedbacksScreen() {
       isPositive && styles.feedbackCardPositive
     ];
     
+    // Separar título, mensagem da descrição
+    const partes = feedback.feedback?.message ? feedback.feedback.message.split('\n\n') : feedback.descricao.split('\n\n');
+    const titulo = partes[0] || feedback.disciplina;
+    const mensagem = partes[1] || feedback.descricao;
+    
     return (
       <View style={cardStyle}>
-        <View style={styles.feedbackHeaderCard}>
-          <View style={[styles.feedbackIconContainer, { backgroundColor: iconBgColor }]}>
-            <Feather name={iconName} size={24} color={iconColor} />
-          </View>
-          <View style={styles.feedbackTitleContainer}>
-            <Text 
-              style={[
-                styles.feedbackDiscipline,
-                isCritical && styles.feedbackDisciplineCritical,
-                isPositive && styles.feedbackDisciplinePositive
-              ]}
-              numberOfLines={2}
-              ellipsizeMode="tail"
-            >
+        <View style={styles.feedbackContent}>
+          <View style={styles.feedbackHeader}>
+            <Text style={[
+              styles.feedbackDiscipline,
+              isCritical && styles.feedbackDisciplineCritical,
+              isPositive && styles.feedbackDisciplinePositive
+            ]}>
               {feedback.disciplina}
             </Text>
             {feedback.data && (
               <Text style={styles.feedbackDate}>{feedback.data}</Text>
             )}
           </View>
-        </View>
-        
-        {feedback.feedback && (
-          <ScrollView 
-            style={styles.feedbackContent}
-            contentContainerStyle={styles.feedbackContentContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            <Text 
-              style={[
-                styles.feedbackTitle,
-                isCritical && styles.feedbackTitleCritical,
-                isPositive && styles.feedbackTitlePositive
-              ]}
-              numberOfLines={3}
-              ellipsizeMode="tail"
-            >
-              {feedback.feedback.title}
-            </Text>
-            <Text 
-              style={[
-                styles.feedbackDescription,
-                isCritical && styles.feedbackDescriptionCritical,
-                isPositive && styles.feedbackDescriptionPositive
-              ]}
-            >
-              {feedback.feedback.message}
-            </Text>
-            
-            {feedback.feedback.features.length > 0 && (
-              <>
-                {/* Separar features negativas e positivas */}
-                {feedback.feedback.features.filter(f => f.influence === 'negativa').length > 0 && (
-                  <View style={[styles.featuresContainer, isCritical && styles.featuresContainerCritical]}>
-                    <Text style={[styles.featuresTitle, isCritical && styles.featuresTitleCritical]}>
-                      ⚠️ Pontos que precisam de atenção:
-                    </Text>
-                    {feedback.feedback.features
-                      .filter(f => f.influence === 'negativa')
-                      .map((feature, idx) => (
-                        <View key={idx} style={styles.featureItem}>
-                          <Feather 
-                            name="arrow-down-circle" 
-                            size={18} 
-                            color="#F44336" 
-                          />
-                          <Text style={styles.featureText} numberOfLines={0}>
-                            <Text style={[styles.featureName, { color: '#F44336', fontWeight: '700' }]}>
-                              {feature.feature}
-                            </Text>
-                            {': '}
-                            <Text style={[styles.featureValue, { color: '#F44336', fontWeight: '600' }]}>
-                              {feature.value} (impacto negativo)
-                            </Text>
-                          </Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-                
-                {/* Features positivas */}
-                {feedback.feedback.features.filter(f => f.influence === 'positiva').length > 0 && (
-                  <View style={[styles.featuresContainer, isPositive && styles.featuresContainerPositive]}>
-                    <Text style={[styles.featuresTitle, isPositive && styles.featuresTitlePositive]}>
-                      ✅ Pontos fortes:
-                    </Text>
-                    {feedback.feedback.features
-                      .filter(f => f.influence === 'positiva')
-                      .map((feature, idx) => (
-                        <View key={idx} style={styles.featureItem}>
-                          <Feather 
-                            name="arrow-up-circle" 
-                            size={18} 
-                            color="#4CAF50" 
-                          />
-                          <Text style={styles.featureText} numberOfLines={0}>
-                            <Text style={[styles.featureName, { color: '#4CAF50', fontWeight: '700' }]}>
-                              {feature.feature}
-                            </Text>
-                            {': '}
-                            <Text style={[styles.featureValue, { color: '#4CAF50', fontWeight: '600' }]}>
-                              {feature.value} (impacto positivo)
-                            </Text>
-                          </Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-              </>
-            )}
-            
-            {feedback.feedback.suggestions.length > 0 && (
-              <View style={styles.suggestionsContainer}>
-                <Text style={styles.suggestionsTitle}>💡 Sugestões:</Text>
-                {feedback.feedback.suggestions.map((suggestion, idx) => (
-                  <View key={idx} style={styles.suggestionItem}>
-                    <Text style={styles.suggestionText}>• {suggestion}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </ScrollView>
-        )}
-        
-        {!feedback.feedback && (
-          <View style={styles.feedbackContent}>
+          {titulo !== feedback.disciplina && feedback.feedback && (
             <Text style={[
-              styles.feedbackDescription,
-              isCritical && styles.feedbackDescriptionCritical,
-              isPositive && styles.feedbackDescriptionPositive
-            ]}>{feedback.descricao}</Text>
-          </View>
-        )}
-        
-        <View style={styles.feedbackFooter}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>
-              {studentName.charAt(0).toUpperCase()}
+              styles.feedbackTitle,
+              isCritical && styles.feedbackTitleCritical,
+              isPositive && styles.feedbackTitlePositive
+            ]}>
+              {feedback.feedback.title || titulo}
             </Text>
-          </View>
-          <Text 
-            style={[
+          )}
+          <Text style={[
+            styles.feedbackDescription,
+            isCritical && styles.feedbackDescriptionCritical,
+            isPositive && styles.feedbackDescriptionPositive
+          ]}>
+            {mensagem}
+          </Text>
+          <View style={styles.feedbackFooter}>
+            <Feather 
+              name={iconName}
+              size={14} 
+              color={iconColor} 
+            />
+            <Text style={[
               styles.feedbackProfessor,
               isCritical && styles.feedbackProfessorCritical,
               isPositive && styles.feedbackProfessorPositive
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {studentName}
-          </Text>
+            ]}>
+              {feedback.professor}
+            </Text>
+          </View>
+        </View>
+        <View style={[
+          styles.feedbackImagePlaceholder,
+          isCritical 
+            ? styles.feedbackImagePlaceholderCritical
+            : isPositive
+              ? styles.feedbackImagePlaceholderSuccess
+              : isEvasion
+                ? styles.feedbackImagePlaceholderWarning 
+                : styles.feedbackImagePlaceholderSuccess
+        ]}>
+          <Feather 
+            name={iconName}
+            size={24} 
+            color={iconColor} 
+          />
         </View>
       </View>
     );
@@ -576,7 +486,7 @@ export default function StudentFeedbacksScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Feedbacks</Text>
-          <Text style={styles.subtitle}>Acompanhe os feedbacks dos seus professores</Text>
+          <Text style={styles.subtitle}>Acompanhe os feedbacks das predições</Text>
         </View>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Carregando feedbacks...</Text>
@@ -590,7 +500,7 @@ export default function StudentFeedbacksScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Feedbacks</Text>
-          <Text style={styles.subtitle}>Acompanhe os feedbacks dos seus professores</Text>
+          <Text style={styles.subtitle}>Acompanhe os feedbacks das predições</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Feather name="inbox" size={64} color={colors.muted} />
@@ -605,14 +515,13 @@ export default function StudentFeedbacksScreen() {
       <View style={styles.header}>
         <Text style={styles.subtitle}>Acompanhe os feedbacks dos seus professores</Text>
       </View>
-      <View style={styles.carouselContainer}>
-        <Carousel
-          showIndicators={true}
-          showNavigation={feedbacks.length > 1}
-        >
-          {feedbacks.map((feedback, index) => renderFeedbackCard(feedback, index))}
-        </Carousel>
-      </View>
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+      >
+        {feedbacks.map((feedback, index) => renderFeedbackCard(feedback, index))}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -627,19 +536,19 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   header: {
-    padding: 20,
+    padding: 16,
     paddingTop: 10,
     paddingBottom: 10,
     width: '100%',
-    maxWidth: MAX_CARD_WIDTH + 40,
     alignItems: 'center',
   },
-  carouselContainer: {
+  scrollContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     width: '100%',
-    maxWidth: MAX_CARD_WIDTH + 40,
+  },
+  scrollContent: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
   title: {
     fontSize: 24,
@@ -677,57 +586,43 @@ const styles = StyleSheet.create({
   },
   feedbackCard: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    minHeight: 500,
-    padding: 24,
-    marginHorizontal: 20,
-    elevation: 4,
-    // @ts-ignore - boxShadow é necessário para React Native Web
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-    maxWidth: CARD_WIDTH,
-    width: CARD_WIDTH,
-    alignSelf: 'center',
-    justifyContent: 'flex-start',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
+    width: '100%',
+    maxWidth: '100%',
   },
   feedbackCardCritical: {
     borderWidth: 2,
     borderColor: '#E53935',
     backgroundColor: '#fff5f5',
-    marginHorizontal: 18, // Reduzir margem para compensar a borda de 2px
   },
   feedbackCardPositive: {
     borderWidth: 2,
     borderColor: '#2E7D32', // Verde escuro para positivo
     backgroundColor: '#f1f8f4', // Verde muito claro para fundo
-    marginHorizontal: 18, // Reduzir margem para compensar a borda de 2px
   },
-  feedbackHeaderCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  feedbackIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E3F2FD',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  feedbackTitleContainer: {
+  feedbackContent: {
     flex: 1,
-    flexShrink: 1,
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   feedbackDiscipline: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 4,
-    flexWrap: 'wrap',
+    flex: 1,
   },
   feedbackDisciplineCritical: {
     color: '#E53935',
@@ -741,20 +636,12 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontStyle: 'italic',
   },
-  feedbackContent: {
-    flex: 1,
-    minHeight: 0,
-  },
-  feedbackContentContainer: {
-    flexGrow: 1,
-    paddingBottom: 10,
-  },
   feedbackTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 12,
-    flexWrap: 'wrap',
+    marginBottom: 6,
+    marginTop: 4,
   },
   feedbackTitleCritical: {
     color: '#E53935',
@@ -764,11 +651,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   feedbackDescription: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 13,
+    fontWeight: '400',
     color: colors.text,
-    marginBottom: 16,
-    flexWrap: 'wrap',
+    marginBottom: 6,
+    lineHeight: 20,
   },
   feedbackDescriptionCritical: {
     color: '#C62828',
@@ -864,31 +751,32 @@ const styles = StyleSheet.create({
   feedbackFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 'auto',
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-  },
-  avatarContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary || '#4A90E2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  avatarText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
+    gap: 6,
   },
   feedbackProfessor: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '600',
-    flex: 1,
-    flexShrink: 1,
+    fontSize: 12,
+    color: colors.muted,
+  },
+  feedbackImagePlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+    flexShrink: 0,
+  },
+  feedbackImagePlaceholderSuccess: {
+    backgroundColor: '#c8e6c9',
+    borderWidth: 2,
+    borderColor: '#2E7D32',
+  },
+  feedbackImagePlaceholderWarning: {
+    backgroundColor: '#fff3e0',
+  },
+  feedbackImagePlaceholderCritical: {
+    backgroundColor: '#ffebee',
   },
   feedbackProfessorCritical: {
     color: '#E53935',
