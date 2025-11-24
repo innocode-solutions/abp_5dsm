@@ -9,9 +9,14 @@ import fs from 'fs';
 function getMLDir(): string {
   const currentDir = __dirname;
   
-  // Se estamos em dist/, voltamos para a raiz do backend
+  // Se estamos em dist/, voltamos para a raiz do backend (app/)
   if (currentDir.includes(path.join('dist', 'src'))) {
-    return path.resolve(currentDir, '../../src/ml');
+    // currentDir: /app/dist/src/service
+    // .. -> /app/dist/src
+    // .. -> /app/dist
+    // .. -> /app
+    // src/ml -> /app/src/ml
+    return path.resolve(currentDir, '../../../src/ml');
   }
   
   // Se estamos em src/service (dev), voltamos 2 níveis e entramos em src/ml
