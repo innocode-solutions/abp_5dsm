@@ -19,8 +19,9 @@ import { Feather } from '@expo/vector-icons';
 
 import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
-import { getTeacherClasses, Class } from '../service/classService';
+import { getTeacherClasses, Class, createClass, CreateClassData } from '../service/classService';
 import ClassListItem from '../components/ClassListItem';
+import ClassModal from '../components/ClassModal';
 import { RootStackParamList, RootTabParamList } from '../navigation';
 
 // Tipo combinado para permitir navegação tanto no Tab quanto no Stack
@@ -34,6 +35,7 @@ export default function ClassesTeacherScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // Carregar turmas
   const loadClasses = useCallback(async () => {
@@ -130,8 +132,7 @@ export default function ClassesTeacherScreen() {
       headerRight: () => (
         <TouchableOpacity
           onPress={() => {
-            // TODO: Implementar funcionalidade de adicionar turma
-            Alert.alert('Info', 'Funcionalidade de adicionar turma em breve');
+            setModalVisible(true);
           }}
           style={{ marginRight: 16 }}
         >
@@ -140,6 +141,19 @@ export default function ClassesTeacherScreen() {
       ),
     });
   }, [navigation, logout]); // ✅ Adicionar logout nas dependências
+
+  // Função para salvar nova turma
+  const handleSaveClass = useCallback(async (data: CreateClassData) => {
+    try {
+      await createClass(data);
+      // Recarregar a lista de turmas
+      await loadClasses();
+      Alert.alert('Sucesso', 'Turma cadastrada com sucesso!');
+    } catch (err: any) {
+      console.error('Erro ao salvar turma:', err);
+      throw err; // Re-throw para o modal tratar
+    }
+  }, [loadClasses]);
 
   // Função de refresh
   const onRefresh = useCallback(async () => {
@@ -245,6 +259,11 @@ export default function ClassesTeacherScreen() {
         windowSize={10}
         removeClippedSubviews
         maxToRenderPerBatch={10}
+      />
+      <ClassModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSave={handleSaveClass}
       />
     </SafeAreaView>
   );

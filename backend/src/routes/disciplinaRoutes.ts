@@ -13,8 +13,8 @@ router.get('/', DisciplinaController.getAll);
 // GET /api/disciplinas/:id - Get subject by ID (todos autenticados)
 router.get('/:id', DisciplinaController.getById);
 
-// POST /api/disciplinas - Create new subject (apenas ADMIN)
-router.post('/', AuthMiddleware.requireRole(UserRole.ADMIN), DisciplinaController.create);
+// POST /api/disciplinas - Create new subject (ADMIN ou TEACHER)
+router.post('/', AuthMiddleware.requireAnyRole([UserRole.ADMIN, UserRole.TEACHER]), DisciplinaController.create);
 
 // PUT /api/disciplinas/:id - Update subject (apenas ADMIN)
 router.put('/:id', AuthMiddleware.requireRole(UserRole.ADMIN), DisciplinaController.update);
