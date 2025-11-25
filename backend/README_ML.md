@@ -1,43 +1,48 @@
-# Machine Learning - Backend Integrado
+# Machine Learning - Serviço Externo
 
-## 📁 Estrutura
+## 🏗️ Arquitetura
+
+O backend agora utiliza um **serviço de ML externo** ao invés de executar modelos Python localmente.
 
 ```
 backend/
   src/
-    ml/
-      models/
-        dropout_predict.py      # Predição de evasão
-        performance_predict.py   # Predição de desempenho
-      pipelines/
-        *.pkl                   # Modelos treinados
-      datasets/
-        *.csv                   # Datasets de treinamento
-  requirements.txt              # Dependências Python
+    service/
+      mlService.ts          # Cliente HTTP para o serviço de ML
+      predictionService.ts  # Serviço de predições que usa mlService
 ```
 
-## 🚀 Instalação
+## 🔗 Configuração do Endpoint
 
-1. Instale as dependências Python:
+O endpoint do serviço de ML é configurado através da variável de ambiente `ML_SERVICE_URL`:
+
+- **Padrão (produção)**: `https://aimodel-teste-deploy.up.railway.app`
+- **Desenvolvimento local**: Configure `ML_SERVICE_URL=http://localhost:5000` no seu `.env`
+
+### Variável de Ambiente
+
 ```bash
-pip install -r requirements.txt
+# No Railway ou arquivo .env
+ML_SERVICE_URL=https://aimodel-teste-deploy.up.railway.app
 ```
-
-2. Certifique-se de que Python 3.x está instalado e disponível no PATH.
 
 ## ✅ Verificação
 
-Teste se tudo está funcionando:
+Teste se o serviço de ML está funcionando:
 
 ```bash
-# Health check do ML service
-curl http://localhost:3333/health/ml
+# Health check do ML service (via backend)
+curl http://localhost:3000/health/ml
+
+# Health check direto do serviço de ML
+curl https://aimodel-teste-deploy.up.railway.app/health
 ```
 
 ## 📝 Notas
 
-- Os modelos Python são executados diretamente pelo backend via `child_process`
-- Não é necessário rodar um serviço Python separado
-- Todos os arquivos ML estão dentro do backend para facilitar deploy
+- O backend faz requisições HTTP para o serviço de ML externo
+- O serviço de ML é um serviço separado (Flask/FastAPI) deployado no Railway
+- Não é mais necessário ter Python instalado no backend
+- As predições são feitas via API REST: `/predict/dropout` e `/predict/performance`
 
 

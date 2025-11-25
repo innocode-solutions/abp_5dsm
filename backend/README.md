@@ -1,6 +1,6 @@
 # Backend - Sistema de Predição Acadêmica
 
-Backend TypeScript/Node.js com integração direta de modelos de Machine Learning em Python.
+Backend TypeScript/Node.js com integração via API REST com serviço de Machine Learning externo.
 
 ## 🚀 Início Rápido
 
@@ -9,12 +9,34 @@ Backend TypeScript/Node.js com integração direta de modelos de Machine Learnin
 ```bash
 # Node.js
 npm install
-
-# Python (se ainda não instalou)
-pip install -r requirements.txt
 ```
 
-### 2. Configurar Banco de Dados
+### 2. Configurar Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do diretório `backend` com as seguintes variáveis:
+
+```bash
+# Database Configuration (OBRIGATÓRIO)
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/academic_management
+
+# JWT Configuration (OBRIGATÓRIO)
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRES_IN=7d
+
+# Server Configuration
+NODE_ENV=development
+PORT=3000
+
+# Frontend URL (for CORS)
+FRONTEND_URL=http://localhost:3001
+
+# ML Service URL (padrão: serviço externo no Railway)
+ML_SERVICE_URL=https://aimodel-teste-deploy.up.railway.app
+```
+
+**Importante**: Substitua os valores acima pelos seus valores reais, especialmente `DATABASE_URL` e `JWT_SECRET`.
+
+### 3. Configurar Banco de Dados
 
 ```bash
 # Gerar Prisma Client
@@ -24,7 +46,7 @@ npm run prisma:generate
 npm run prisma:migrate
 ```
 
-### 3. Rodar o Servidor
+### 4. Rodar o Servidor
 
 ```bash
 # Desenvolvimento
@@ -48,17 +70,24 @@ node check-setup.js
 ```
 backend/
   src/
-    ml/                    # Modelos ML integrados
-      models/              # Scripts Python
-      pipelines/           # Modelos .pkl
-      datasets/           # Datasets CSV
     service/
-      mlService.ts         # Serviço de execução Python
-      predictionService.ts # Serviço de predições
+      mlService.ts         # Cliente HTTP para serviço de ML externo
+      predictionService.ts # Serviço de predições que usa mlService
     controllers/           # Controllers
     routes/                # Rotas
     middleware/            # Middlewares
-  requirements.txt        # Dependências Python
+```
+
+## 🔗 Configuração do Serviço de ML
+
+O backend se conecta a um serviço de ML externo. Configure a variável de ambiente:
+
+```bash
+# Produção (padrão)
+ML_SERVICE_URL=https://aimodel-teste-deploy.up.railway.app
+
+# Desenvolvimento local (se rodar o serviço ML localmente)
+ML_SERVICE_URL=http://localhost:5000
 ```
 
 ## 🔍 Health Checks
@@ -72,25 +101,23 @@ backend/
 - [README_ML.md](./README_ML.md) - Documentação dos modelos ML
 - [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md) - Guia de deploy no Railway
 
-## 🐍 Requisitos Python
-
-O backend executa scripts Python diretamente. Certifique-se de ter:
-
-- Python 3.x instalado
-- Dependências instaladas: `pip install -r requirements.txt`
-
 ## 🔧 Troubleshooting
 
-### Erro: "Script Python não encontrado"
-- Verifique se os arquivos estão em `backend/src/ml/models/`
-- Verifique se o caminho está correto no `mlService.ts`
+### Erro: "Serviço de ML indisponível"
+- Verifique se o serviço de ML está rodando: `curl https://aimodel-teste-deploy.up.railway.app/health`
+- Verifique se a variável `ML_SERVICE_URL` está configurada corretamente
+- Para desenvolvimento local, certifique-se de que o serviço ML está rodando na porta 5000
 
-### Erro: "Python não disponível"
-- Instale Python 3.x
-- Verifique se está no PATH: `python --version` ou `python3 --version`
-
-### Erro: "ModuleNotFoundError" no Python
-- Instale as dependências: `pip install -r requirements.txt`
+### Erro: "Timeout ao processar predição"
+- O serviço de ML pode estar sobrecarregado
+- Verifique os logs do serviço de ML
+- Aumente o timeout se necessário (padrão: 5 segundos)
 
 ### Erro: "@prisma/client" não encontrado
 - Execute: `npm run prisma:generate`
+
+### Erro: "Environment variable not found: DATABASE_URL"
+- Crie um arquivo `.env` na raiz do diretório `backend`
+- Adicione a variável `DATABASE_URL` com a URL de conexão do seu banco PostgreSQL
+- Formato: `postgresql://usuario:senha@host:porta/database`
+- Reinicie o servidor após criar o arquivo `.env`
