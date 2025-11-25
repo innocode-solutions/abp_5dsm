@@ -145,15 +145,45 @@ export default function ClassesTeacherScreen() {
   // Função para salvar nova turma
   const handleSaveClass = useCallback(async (data: CreateClassData) => {
     try {
+      console.log('[DEBUG] Tentando criar turma. Role do usuário:', user?.Role);
       await createClass(data);
       // Recarregar a lista de turmas
       await loadClasses();
       Alert.alert('Sucesso', 'Turma cadastrada com sucesso!');
     } catch (err: any) {
       console.error('Erro ao salvar turma:', err);
+      console.error('[DEBUG] Role do usuário no momento do erro:', user?.Role);
+      
+      // Se for erro 403, sugerir fazer logout/login
+      if (err.message?.includes('403') || err.message?.includes('permissão') || err.message?.includes('Acesso negado')) {
+        Alert.alert(
+          'Permissão Insuficiente',
+          err.message + '\n\n💡 Dica: Faça logout e login novamente para atualizar suas permissões.',
+          [
+            { text: 'OK', style: 'default' },
+            {
+              text: 'Fazer Logout',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  await logout();
+                  navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [{ name: 'Login' }],
+                    })
+                  );
+                } catch (logoutErr) {
+                  console.error('Erro ao fazer logout:', logoutErr);
+                }
+              },
+            },
+          ]
+        );
+      }
       throw err; // Re-throw para o modal tratar
     }
-  }, [loadClasses]);
+  }, [loadClasses, user?.Role, logout, navigation]);
 
   // Função de refresh
   const onRefresh = useCallback(async () => {

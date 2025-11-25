@@ -87,7 +87,18 @@ export async function createClass(data: CreateClassData): Promise<Class> {
       throw new Error('Não autorizado. Faça login novamente.');
     }
     if (error.response?.status === 403) {
-      throw new Error(error.response.data.error || 'Você não tem permissão para criar turmas. Entre em contato com o administrador.');
+      const errorData = error.response.data;
+      const errorMessage = errorData?.error || 'Você não tem permissão para criar turmas.';
+      const userRole = errorData?.userRole;
+      const allowedRoles = errorData?.allowedRoles;
+      
+      // Se o erro incluir informações sobre roles, mostrar mais detalhes
+      if (userRole && allowedRoles) {
+        console.error(`[PERMISSÃO] Role do usuário: ${userRole}, Roles permitidas: ${allowedRoles.join(', ')}`);
+        throw new Error(`${errorMessage} (Sua role: ${userRole}, Roles permitidas: ${allowedRoles.join(', ')})`);
+      }
+      
+      throw new Error(`${errorMessage} Faça logout e login novamente para atualizar suas permissões.`);
     }
     if (error.response?.status === 409) {
       throw new Error(error.response.data.error || 'Código da disciplina já existe para este curso');

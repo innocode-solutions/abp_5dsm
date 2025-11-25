@@ -96,8 +96,17 @@ export class AuthMiddleware {
         return res.status(401).json({ error: 'Usuário não autenticado' })
       }
 
-      if (!allowedRoles.includes(req.user.role as UserRole)) {
-        return res.status(403).json({ error: 'Acesso negado. Permissão insuficiente.' })
+      // Normalizar role para comparação (case-insensitive)
+      const userRole = String(req.user.role).toUpperCase() as UserRole
+      const normalizedAllowedRoles = allowedRoles.map(r => String(r).toUpperCase() as UserRole)
+
+      if (!normalizedAllowedRoles.includes(userRole)) {
+        console.log(`[AUTH] Acesso negado. Role do usuário: ${userRole}, Roles permitidas: ${normalizedAllowedRoles.join(', ')}`)
+        return res.status(403).json({ 
+          error: 'Acesso negado. Permissão insuficiente.',
+          userRole: userRole,
+          allowedRoles: normalizedAllowedRoles
+        })
       }
 
       next()
