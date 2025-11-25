@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -14,6 +15,10 @@ import { Feather } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation';
 import colors from '../theme/colors';
 import { getStudentDetails, StudentDetails } from '../service/studentService';
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 768;
+const isSmallScreen = width < 360;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StudentPerformance'>;
 
@@ -286,91 +291,91 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: isMobile ? 16 : 20, // Menos padding no mobile
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: isMobile ? 10 : 12, // Menos margem no mobile
     color: colors.muted,
-    fontSize: 14,
+    fontSize: isMobile ? 12 : 14, // Fonte menor no mobile
   },
   errorText: {
     color: '#DC2626',
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     textAlign: 'center',
   },
   header: {
     alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    paddingVertical: isMobile ? 20 : 24, // Menos padding no mobile
+    paddingHorizontal: isMobile ? 16 : 20, // Menos padding no mobile
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: colors.bg,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: isMobile ? 70 : 80, // Menor no mobile
+    height: isMobile ? 70 : 80, // Menor no mobile
+    borderRadius: isMobile ? 35 : 40, // Menor no mobile
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: isMobile ? 10 : 12, // Menos margem no mobile
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: isMobile ? 28 : 32, // Fonte menor no mobile
     fontWeight: '600',
     color: '#fff',
   },
   studentName: {
-    fontSize: 20,
+    fontSize: isMobile ? 18 : 20, // Fonte menor no mobile
     fontWeight: '600',
     color: colors.text,
     marginBottom: 4,
   },
   matricula: {
-    fontSize: 14,
+    fontSize: isMobile ? 12 : 14, // Fonte menor no mobile
     color: colors.muted,
   },
   section: {
     backgroundColor: '#fff',
-    marginTop: 12,
-    padding: 20,
+    marginTop: isMobile ? 10 : 12, // Menos margem no mobile
+    padding: isMobile ? 16 : 20, // Menos padding no mobile
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: isMobile ? 16 : 18, // Fonte menor no mobile
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 16,
+    marginBottom: isMobile ? 12 : 16, // Menos margem no mobile
   },
   subjectRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: isMobile ? 10 : 12, // Menos padding no mobile
     borderBottomWidth: 1,
     borderBottomColor: colors.bg,
   },
   subjectIcon: {
-    marginRight: 12,
+    marginRight: isMobile ? 10 : 12, // Menos margem no mobile
   },
   subjectInfo: {
     flex: 1,
   },
   subjectName: {
-    fontSize: 15,
+    fontSize: isMobile ? 14 : 15, // Fonte menor no mobile
     fontWeight: '500',
     color: colors.text,
     marginBottom: 4,
   },
   subjectGrade: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
     color: colors.muted,
   },
   riskBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: isMobile ? 10 : 12, // Menos padding no mobile
+    paddingVertical: isMobile ? 5 : 6, // Menos padding no mobile
     borderRadius: 12,
   },
   riskText: {
-    fontSize: 12,
+    fontSize: isMobile ? 11 : 12, // Fonte menor no mobile
     fontWeight: '600',
   },
   attendanceRow: {
@@ -378,22 +383,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   attendanceInfo: {
-    marginLeft: 12,
+    marginLeft: isMobile ? 10 : 12, // Menos margem no mobile
     flex: 1,
   },
   attendanceLabel: {
-    fontSize: 15,
+    fontSize: isMobile ? 14 : 15, // Fonte menor no mobile
     fontWeight: '500',
     color: colors.text,
     marginBottom: 4,
   },
   attendanceValue: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
     color: colors.muted,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: isMobile ? 12 : 14, // Fonte menor no mobile
     color: colors.muted,
-    fontStyle: 'italic',
   },
 });

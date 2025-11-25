@@ -17,15 +17,15 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_BACKEND_PORT": "8080",
-        "EXPO_PUBLIC_MACHINE_IP": "192.168.18.7"
       }
     },
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://abp5dsm-teste-deploy.up.railway.app/api",
+        "EXPO_PUBLIC_SOCKET_URL": "https://abp5dsm-teste-deploy.up.railway.app"
       }
     }
   },

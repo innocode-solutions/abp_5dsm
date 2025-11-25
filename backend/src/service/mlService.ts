@@ -77,18 +77,7 @@ function checkPythonAvailable(): Promise<boolean> {
   });
 }
 
-function getPythonCommand(): string {
-  // No Windows, tenta várias opções para evitar o alias da Microsoft Store
-  if (process.platform === 'win32') {
-    // Ordem de tentativa no Windows:
-    // 1. py (launcher do Python)
-    // 2. python3
-    // 3. python (pode ser o alias da Microsoft Store)
-    return 'py'; // Launcher do Python no Windows é mais confiável
-  }
-  // Linux/Mac
-  return 'python3';
-}
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'https://aimodel-teste-deploy.up.railway.app';
 
 interface DropoutPredictionResult {
   probability_dropout: number;

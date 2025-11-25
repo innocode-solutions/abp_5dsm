@@ -37,6 +37,9 @@ Configure as seguintes variáveis de ambiente no Railway:
 - `HTTP_PORT` - Porta HTTP (padrão: 8080, mas Railway usa PORT)
 - `FRONTEND_URL` - URL do frontend para CORS (ex: `https://seu-frontend.railway.app`)
 - `JWT_EXPIRES_IN` - Tempo de expiração do JWT (padrão: `7d`)
+- `ML_SERVICE_URL` - URL do serviço de ML externo (padrão: `https://aimodel-teste-deploy.up.railway.app`)
+  - **Importante**: O backend agora usa um serviço de ML externo separado ao invés de executar Python localmente
+  - Se você tiver um endpoint diferente, configure esta variável
 
 ### 3. Deploy
 

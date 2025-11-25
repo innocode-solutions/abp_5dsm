@@ -1,8 +1,8 @@
 # Multi-stage build for Node.js TypeScript backend
-# Otimizado para Railway - Usa Debian para wheels pré-compiladas do llvmlite
+# Otimizado para Railway - Backend usa serviço ML externo
 
-# Stage 1: Build stage (mantém Alpine para build rápido)
-FROM node:18-alpine AS builder
+# Stage 1: Build stage
+FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e AS builder
 
 # Set working directory
 WORKDIR /app
@@ -11,7 +11,6 @@ WORKDIR /app
 COPY package*.json ./
 
 # Copy Prisma schema (necessário para gerar o client)
-# Se o prisma não existir, o build falhará - isso garante que o Root Directory está correto
 COPY prisma ./prisma
 
 # Install all dependencies (include devDependencies for build)
@@ -19,34 +18,26 @@ RUN npm ci
 
 # Generate Prisma client
 # DATABASE_URL dummy apenas para validação do schema durante o build
-# Não afeta o runtime pois é definida apenas neste RUN
-# ⚠️ NUNCA use credenciais reais aqui - apenas uma URL dummy para validação
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
-# Copy source code
+# Copy source code 
 COPY . .
 
 # Build TypeScript to JavaScript
 RUN npm run build
 
 # Stage 2: Production stage
-# Usa Debian slim (glibc) para wheels pré-compiladas do llvmlite - MUITO MAIS RÁPIDO
-FROM python:3.12-slim AS production
+# Usa Node.js slim - mais leve já que não precisa de Python
+# Nota: Você pode também fixar o hash SHA256 da imagem node:18-slim se necessário
+FROM node:18-slim AS production
 
-# Install Node.js 18 (LTS) e dependências do sistema
+# Install dependências do sistema necessárias
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    gnupg \
     dumb-init \
     wget \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+    ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Upgrade pip
-RUN pip3 install --no-cache-dir --upgrade pip
 
 # Create non-root user and group for security
 RUN groupadd -r -g 1001 appgroup && \
@@ -65,14 +56,6 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
 COPY --from=builder --chown=appuser:appgroup /app/prisma ./prisma
 COPY --from=builder --chown=appuser:appgroup /app/node_modules/.prisma ./node_modules/.prisma
-
-# Copy Python ML scripts and models
-COPY --from=builder --chown=appuser:appgroup /app/src/ml ./src/ml
-COPY --from=builder --chown=appuser:appgroup /app/requirements.txt ./requirements.txt
-
-# Install Python dependencies (as root, before switching user)
-# Usa wheels pré-compiladas - MUITO MAIS RÁPIDO que compilar do código fonte
-RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Switch to non-root user
 USER appuser

@@ -157,6 +157,11 @@ export class AuthController {
 
       const { user, otp, expiresAt } = generationResult;
 
+      // Em desenvolvimento, logar o código (REMOVER EM PRODUÇÃO)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔑 Código OTP para ${email}: ${otp}`);
+      }
+
       try {
         await sendPasswordResetEmail({
           to: user.Email,
@@ -166,6 +171,19 @@ export class AuthController {
         });
       } catch (mailError) {
         console.error("Falha ao enviar e-mail de redefinição:", mailError);
+        // Se SMTP não estiver configurado, retornar erro específico
+        return res.status(500).json({ 
+          error: "Serviço de e-mail não configurado. Entre em contato com o administrador." 
+        });
+      }
+
+      // Verificar se SMTP está configurado antes de retornar sucesso
+      const hasSmtp = Boolean(process.env.SMTP_HOST && process.env.SMTP_PORT);
+      if (!hasSmtp) {
+        console.warn("⚠️ SMTP não configurado - código gerado mas email não enviado");
+        return res.status(503).json({ 
+          error: "Serviço de e-mail temporariamente indisponível. Tente novamente mais tarde." 
+        });
       }
 
       res.json({ message: "Código enviado se o e-mail for válido" });

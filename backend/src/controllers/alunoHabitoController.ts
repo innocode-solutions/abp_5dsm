@@ -175,12 +175,18 @@ export class AlunoHabitoController {
               where: { IDHabito: existing.IDHabito },
               data: dadosParaAtualizar as any,
             })
+            console.log('✅ Hábitos atualizados com sucesso no banco de dados', {
+              IDHabito: habito.IDHabito,
+              IDAluno: habito.IDAluno,
+              camposAtualizados: Object.keys(dadosParaAtualizar)
+            })
           } catch (updateError: any) {
-            console.error('Erro ao atualizar hábitos')
+            console.error('❌ Erro ao atualizar hábitos no banco:', updateError)
             throw updateError
           }
         } else {
           habito = existing
+          console.log('ℹ️ Nenhum dado novo para atualizar, mantendo hábito existente')
         }
       } else {
         // Cria novo hábito apenas com campos realmente preenchidos
@@ -200,12 +206,28 @@ export class AlunoHabitoController {
         habito = await prisma.alunoHabito.create({
           data: dadosParaCriar as any,
         })
+        console.log('✅ Novo hábito criado com sucesso no banco de dados', {
+          IDHabito: habito.IDHabito,
+          IDAluno: habito.IDAluno,
+          camposSalvos: Object.keys(dadosParaCriar).filter(k => k !== 'IDAluno')
+        })
       }
 
-      return res.json(habito)
-    } catch (error) {
-      console.error('Erro ao salvar hábito')
-      return res.status(500).json({ error: 'Erro interno do servidor' })
+      return res.json({
+        ...habito,
+        message: existing ? 'Hábitos atualizados com sucesso' : 'Hábitos criados com sucesso'
+      })
+    } catch (error: any) {
+      console.error('❌ Erro ao salvar hábito no banco de dados:', error)
+      console.error('Detalhes do erro:', {
+        message: error.message,
+        code: error.code,
+        meta: error.meta
+      })
+      return res.status(500).json({ 
+        error: 'Erro interno do servidor ao salvar hábitos',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      })
     }
   }
 
