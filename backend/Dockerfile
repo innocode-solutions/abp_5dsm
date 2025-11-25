@@ -2,7 +2,7 @@
 # Otimizado para Railway - Backend usa serviço ML externo
 
 # Stage 1: Build stage
-FROM node:18-alpine AS builder
+FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e AS builder
 
 # Set working directory
 WORKDIR /app
@@ -28,6 +28,7 @@ RUN npm run build
 
 # Stage 2: Production stage
 # Usa Node.js slim - mais leve já que não precisa de Python
+# Nota: Você pode também fixar o hash SHA256 da imagem node:18-slim se necessário
 FROM node:18-slim AS production
 
 # Install dependências do sistema necessárias
