@@ -60,12 +60,29 @@ export class AuthMiddleware {
       }
 
       const payload = decoded as JWTPayload
+      
+      // Normalizar role do token para garantir compatibilidade
+      let normalizedRole = String(payload.role || '').toUpperCase().trim()
+      
+      // Garantir que o role seja um valor válido do enum
+      if (!Object.values(UserRole).includes(normalizedRole as UserRole)) {
+        // Se não for um valor válido, tentar mapear
+        const roleMap: Record<string, UserRole> = {
+          'STUDENT': UserRole.STUDENT,
+          'TEACHER': UserRole.TEACHER,
+          'ADMIN': UserRole.ADMIN
+        }
+        normalizedRole = roleMap[normalizedRole] || normalizedRole
+      }
+      
       req.user = {
         userId: payload.userId,
-        role: payload.role as UserRole,
+        role: normalizedRole as UserRole,
         email: payload.email,
         studentId: payload.studentId
       } as UserInfo
+      
+      console.log(`[AUTH] Token decodificado. Role: ${normalizedRole}, Tipo: ${typeof normalizedRole}`)
       next()
     })
   }
@@ -96,19 +113,31 @@ export class AuthMiddleware {
         return res.status(401).json({ error: 'Usuário não autenticado' })
       }
 
-      // Normalizar role para comparação (case-insensitive)
-      const userRole = String(req.user.role).toUpperCase() as UserRole
-      const normalizedAllowedRoles = allowedRoles.map(r => String(r).toUpperCase() as UserRole)
+      // Normalizar role para comparação (case-insensitive e garantir que seja string)
+      const userRoleStr = String(req.user.role || '').toUpperCase().trim()
+      const normalizedAllowedRoles = allowedRoles.map(r => String(r).toUpperCase().trim())
 
-      if (!normalizedAllowedRoles.includes(userRole)) {
-        console.log(`[AUTH] Acesso negado. Role do usuário: ${userRole}, Roles permitidas: ${normalizedAllowedRoles.join(', ')}`)
+      // Log para debug
+      console.log(`[AUTH] Verificando permissão. Role do usuário: "${userRoleStr}", Roles permitidas: [${normalizedAllowedRoles.join(', ')}]`)
+      console.log(`[AUTH] Tipo do role: ${typeof req.user.role}, Valor original: ${req.user.role}`)
+
+      // Verificar se o role do usuário está na lista de roles permitidas
+      const hasPermission = normalizedAllowedRoles.some(allowedRole => allowedRole === userRoleStr)
+
+      if (!hasPermission) {
+        console.log(`[AUTH] ❌ Acesso negado. Role do usuário: ${userRoleStr}, Roles permitidas: ${normalizedAllowedRoles.join(', ')}`)
         return res.status(403).json({ 
           error: 'Acesso negado. Permissão insuficiente.',
-          userRole: userRole,
-          allowedRoles: normalizedAllowedRoles
+          userRole: userRoleStr,
+          allowedRoles: normalizedAllowedRoles,
+          debug: {
+            originalRole: req.user.role,
+            roleType: typeof req.user.role
+          }
         })
       }
 
+      console.log(`[AUTH] ✅ Permissão concedida para role: ${userRoleStr}`)
       next()
     }
   }
