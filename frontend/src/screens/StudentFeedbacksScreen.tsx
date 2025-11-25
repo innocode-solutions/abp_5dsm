@@ -16,6 +16,10 @@ import { generatePerformanceFeedback, generateDropoutFeedback } from '../service
 
 // Layout otimizado para mobile - cards ocupam toda a largura disponível
 
+const { width } = Dimensions.get('window');
+const isMobile = width < 768;
+const isSmallScreen = width < 360;
+
 interface Feedback {
   disciplina: string;
   descricao: string;
@@ -416,7 +420,7 @@ export default function StudentFeedbacksScreen() {
     const mensagem = partes[1] || feedback.descricao;
     
     return (
-      <View style={cardStyle}>
+      <View key={`feedback-${feedback.disciplina}-${index}`} style={cardStyle}>
         <View style={styles.feedbackContent}>
           <View style={styles.feedbackHeader}>
             <Text style={[
@@ -536,7 +540,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   header: {
-    padding: 16,
+    padding: isMobile ? 12 : 16, // Menos padding no mobile
     paddingTop: 10,
     paddingBottom: 10,
     width: '100%',
@@ -547,20 +551,20 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   scrollContent: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: isMobile ? 10 : 12, // Menos padding no mobile
+    paddingHorizontal: isMobile ? 12 : 16, // Menos padding no mobile
   },
   title: {
-    fontSize: 24,
+    fontSize: isMobile ? 20 : 24, // Fonte menor no mobile
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: isMobile ? 6 : 8, // Menos margem no mobile
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: isMobile ? 12 : 14, // Fonte menor no mobile
     color: colors.muted,
-    marginBottom: 10,
+    marginBottom: isMobile ? 8 : 10, // Menos margem no mobile
     textAlign: 'center',
   },
   loadingContainer: {
@@ -569,7 +573,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     color: colors.muted,
   },
   emptyContainer: {
@@ -579,16 +583,16 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     color: colors.muted,
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: isMobile ? 12 : 16, // Menos margem no mobile
   },
   feedbackCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    padding: isMobile ? 10 : 12, // Menos padding no mobile
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
     shadowColor: '#000',
@@ -619,7 +623,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   feedbackDiscipline: {
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     fontWeight: '700',
     color: colors.text,
     flex: 1,
@@ -637,10 +641,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   feedbackTitle: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 6,
+    marginBottom: isMobile ? 5 : 6, // Menos margem no mobile
     marginTop: 4,
   },
   feedbackTitleCritical: {
@@ -651,11 +655,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   feedbackDescription: {
-    fontSize: 13,
+    fontSize: isMobile ? 12 : 13, // Fonte menor no mobile
     fontWeight: '400',
     color: colors.text,
-    marginBottom: 6,
-    lineHeight: 20,
+    marginBottom: isMobile ? 5 : 6, // Menos margem no mobile
+    lineHeight: isMobile ? 18 : 20, // Line height menor no mobile
   },
   feedbackDescriptionCritical: {
     color: '#C62828',
@@ -666,46 +670,46 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   featuresContainer: {
-    marginTop: 12,
-    marginBottom: 12,
-    paddingTop: 12,
+    marginTop: isMobile ? 10 : 12, // Menos margem no mobile
+    marginBottom: isMobile ? 10 : 12, // Menos margem no mobile
+    paddingTop: isMobile ? 10 : 12, // Menos padding no mobile
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },
   featuresContainerCritical: {
     backgroundColor: '#ffebee',
-    padding: 12,
+    padding: isMobile ? 10 : 12, // Menos padding no mobile
     borderRadius: 8,
     borderLeftWidth: 4,
     borderLeftColor: '#F44336',
     borderTopWidth: 0,
-    marginTop: 8,
+    marginTop: isMobile ? 6 : 8, // Menos margem no mobile
   },
   featuresContainerPositive: {
     backgroundColor: '#e8f5e9',
-    padding: 12,
+    padding: isMobile ? 10 : 12, // Menos padding no mobile
     borderRadius: 8,
     borderLeftWidth: 4,
     borderLeftColor: '#4CAF50',
     borderTopWidth: 0,
-    marginTop: 8,
+    marginTop: isMobile ? 6 : 8, // Menos margem no mobile
   },
   featuresTitle: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: isMobile ? 6 : 8, // Menos margem no mobile
     flexWrap: 'wrap',
   },
   featuresTitleCritical: {
     color: '#F44336',
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: isMobile ? 14 : 15, // Fonte menor no mobile
   },
   featuresTitlePositive: {
     color: '#2E7D32',
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: isMobile ? 14 : 15, // Fonte menor no mobile
   },
   featureItem: {
     flexDirection: 'row',
@@ -714,9 +718,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   featureText: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
     color: colors.text,
-    marginLeft: 8,
+    marginLeft: isMobile ? 6 : 8, // Menos margem no mobile
     flex: 1,
     flexShrink: 1,
     flexWrap: 'wrap',
@@ -728,24 +732,24 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   suggestionsContainer: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: isMobile ? 10 : 12, // Menos margem no mobile
+    paddingTop: isMobile ? 10 : 12, // Menos padding no mobile
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },
   suggestionsTitle: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: isMobile ? 6 : 8, // Menos margem no mobile
   },
   suggestionItem: {
     marginBottom: 4,
   },
   suggestionText: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
     color: colors.text,
-    lineHeight: 20,
+    lineHeight: isMobile ? 18 : 20, // Line height menor no mobile
     flex: 1,
   },
   feedbackFooter: {
@@ -758,13 +762,13 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   feedbackImagePlaceholder: {
-    width: 50,
-    height: 50,
+    width: isMobile ? 45 : 50, // Menor no mobile
+    height: isMobile ? 45 : 50, // Menor no mobile
     borderRadius: 8,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
+    marginLeft: isMobile ? 8 : 10, // Menos margem no mobile
     flexShrink: 0,
   },
   feedbackImagePlaceholderSuccess: {

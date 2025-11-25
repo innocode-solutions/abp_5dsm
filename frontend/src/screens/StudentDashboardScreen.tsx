@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +22,10 @@ import { getToken } from '../service/tokenStore';
 import { getStudentDetails, getStudentIdByUserId } from '../service/studentService';
 import { getMyFeedbacks, ApiFeedback } from '../service/feedbackApiService';
 import { generatePerformanceFeedback, generateDropoutFeedback } from '../service/FeedbackService';
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 768;
+const isSmallScreen = width < 360;
 
 type StudentDashboardNavigationProp = BottomTabNavigationProp<StudentTabParamList, 'Home'> & 
   NativeStackNavigationProp<RootStackParamList>;
@@ -342,21 +348,21 @@ export default function StudentDashboardScreen() {
               // Verificar se é crítico usando predicted_score (0-100) para DESEMPENHO
               // predicted_score < 60 = nota < 6.0
               const predictedScore = feedback.tipo === 'DESEMPENHO'
-                ? (feedback.predicted_score !== undefined ? feedback.predicted_score : (feedback.notaPrevista !== undefined ? feedback.notaPrevista * 10 : feedback.probabilidade * 100))
+                ? (feedback.predicted_score !== undefined ? feedback.predicted_score : (feedback.notaPrevista !== undefined ? feedback.notaPrevista * 10 : (feedback.probabilidade ?? 0) * 100))
                 : null;
               const isCritical = feedback.tipo === 'DESEMPENHO'
                 ? (predictedScore !== null && predictedScore < 60)
-                : feedback.probabilidade >= 0.7;
+                : (feedback.probabilidade ?? 0) >= 0.7;
               
               // Verificar se é positivo (nota >= 6 para desempenho, ou baixo risco para evasão)
               const isPositive = feedback.tipo === 'DESEMPENHO' 
                 ? !isCritical 
-                : (feedback.probabilidade < 0.4); // Baixo risco de evasão = positivo
+                : ((feedback.probabilidade ?? 0) < 0.4); // Baixo risco de evasão = positivo
               
               // Extrair nota se for desempenho
               // Usar notaPrevista para exibição (0-10), mas predicted_score para lógica
               const nota = feedback.tipo === 'DESEMPENHO' 
-                ? (feedback.notaPrevista !== undefined ? feedback.notaPrevista : (feedback.predicted_score !== undefined ? feedback.predicted_score / 10 : feedback.probabilidade * 10))
+                ? (feedback.notaPrevista !== undefined ? feedback.notaPrevista : (feedback.predicted_score !== undefined ? feedback.predicted_score / 10 : (feedback.probabilidade ?? 0) * 10))
                 : null;
               
               return (
@@ -492,9 +498,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
+    padding: isMobile ? 16 : 20, // Menos padding no mobile
     paddingTop: 10,
-    paddingBottom: 80, // Espaço para o bottom navigation (ajustado)
+    paddingBottom: 80,
   },
   header: {
     flexDirection: 'row',
@@ -516,10 +522,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   welcomeSection: {
-    marginBottom: 24,
+    marginBottom: isMobile ? 16 : 24, // Menos espaço no mobile
   },
   welcomeText: {
-    fontSize: 20,
+    fontSize: isMobile ? 18 : 20, // Fonte menor no mobile
     color: colors.text,
   },
   welcomeName: {
@@ -529,8 +535,8 @@ const styles = StyleSheet.create({
   performanceCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
+    padding: isMobile ? 16 : 20, // Menos padding no mobile
+    marginBottom: isMobile ? 16 : 24,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
@@ -548,9 +554,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   performanceScore: {
-    fontSize: 48,
+    fontSize: isSmallScreen ? 36 : (isMobile ? 42 : 48), // Fonte menor em telas pequenas
     fontWeight: '700',
-    color: '#17a2b8', // Teal/green color
+    color: '#17a2b8',
   },
   performanceScoreCritical: {
     color: '#E53935', // Red color for critical
@@ -568,16 +574,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: isMobile ? 16 : 18, // Fonte menor no mobile
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 16,
+    marginBottom: isMobile ? 12 : 16,
   },
   feedbackCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    padding: isMobile ? 10 : 12, // Menos padding no mobile
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
     shadowColor: '#000',
@@ -607,7 +613,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   feedbackDiscipline: {
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     fontWeight: '700',
     color: colors.text,
     flex: 1,
@@ -628,11 +634,11 @@ const styles = StyleSheet.create({
     color: '#E53935',
   },
   feedbackDescription: {
-    fontSize: 13,
+    fontSize: isMobile ? 12 : 13, // Fonte menor no mobile
     fontWeight: '400',
     color: colors.text,
     marginBottom: 6,
-    lineHeight: 20,
+    lineHeight: isMobile ? 18 : 20, // Line height menor no mobile
   },
   feedbackDescriptionCritical: {
     color: '#C62828',
@@ -724,12 +730,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffebee',
   },
   buttonsContainer: {
-    gap: 12,
+    gap: isMobile ? 10 : 12, // Menos gap no mobile
   },
   formButton: {
     backgroundColor: '#4A90E2',
     borderRadius: 12,
-    padding: 16,
+    padding: isMobile ? 14 : 16, // Menos padding no mobile
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.1,
@@ -739,13 +745,13 @@ const styles = StyleSheet.create({
   },
   formButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     fontWeight: '600',
   },
   evasionButton: {
     backgroundColor: '#E53935',
     borderRadius: 12,
-    padding: 16,
+    padding: isMobile ? 14 : 16, // Menos padding no mobile
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.1,
@@ -755,7 +761,7 @@ const styles = StyleSheet.create({
   },
   evasionButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     fontWeight: '600',
   },
 });

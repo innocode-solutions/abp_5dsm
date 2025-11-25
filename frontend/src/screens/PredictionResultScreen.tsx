@@ -245,25 +245,34 @@ export default function PredictionResultScreen({ route, navigation }: Props) {
           {feedback.features.length > 0 && (
             <View style={styles.featuresContainer}>
               <Text style={styles.featuresTitle}>Principais fatores:</Text>
-              {feedback.features.map((feature, idx) => (
-                <View key={idx} style={styles.featureItem}>
-                  <Feather
-                    name={feature.influence === 'positiva' ? 'arrow-up-circle' : 'arrow-down-circle'}
-                    size={16}
-                    color={feature.influence === 'positiva' ? '#4CAF50' : '#F44336'}
-                  />
-                  <Text style={styles.featureText}>
-                    <Text style={styles.featureName}>{feature.feature}</Text>
-                    {': '}
-                    <Text style={[
-                      styles.featureValue,
-                      { color: feature.influence === 'positiva' ? '#4CAF50' : '#F44336' }
-                    ]}>
-                      {feature.value} ({feature.influence})
+              {feedback.features
+                .filter((feature) => {
+                  // Filtrar envolvimento dos pais - não deve aparecer como principal fator
+                  const featureName = feature.feature.toLowerCase();
+                  return !featureName.includes('envolvimento') && 
+                         !featureName.includes('pais') && 
+                         !featureName.includes('parent') &&
+                         !featureName.includes('familia');
+                })
+                .map((feature, idx) => (
+                  <View key={idx} style={styles.featureItem}>
+                    <Feather
+                      name={feature.influence === 'positiva' ? 'arrow-up-circle' : 'arrow-down-circle'}
+                      size={16}
+                      color={feature.influence === 'positiva' ? '#4CAF50' : '#F44336'}
+                    />
+                    <Text style={styles.featureText}>
+                      <Text style={styles.featureName}>{feature.feature}</Text>
+                      {': '}
+                      <Text style={[
+                        styles.featureValue,
+                        { color: feature.influence === 'positiva' ? '#4CAF50' : '#F44336' }
+                      ]}>
+                        {feature.value} ({feature.influence})
+                      </Text>
                     </Text>
-                  </Text>
-                </View>
-              ))}
+                  </View>
+                ))}
             </View>
           )}
 
@@ -373,28 +382,106 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 14, color: colors.muted || "#666", marginBottom: 4 },
   infoValue: { fontSize: 16, color: colors.text || "#333" },
   description: { fontSize: 13, color: colors.muted || "#666", fontStyle: "italic" },
-  feedbackContainer: { backgroundColor: "#E3F2FD", borderRadius: 12, padding: 16, marginHorizontal: 20, marginTop: 12, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.primary || "#4A90E2", flexWrap: "wrap" },
+  feedbackContainer: { 
+    backgroundColor: "#E3F2FD", 
+    borderRadius: 12, 
+    padding: 16, 
+    marginHorizontal: 20, 
+    marginTop: 12, 
+    marginBottom: 12, 
+    borderLeftWidth: 4, 
+    borderLeftColor: colors.primary || "#4A90E2", 
+    flexWrap: "wrap",
+    overflow: 'hidden', // Garantir que o conteúdo não saia do card
+  },
   feedbackContainerCritical: { backgroundColor: "#FFEBEE", borderLeftColor: "#F44336", borderLeftWidth: 4 },
   feedbackContainerPositive: { backgroundColor: "#E8F5E9", borderLeftColor: "#2E7D32", borderLeftWidth: 4 },
-  feedbackHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap" },
-  feedbackTitle: { fontSize: 18, fontWeight: "700", color: colors.text || "#333", marginLeft: 8, flex: 1, flexShrink: 1, flexWrap: "wrap" },
+  feedbackHeader: { 
+    flexDirection: "row", 
+    alignItems: "flex-start", 
+    marginBottom: 12, 
+    flexWrap: "wrap",
+    width: '100%', // Garantir largura total
+  },
+  feedbackTitle: { 
+    fontSize: 18, 
+    fontWeight: "700", 
+    color: colors.text || "#333", 
+    marginLeft: 8, 
+    flex: 1, 
+    flexShrink: 1, 
+    flexWrap: "wrap",
+    minWidth: 0, // IMPORTANTE: Permite que o texto quebre corretamente em flexbox
+  },
   feedbackTitleCritical: { color: "#F44336" },
   feedbackTitlePositive: { color: "#2E7D32" },
-  feedbackMessage: { fontSize: 15, color: colors.text || "#333", lineHeight: 22, marginBottom: 12, flexWrap: "wrap" },
+  feedbackMessage: { 
+    fontSize: 15, 
+    color: colors.text || "#333", 
+    lineHeight: 22, 
+    marginBottom: 12, 
+    flexWrap: "wrap",
+    width: '100%', // Garantir largura total
+  },
   feedbackMessageCritical: { color: "#D32F2F", fontWeight: "500" },
   featuresContainer: { marginTop: 12, marginBottom: 12 },
   featuresTitle: { fontSize: 14, fontWeight: "600", color: colors.text || "#333", marginBottom: 8, flexWrap: "wrap" },
   featureItem: { flexDirection: "row", alignItems: "flex-start", marginBottom: 6, flexWrap: "wrap" },
-  featureText: { fontSize: 14, color: colors.text || "#333", marginLeft: 8, flex: 1, flexShrink: 1, flexWrap: "wrap" },
+  featureText: { 
+    fontSize: 14, 
+    color: colors.text || "#333", 
+    marginLeft: 8, 
+    flex: 1, 
+    flexShrink: 1, 
+    flexWrap: "wrap",
+    minWidth: 0, // IMPORTANTE: Permite quebra de texto
+  },
   featureName: { fontWeight: "600" },
   featureValue: { fontWeight: "500" },
-  suggestionsContainer: { marginTop: 12, backgroundColor: "#fff", borderRadius: 8, padding: 12, flexWrap: "wrap" },
-  suggestionsContainerCritical: { backgroundColor: "#FFEBEE", borderWidth: 1, borderColor: "#F44336" },
-  suggestionsTitle: { fontSize: 14, fontWeight: "600", color: colors.text || "#333", marginBottom: 8, flexWrap: "wrap" },
-  suggestionsTitleCritical: { color: "#F44336", fontWeight: "700" },
-  suggestionItem: { marginBottom: 4, flexWrap: "wrap" },
-  suggestionText: { fontSize: 14, color: colors.text || "#333", lineHeight: 20, flexWrap: "wrap", flexShrink: 1 },
-  suggestionTextCritical: { color: "#D32F2F", fontWeight: "500" },
+  suggestionsContainer: { 
+    marginTop: 12, 
+    backgroundColor: "#fff", 
+    borderRadius: 8, 
+    padding: 12, 
+    flexWrap: "wrap",
+    overflow: 'hidden', // Garantir que o conteúdo não saia do card
+    width: '100%', // Garantir largura total
+  },
+  suggestionsContainerCritical: { 
+    backgroundColor: "#FFEBEE", 
+    borderWidth: 1, 
+    borderColor: "#F44336" 
+  },
+  suggestionsTitle: { 
+    fontSize: 14, 
+    fontWeight: "600", 
+    color: colors.text || "#333", 
+    marginBottom: 8, 
+    flexWrap: "wrap",
+    width: '100%', // Garantir largura total
+  },
+  suggestionsTitleCritical: { 
+    color: "#F44336", 
+    fontWeight: "700" 
+  },
+  suggestionItem: { 
+    marginBottom: 4, 
+    flexWrap: "wrap",
+    width: '100%', // Garantir largura total
+  },
+  suggestionText: { 
+    fontSize: 14, 
+    color: colors.text || "#333", 
+    lineHeight: 20, 
+    flexWrap: "wrap", 
+    flexShrink: 1,
+    width: '100%', // Garantir largura total
+    minWidth: 0, // IMPORTANTE: Permite quebra de texto
+  },
+  suggestionTextCritical: { 
+    color: "#D32F2F", 
+    fontWeight: "500" 
+  },
   actionsContainer: { marginHorizontal: 20, marginTop: 20, gap: 12 },
   actionButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 16, borderRadius: 8, gap: 8 },
   refazerButton: { backgroundColor: colors.primary || "#4A90E2" },

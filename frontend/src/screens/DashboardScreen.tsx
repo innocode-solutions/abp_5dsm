@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ListRenderItemInfo, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ListRenderItemInfo, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +19,10 @@ type Student = {
   course: string;
   avatar: string;
 };
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 768;
+const isSmallScreen = width < 360;
 
 export default function DashboardScreen() {
   const navigation = useNavigation<DashboardScreenProp>();
@@ -243,11 +247,22 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  container: { padding: 16, paddingBottom: 40 },
+  container: { 
+    padding: isMobile ? 12 : 16, // Menos padding no mobile
+    paddingBottom: 40 
+  },
   grid: { flexDirection: 'row', gap: 12 },
   cardLabel: { color: colors.muted, fontSize: 13, marginBottom: 6 },
-  cardValue: { color: colors.text, fontSize: 20, fontWeight: '600' },
-  totalValue: { color: colors.text, fontSize: 28, fontWeight: '700' },
+  cardValue: { 
+    color: colors.text, 
+    fontSize: isMobile ? 18 : 20, // Fonte menor no mobile
+    fontWeight: '600' 
+  },
+  totalValue: { 
+    color: colors.text, 
+    fontSize: isMobile ? 24 : 28, // Fonte menor no mobile
+    fontWeight: '700' 
+  },
   rowContainer: {
     backgroundColor: '#fff',
     paddingHorizontal: 0,
@@ -274,7 +289,7 @@ const styles = StyleSheet.create({
   },
   disciplineCard: {
     backgroundColor: '#fff',
-    padding: 16,
+    padding: isMobile ? 12 : 16, // Menos padding no mobile
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -298,7 +313,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   disciplineName: {
-    fontSize: 16,
+    fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     fontWeight: '600',
     color: colors.text,
     marginBottom: 4,
