@@ -20,7 +20,7 @@ RUN npm ci
 # DATABASE_URL dummy apenas para validação do schema durante o build
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
-# Copy source code
+# Copy source code 
 COPY . .
 
 # Build TypeScript to JavaScript
