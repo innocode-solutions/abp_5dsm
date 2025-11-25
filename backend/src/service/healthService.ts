@@ -7,8 +7,8 @@ export class HealthService {
    * Basic health check endpoint
    */
   static healthCheck(req: Request, res: Response) {
-    res.json({
-      status: 'OK',
+    res.json({ 
+      status: 'OK', 
       timestamp: new Date().toISOString(),
       message: 'API rodando corretamente',
       environment: process.env.NODE_ENV || 'development'
@@ -21,15 +21,15 @@ export class HealthService {
   static async databaseHealthCheck(req: Request, res: Response) {
     try {
       await prisma.$queryRaw`SELECT 1`;
-      res.json({
-        status: 'OK',
+      res.json({ 
+        status: 'OK', 
         message: 'Database connection is healthy',
         timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error('Database health check failed');
-      res.status(503).json({
-        status: 'ERROR',
+      res.status(503).json({ 
+        status: 'ERROR', 
         message: 'Database connection failed',
         timestamp: new Date().toISOString()
       });
@@ -46,12 +46,22 @@ export class HealthService {
         res.json({
           status: 'OK',
           message: mlHealth.message,
+          details: {
+            pythonAvailable: mlHealth.pythonAvailable,
+            scriptsAvailable: mlHealth.scriptsAvailable,
+            modelsAvailable: mlHealth.modelsAvailable
+          },
           timestamp: new Date().toISOString()
         });
       } else {
         res.status(503).json({
           status: 'ERROR',
           message: mlHealth.message,
+          details: {
+            pythonAvailable: mlHealth.pythonAvailable,
+            scriptsAvailable: mlHealth.scriptsAvailable,
+            modelsAvailable: mlHealth.modelsAvailable
+          },
           timestamp: new Date().toISOString()
         });
       }
@@ -69,7 +79,7 @@ export class HealthService {
    * Graceful shutdown handler
    */
   static async gracefulShutdown(signal: string) {
-
+    
     try {
       await prisma.$disconnect();
       process.exit(0);

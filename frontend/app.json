@@ -29,9 +29,7 @@
     },
     "web": {},
     "updates": {
-      "enabled": false,
-      "checkAutomatically": "NEVER",
-      "fallbackToCacheTimeout": 0
+      "enabled": false
     },
     "assetBundlePatterns": [
       "**/*"
