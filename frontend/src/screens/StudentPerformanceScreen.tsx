@@ -103,9 +103,14 @@ export default function StudentPerformanceScreen({ route }: Props) {
             ? (matricula.desempenhos[0].NotaPrevista || 5.0)
             : Math.round(performancePred.Probabilidade * 1000) / 10 || 5.0;
         }
+      } else {
+        // Se não há predição, usar a média das notas reais da matrícula
+        if (matricula.Nota !== null && matricula.Nota !== undefined) {
+          nota = matricula.Nota; // Média já calculada no backend
+          usandoMedia = true;
+        }
+        // Se não houver nota, mantém o valor padrão de 5.0
       }
-      // Se não houver predição, mantém o valor padrão de 5.0
-      // IMPORTANTE: Não usar mais matricula.Nota - apenas predições
 
       // Buscar predição de evasão (mais recente)
       const dropoutPreds = matricula.predictions

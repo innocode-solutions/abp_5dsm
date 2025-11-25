@@ -423,7 +423,7 @@ export default function StudentDashboardScreen() {
                         styles.feedbackProfessor,
                         isCritical && styles.feedbackProfessorCritical,
                         isPositive && styles.feedbackProfessorPositive
-                      ]}>{feedback.tipo === 'DESEMPENHO' ? 'Predição de Desempenho' : 'Predição de Evasão'}</Text>
+                      ]}>{feedback.professor}</Text>
                     </View>
                   </View>
                   <View style={[
@@ -442,7 +442,7 @@ export default function StudentDashboardScreen() {
                           ? (isPositive ? 'check-circle' : (isCritical ? 'alert-triangle' : 'info'))
                           : (isCritical ? 'trending-down' : 'check-circle')
                       } 
-                      size={24} 
+                      size={32} 
                       color={
                         isCritical 
                           ? '#E53935' 
@@ -585,13 +585,12 @@ const styles = StyleSheet.create({
     padding: isMobile ? 10 : 12, // Menos padding no mobile
     marginBottom: 8,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 2,
-    width: '100%',
   },
   feedbackCardCritical: {
     borderWidth: 2,
@@ -624,10 +623,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   feedbackTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 6,
+    marginBottom: 8,
     marginTop: 4,
   },
   feedbackTitleCritical: {
@@ -709,14 +708,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   feedbackImagePlaceholder: {
-    width: 50,
-    height: 50,
+    width: 60,
+    height: 60,
     borderRadius: 8,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
-    flexShrink: 0,
+    marginLeft: 12,
   },
   feedbackImagePlaceholderSuccess: {
     backgroundColor: '#c8e6c9', // Verde mais vibrante e em evidência

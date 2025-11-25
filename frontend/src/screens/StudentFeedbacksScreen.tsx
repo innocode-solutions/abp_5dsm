@@ -11,10 +11,13 @@ import colors from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { getStudentDetails, getStudentIdByUserId } from '../service/studentService';
 import { getMyFeedbacks, ApiFeedback } from '../service/feedbackApiService';
+import Carousel from '../components/Carousel';
 import { Feather } from '@expo/vector-icons';
 import { generatePerformanceFeedback, generateDropoutFeedback } from '../service/FeedbackService';
 
-// Layout otimizado para mobile - cards ocupam toda a largura disponível
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const MAX_CARD_WIDTH = 900; // Largura máxima para desktop
+const CARD_WIDTH = Math.min(SCREEN_WIDTH - 40, MAX_CARD_WIDTH);
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768;
@@ -141,7 +144,7 @@ export default function StudentFeedbacksScreen() {
           feedbacksPorDisciplina.set(apiFeedback.disciplina, {
             disciplina: apiFeedback.disciplina,
             descricao: formattedFeedback.message,
-            professor: `Predição de ${apiFeedback.tipo === 'DESEMPENHO' ? 'Desempenho' : 'Evasão'}`,
+            professor: `${apiFeedback.tipo === 'DESEMPENHO' ? 'Desempenho' : 'Risco de Evasão'} - ${apiFeedback.disciplina}`,
             data: dataFormatada,
             tipo: apiFeedback.tipo,
             probabilidade: apiFeedback.probabilidade, // Incluir probabilidade para determinar cores
@@ -205,7 +208,7 @@ export default function StudentFeedbacksScreen() {
             feedbacksPorDisciplina.set(matricula.disciplina.NomeDaDisciplina, {
               disciplina: matricula.disciplina.NomeDaDisciplina,
               descricao: feedback.message,
-              professor: `Predição de Desempenho`,
+              professor: `Desempenho - ${matricula.disciplina.NomeDaDisciplina}`,
               data: dataFormatada,
               tipo: 'DESEMPENHO',
               probabilidade: performancePred.Probabilidade, // Incluir probabilidade
@@ -234,7 +237,7 @@ export default function StudentFeedbacksScreen() {
             feedbacksPorDisciplina.set(matricula.disciplina.NomeDaDisciplina, {
               disciplina: matricula.disciplina.NomeDaDisciplina,
               descricao: feedback.message,
-              professor: `Predição de Evasão`,
+              professor: `Risco de Evasão - ${matricula.disciplina.NomeDaDisciplina}`,
               data: dataFormatada,
               tipo: 'EVASAO',
               probabilidade: dropoutPred.Probabilidade, // Incluir probabilidade
@@ -414,11 +417,6 @@ export default function StudentFeedbacksScreen() {
       isPositive && styles.feedbackCardPositive
     ];
     
-    // Separar título, mensagem da descrição
-    const partes = feedback.feedback?.message ? feedback.feedback.message.split('\n\n') : feedback.descricao.split('\n\n');
-    const titulo = partes[0] || feedback.disciplina;
-    const mensagem = partes[1] || feedback.descricao;
-    
     return (
       <View key={`feedback-${feedback.disciplina}-${index}`} style={cardStyle}>
         <View style={styles.feedbackContent}>
@@ -434,52 +432,137 @@ export default function StudentFeedbacksScreen() {
               <Text style={styles.feedbackDate}>{feedback.data}</Text>
             )}
           </View>
-          {titulo !== feedback.disciplina && feedback.feedback && (
-            <Text style={[
-              styles.feedbackTitle,
-              isCritical && styles.feedbackTitleCritical,
-              isPositive && styles.feedbackTitlePositive
-            ]}>
-              {feedback.feedback.title || titulo}
+        </View>
+        
+        {feedback.feedback && (
+          <ScrollView 
+            style={styles.feedbackContent}
+            contentContainerStyle={styles.feedbackContentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text 
+              style={[
+                styles.feedbackTitle,
+                isCritical && styles.feedbackTitleCritical,
+                isPositive && styles.feedbackTitlePositive
+              ]}
+              numberOfLines={3}
+              ellipsizeMode="tail"
+            >
+              {feedback.feedback.title}
             </Text>
-          )}
-          <Text style={[
-            styles.feedbackDescription,
-            isCritical && styles.feedbackDescriptionCritical,
-            isPositive && styles.feedbackDescriptionPositive
-          ]}>
-            {mensagem}
-          </Text>
-          <View style={styles.feedbackFooter}>
-            <Feather 
-              name={iconName}
-              size={14} 
-              color={iconColor} 
-            />
+            <Text 
+              style={[
+                styles.feedbackDescription,
+                isCritical && styles.feedbackDescriptionCritical,
+                isPositive && styles.feedbackDescriptionPositive
+              ]}
+            >
+              {feedback.feedback.message}
+            </Text>
+            
+            {feedback.feedback.features.length > 0 && (
+              <>
+                {/* Separar features negativas e positivas */}
+                {feedback.feedback.features.filter(f => f.influence === 'negativa').length > 0 && (
+                  <View style={[styles.featuresContainer, isCritical && styles.featuresContainerCritical]}>
+                    <Text style={[styles.featuresTitle, isCritical && styles.featuresTitleCritical]}>
+                      ⚠️ Pontos que precisam de atenção:
+                    </Text>
+                    {feedback.feedback.features
+                      .filter(f => f.influence === 'negativa')
+                      .map((feature, idx) => (
+                        <View key={idx} style={styles.featureItem}>
+                          <Feather 
+                            name="arrow-down-circle" 
+                            size={18} 
+                            color="#F44336" 
+                          />
+                          <Text style={styles.featureText} numberOfLines={0}>
+                            <Text style={[styles.featureName, { color: '#F44336', fontWeight: '700' }]}>
+                              {feature.feature}
+                            </Text>
+                            {': '}
+                            <Text style={[styles.featureValue, { color: '#F44336', fontWeight: '600' }]}>
+                              {feature.value} (impacto negativo)
+                            </Text>
+                          </Text>
+                        </View>
+                      ))}
+                  </View>
+                )}
+                
+                {/* Features positivas */}
+                {feedback.feedback.features.filter(f => f.influence === 'positiva').length > 0 && (
+                  <View style={[styles.featuresContainer, isPositive && styles.featuresContainerPositive]}>
+                    <Text style={[styles.featuresTitle, isPositive && styles.featuresTitlePositive]}>
+                      ✅ Pontos fortes:
+                    </Text>
+                    {feedback.feedback.features
+                      .filter(f => f.influence === 'positiva')
+                      .map((feature, idx) => (
+                        <View key={idx} style={styles.featureItem}>
+                          <Feather 
+                            name="arrow-up-circle" 
+                            size={18} 
+                            color="#4CAF50" 
+                          />
+                          <Text style={styles.featureText} numberOfLines={0}>
+                            <Text style={[styles.featureName, { color: '#4CAF50', fontWeight: '700' }]}>
+                              {feature.feature}
+                            </Text>
+                            {': '}
+                            <Text style={[styles.featureValue, { color: '#4CAF50', fontWeight: '600' }]}>
+                              {feature.value} (impacto positivo)
+                            </Text>
+                          </Text>
+                        </View>
+                      ))}
+                  </View>
+                )}
+              </>
+            )}
+            
+            {feedback.feedback.suggestions.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                <Text style={styles.suggestionsTitle}>💡 Sugestões:</Text>
+                {feedback.feedback.suggestions.map((suggestion, idx) => (
+                  <View key={idx} style={styles.suggestionItem}>
+                    <Text style={styles.suggestionText}>• {suggestion}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        )}
+        
+        {!feedback.feedback && (
+          <View style={styles.feedbackContent}>
             <Text style={[
+              styles.feedbackDescription,
+              isCritical && styles.feedbackDescriptionCritical,
+              isPositive && styles.feedbackDescriptionPositive
+            ]}>{feedback.descricao}</Text>
+          </View>
+        )}
+        
+        <View style={styles.feedbackFooter}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>
+              {studentName.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          <Text 
+            style={[
               styles.feedbackProfessor,
               isCritical && styles.feedbackProfessorCritical,
               isPositive && styles.feedbackProfessorPositive
-            ]}>
-              {feedback.professor}
-            </Text>
-          </View>
-        </View>
-        <View style={[
-          styles.feedbackImagePlaceholder,
-          isCritical 
-            ? styles.feedbackImagePlaceholderCritical
-            : isPositive
-              ? styles.feedbackImagePlaceholderSuccess
-              : isEvasion
-                ? styles.feedbackImagePlaceholderWarning 
-                : styles.feedbackImagePlaceholderSuccess
-        ]}>
-          <Feather 
-            name={iconName}
-            size={24} 
-            color={iconColor} 
-          />
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {studentName}
+          </Text>
         </View>
       </View>
     );
@@ -490,7 +573,7 @@ export default function StudentFeedbacksScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Feedbacks</Text>
-          <Text style={styles.subtitle}>Acompanhe os feedbacks das predições</Text>
+          <Text style={styles.subtitle}>Acompanhe os feedbacks dos seus professores</Text>
         </View>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Carregando feedbacks...</Text>
@@ -504,7 +587,7 @@ export default function StudentFeedbacksScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Feedbacks</Text>
-          <Text style={styles.subtitle}>Acompanhe os feedbacks das predições</Text>
+          <Text style={styles.subtitle}>Acompanhe os feedbacks dos seus professores</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Feather name="inbox" size={64} color={colors.muted} />
@@ -519,13 +602,14 @@ export default function StudentFeedbacksScreen() {
       <View style={styles.header}>
         <Text style={styles.subtitle}>Acompanhe os feedbacks dos seus professores</Text>
       </View>
-      <ScrollView 
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={true}
-      >
-        {feedbacks.map((feedback, index) => renderFeedbackCard(feedback, index))}
-      </ScrollView>
+      <View style={styles.carouselContainer}>
+        <Carousel
+          showIndicators={true}
+          showNavigation={feedbacks.length > 1}
+        >
+          {feedbacks.map((feedback, index) => renderFeedbackCard(feedback, index))}
+        </Carousel>
+      </View>
     </SafeAreaView>
   );
 }
@@ -544,10 +628,13 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10,
     width: '100%',
+    maxWidth: MAX_CARD_WIDTH + 40,
     alignItems: 'center',
   },
-  scrollContainer: {
+  carouselContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     width: '100%',
   },
   scrollContent: {
@@ -607,26 +694,41 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E53935',
     backgroundColor: '#fff5f5',
+    marginHorizontal: 18, // Reduzir margem para compensar a borda de 2px
   },
   feedbackCardPositive: {
     borderWidth: 2,
     borderColor: '#2E7D32', // Verde escuro para positivo
     backgroundColor: '#f1f8f4', // Verde muito claro para fundo
+    marginHorizontal: 18, // Reduzir margem para compensar a borda de 2px
   },
-  feedbackContent: {
-    flex: 1,
-  },
-  feedbackHeader: {
+  feedbackHeaderCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  feedbackIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E3F2FD',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  feedbackTitleContainer: {
+    flex: 1,
+    flexShrink: 1,
   },
   feedbackDiscipline: {
     fontSize: isMobile ? 14 : 16, // Fonte menor no mobile
     fontWeight: '700',
     color: colors.text,
-    flex: 1,
+    marginBottom: 4,
+    flexWrap: 'wrap',
   },
   feedbackDisciplineCritical: {
     color: '#E53935',
@@ -639,6 +741,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.muted,
     fontStyle: 'italic',
+  },
+  feedbackContent: {
+    flex: 1,
+    minHeight: 0,
+  },
+  feedbackContentContainer: {
+    flexGrow: 1,
+    paddingBottom: 10,
   },
   feedbackTitle: {
     fontSize: isMobile ? 13 : 14, // Fonte menor no mobile
@@ -755,11 +865,10 @@ const styles = StyleSheet.create({
   feedbackFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  feedbackProfessor: {
-    fontSize: 12,
-    color: colors.muted,
+    marginTop: 'auto',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
   },
   feedbackImagePlaceholder: {
     width: isMobile ? 45 : 50, // Menor no mobile
@@ -776,11 +885,17 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2E7D32',
   },
-  feedbackImagePlaceholderWarning: {
-    backgroundColor: '#fff3e0',
+  avatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
   },
-  feedbackImagePlaceholderCritical: {
-    backgroundColor: '#ffebee',
+  feedbackProfessor: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '600',
+    flex: 1,
+    flexShrink: 1,
   },
   feedbackProfessorCritical: {
     color: '#E53935',
