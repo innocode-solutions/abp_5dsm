@@ -165,8 +165,14 @@ export default function AddUserScreen({ navigation }: Props) {
         userData.disciplinaData = {
           IDDisciplina: disciplinaSelecionada!.IDDisciplina,
         };
+        console.log('[FRONTEND] Dados do professor sendo enviados:', {
+          Email: userData.Email,
+          Role: userData.Role,
+          disciplinaData: userData.disciplinaData
+        });
       }
 
+      console.log('[FRONTEND] Enviando dados do usuário:', { ...userData, password: '***' });
       await userService.createUser(userData);
 
       Alert.alert('Sucesso', 'Usuário criado com sucesso!', [

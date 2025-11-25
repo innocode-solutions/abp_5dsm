@@ -160,6 +160,10 @@ export class UserController {
   static async create(req: Request, res: Response) {
     try {
       const { Email, PasswordHash, Role, name, alunoData, disciplinaData }: CreateUserData = req.body
+      console.log(`[CREATE_USER] Criando usuário. Role: ${Role}, Email: ${Email}`)
+      if (Role === UserRole.TEACHER) {
+        console.log(`[CREATE_USER] DisciplinaData recebida:`, disciplinaData)
+      }
 
       // Validate required fields
       if (!Email || !PasswordHash || !Role || !name) {
@@ -234,12 +238,19 @@ export class UserController {
         }
 
         if (Role === UserRole.TEACHER && disciplinaData) {
-          await tx.professorDisciplina.create({
-            data: {
-              IDUser: user.IDUser,
-              IDDisciplina: disciplinaData.IDDisciplina
-            }
-          })
+          console.log(`[CREATE_USER] Criando associação professor-disciplina. User: ${user.IDUser}, Disciplina: ${disciplinaData.IDDisciplina}`)
+          try {
+            await tx.professorDisciplina.create({
+              data: {
+                IDUser: user.IDUser,
+                IDDisciplina: disciplinaData.IDDisciplina
+              }
+            })
+            console.log(`[CREATE_USER] ✅ Associação criada com sucesso`)
+          } catch (error: any) {
+            console.error(`[CREATE_USER] ❌ Erro ao criar associação:`, error)
+            throw error
+          }
         }
 
         return user
