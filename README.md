@@ -7,19 +7,12 @@
 
 
 <p align="center">
-
   <a href="#sobre">Sobre</a> |
-
   <a href="#acesso">Acesso ao Projeto</a> |
-
   <a href="#status">Status do Projeto</a> |
-
   <a href="#sprints">Sprints</a> |
-
   <a href="#tecnologias">Tecnologias</a> |
-
   <a href="#equipe">Equipe</a>
-
 </p>
 
 
@@ -53,17 +46,11 @@ O sistema oferece interfaces específicas para três perfis de usuário: <strong
 <h1 align="center">Acesso ao Projeto</h1>
 
 <p align="center">
-
   Experimente a aplicação ou faça o download do instalador para Android.
-
 <br><br>
-
   <a href="https://drive.google.com/drive/folders/1nU0saP3uhb3UfS3abf6U-9Q2OTon_fiQ" target="_blank">
-
     <img src="https://img.shields.io/badge/Download-APK-green?style=for-the-badge&logo=android" alt="Download APK">
-
   </a>
-
 </p>
 
 
@@ -255,17 +242,11 @@ O sistema oferece interfaces específicas para três perfis de usuário: <strong
 
 
 | Função          | Nome                     | GitHub                                                       | LinkedIn |
-
 |-----------------|--------------------------|--------------------------------------------------------------|----------|
-
 | Product Owner   | Mauro do Prado Santos    | [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/omaurosantos) | [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/mauro-do-prado-santos-350b2720a/) |
-
 | Scrum Master    | Jonatas Filipe Carvalho  | [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/filipejonatas) | [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/jonatas-filipe-aa4534165/) |
-
 | Dev Team        | Samuel Lucas Vieira de Melo | [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/SamuelLucasVieira) | [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/samuel-lucas-7a3256144/) |
-
 | Dev Team        | Igor Fonseca             | [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/Igor-Fons) | [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/igor-fonseca-84277226a/) |
-
 | Dev Team        | Vitor Cezar de Souza     | [![GitHub Badge](https://img.shields.io/badge/GitHub-111217?style=flat-square&logo=github&logoColor=white)](https://github.com/vooshybee) | [![Linkedin Badge](https://img.shields.io/badge/Linkedin-blue?style=flat-square&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/vitor-souza-29077228b/) |
 
 
