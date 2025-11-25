@@ -240,15 +240,28 @@ export class UserController {
         if (Role === UserRole.TEACHER && disciplinaData) {
           console.log(`[CREATE_USER] Criando associação professor-disciplina. User: ${user.IDUser}, Disciplina: ${disciplinaData.IDDisciplina}`)
           try {
-            await tx.professorDisciplina.create({
+            // Verificar se o modelo está disponível no Prisma Client
+            if (!tx.professorDisciplina) {
+              console.error(`[CREATE_USER] ❌ Modelo professorDisciplina não encontrado no Prisma Client`)
+              throw new Error('Modelo professorDisciplina não está disponível no Prisma Client. Execute "npx prisma generate"')
+            }
+            
+            const result = await tx.professorDisciplina.create({
               data: {
                 IDUser: user.IDUser,
                 IDDisciplina: disciplinaData.IDDisciplina
               }
             })
-            console.log(`[CREATE_USER] ✅ Associação criada com sucesso`)
+            console.log(`[CREATE_USER] ✅ Associação criada com sucesso:`, result)
           } catch (error: any) {
             console.error(`[CREATE_USER] ❌ Erro ao criar associação:`, error)
+            console.error(`[CREATE_USER] Erro completo:`, JSON.stringify(error, null, 2))
+            if (error.code) {
+              console.error(`[CREATE_USER] Código do erro: ${error.code}`)
+            }
+            if (error.meta) {
+              console.error(`[CREATE_USER] Meta do erro:`, error.meta)
+            }
             throw error
           }
         }
