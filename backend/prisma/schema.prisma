@@ -36,8 +36,9 @@ model Disciplina {
   updatedAt          DateTime @updatedAt
 
   // Relacionamentos
-  curso      Curso       @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
-  matriculas Matricula[]
+  curso              Curso                @relation(fields: [IDCurso], references: [IDCurso], onDelete: Cascade)
+  matriculas         Matricula[]
+  professores        ProfessorDisciplina[]
 
   // Índices e constraints
   @@unique([IDCurso, CodigoDaDisciplina])
@@ -130,9 +131,10 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Relacionamento um-para-muitos com Aluno
-  alunos        Aluno[]
-  resetRequests PasswordResetRequest[]
-  notificacoes  Notificacao[]
+  alunos              Aluno[]
+  resetRequests       PasswordResetRequest[]
+  notificacoes        Notificacao[]
+  disciplinasMinistradas ProfessorDisciplina[]
 
   @@map("users")
 }
@@ -307,4 +309,22 @@ model Notificacao {
   @@index([IDUser, createdAt], name: "idx_notificacoes_user_data")
   @@index([Status], name: "idx_notificacoes_status")
   @@map("notificacoes")
+}
+
+model ProfessorDisciplina {
+  IDProfessorDisciplina String   @id @default(uuid())
+  IDUser                String
+  IDDisciplina          String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relacionamentos
+  user       User       @relation(fields: [IDUser], references: [IDUser], onDelete: Cascade)
+  disciplina Disciplina @relation(fields: [IDDisciplina], references: [IDDisciplina], onDelete: Cascade)
+
+  // Constraint única: um professor não pode estar associado à mesma disciplina duas vezes
+  @@unique([IDUser, IDDisciplina])
+  @@index([IDUser], name: "idx_professor_disciplina_user")
+  @@index([IDDisciplina], name: "idx_professor_disciplina_disciplina")
+  @@map("professor_disciplina")
 }

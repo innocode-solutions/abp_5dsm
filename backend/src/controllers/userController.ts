@@ -21,6 +21,9 @@ interface CreateUserData {
     Semestre: number
     IDCurso: string
   }
+  disciplinaData?: {
+    IDDisciplina: string
+  }
 }
 
 interface UpdateUserData {
@@ -156,7 +159,7 @@ export class UserController {
   // POST /users - Create new user
   static async create(req: Request, res: Response) {
     try {
-      const { Email, PasswordHash, Role, name, alunoData }: CreateUserData = req.body
+      const { Email, PasswordHash, Role, name, alunoData, disciplinaData }: CreateUserData = req.body
 
       // Validate required fields
       if (!Email || !PasswordHash || !Role || !name) {
@@ -187,6 +190,26 @@ export class UserController {
         }
       }
 
+      // Validate teacher-specific requirements
+      if (Role === UserRole.TEACHER) {
+        if (!disciplinaData || !disciplinaData.IDDisciplina) {
+          return res.status(400).json({
+            error: 'disciplinaData com IDDisciplina é obrigatório para professores'
+          })
+        }
+
+        // Verificar se a disciplina existe
+        const disciplina = await prisma.disciplina.findUnique({
+          where: { IDDisciplina: disciplinaData.IDDisciplina }
+        })
+
+        if (!disciplina) {
+          return res.status(404).json({
+            error: 'Disciplina não encontrada'
+          })
+        }
+      }
+
       // Create user with transaction
       const result = await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
@@ -206,6 +229,15 @@ export class UserController {
               Semestre: alunoData.Semestre,
               IDCurso: alunoData.IDCurso,
               IDUser: user.IDUser
+            }
+          })
+        }
+
+        if (Role === UserRole.TEACHER && disciplinaData) {
+          await tx.professorDisciplina.create({
+            data: {
+              IDUser: user.IDUser,
+              IDDisciplina: disciplinaData.IDDisciplina
             }
           })
         }

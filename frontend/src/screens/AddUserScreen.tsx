@@ -16,7 +16,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import { RootStackParamList } from '../navigation';
-import { userService, Curso } from '../service/userService';
+import { userService, Curso, Disciplina } from '../service/userService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddUser'>;
 
@@ -29,14 +29,27 @@ export default function AddUserScreen({ navigation }: Props) {
   const [role, setRole] = useState<UserRole | null>(null);
   const [cursoSelecionado, setCursoSelecionado] = useState<Curso | null>(null);
   const [semestre, setSemestre] = useState('');
+  const [disciplinaSelecionada, setDisciplinaSelecionada] = useState<Disciplina | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingCursos, setLoadingCursos] = useState(false);
+  const [loadingDisciplinas, setLoadingDisciplinas] = useState(false);
   const [cursos, setCursos] = useState<Curso[]>([]);
+  const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [modalCursoVisible, setModalCursoVisible] = useState(false);
+  const [modalDisciplinaVisible, setModalDisciplinaVisible] = useState(false);
 
   useEffect(() => {
     if (role === 'STUDENT') {
       loadCursos();
+      setDisciplinaSelecionada(null);
+    } else if (role === 'TEACHER') {
+      loadDisciplinas();
+      setCursoSelecionado(null);
+      setSemestre('');
+    } else {
+      setCursoSelecionado(null);
+      setDisciplinaSelecionada(null);
+      setSemestre('');
     }
   }, [role]);
 
@@ -50,6 +63,19 @@ export default function AddUserScreen({ navigation }: Props) {
       console.error('Erro ao carregar cursos:', error);
     } finally {
       setLoadingCursos(false);
+    }
+  };
+
+  const loadDisciplinas = async () => {
+    setLoadingDisciplinas(true);
+    try {
+      const disciplinasData = await userService.getDisciplinas();
+      setDisciplinas(disciplinasData);
+    } catch (error: any) {
+      Alert.alert('Erro', 'Não foi possível carregar as disciplinas');
+      console.error('Erro ao carregar disciplinas:', error);
+    } finally {
+      setLoadingDisciplinas(false);
     }
   };
 
@@ -103,6 +129,13 @@ export default function AddUserScreen({ navigation }: Props) {
       }
     }
 
+    if (role === 'TEACHER') {
+      if (!disciplinaSelecionada) {
+        Alert.alert('Erro', 'Selecione a disciplina');
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -125,6 +158,12 @@ export default function AddUserScreen({ navigation }: Props) {
           Nome: nome.trim(),
           Semestre: parseInt(semestre, 10),
           IDCurso: cursoSelecionado!.IDCurso,
+        };
+      }
+
+      if (role === 'TEACHER') {
+        userData.disciplinaData = {
+          IDDisciplina: disciplinaSelecionada!.IDDisciplina,
         };
       }
 
@@ -235,7 +274,7 @@ export default function AddUserScreen({ navigation }: Props) {
           <>
             {/* Campo Curso */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Curso ou Disciplina</Text>
+              <Text style={styles.label}>Curso</Text>
               <TouchableOpacity
                 style={styles.input}
                 onPress={() => setModalCursoVisible(true)}
@@ -248,7 +287,7 @@ export default function AddUserScreen({ navigation }: Props) {
                 >
                   {cursoSelecionado
                     ? cursoSelecionado.NomeDoCurso
-                    : 'Selecione o curso ou disciplina'}
+                    : 'Selecione o curso'}
                 </Text>
                 <Feather
                   name="chevron-down"
@@ -270,6 +309,37 @@ export default function AddUserScreen({ navigation }: Props) {
                 onChangeText={setSemestre}
                 keyboardType="numeric"
               />
+            </View>
+          </>
+        )}
+
+        {/* Campos específicos para Professor */}
+        {role === 'TEACHER' && (
+          <>
+            {/* Campo Disciplina */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Disciplina *</Text>
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => setModalDisciplinaVisible(true)}
+              >
+                <Text
+                  style={[
+                    styles.inputText,
+                    !disciplinaSelecionada && styles.placeholderText,
+                  ]}
+                >
+                  {disciplinaSelecionada
+                    ? `${disciplinaSelecionada.NomeDaDisciplina}${disciplinaSelecionada.curso ? ` - ${disciplinaSelecionada.curso.NomeDoCurso}` : ''}`
+                    : 'Selecione a disciplina'}
+                </Text>
+                <Feather
+                  name="chevron-down"
+                  size={20}
+                  color={colors.muted}
+                  style={styles.chevronIcon}
+                />
+              </TouchableOpacity>
             </View>
           </>
         )}
@@ -331,6 +401,70 @@ export default function AddUserScreen({ navigation }: Props) {
                   <View style={styles.modalEmpty}>
                     <Text style={styles.modalEmptyText}>
                       Nenhum curso disponível
+                    </Text>
+                  </View>
+                }
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Seleção de Disciplina */}
+      <Modal
+        visible={modalDisciplinaVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalDisciplinaVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Selecione a Disciplina</Text>
+              <TouchableOpacity
+                onPress={() => setModalDisciplinaVisible(false)}
+                style={styles.modalCloseButton}
+              >
+                <Feather name="x" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            {loadingDisciplinas ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator size="large" color={colors.primary} />
+              </View>
+            ) : (
+              <FlatList
+                data={disciplinas}
+                keyExtractor={(item) => item.IDDisciplina}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.cursoItem}
+                    onPress={() => {
+                      setDisciplinaSelecionada(item);
+                      setModalDisciplinaVisible(false);
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.cursoItemText}>
+                        {item.NomeDaDisciplina}
+                      </Text>
+                      {item.curso && (
+                        <Text style={[styles.cursoItemText, { fontSize: 12, color: colors.muted, marginTop: 4 }]}>
+                          {item.curso.NomeDoCurso}
+                        </Text>
+                      )}
+                      {item.CodigoDaDisciplina && (
+                        <Text style={[styles.cursoItemText, { fontSize: 12, color: colors.muted }]}>
+                          Código: {item.CodigoDaDisciplina}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <View style={styles.modalEmpty}>
+                    <Text style={styles.modalEmptyText}>
+                      Nenhuma disciplina disponível
                     </Text>
                   </View>
                 }

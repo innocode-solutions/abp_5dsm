@@ -6,6 +6,17 @@ export interface Curso {
   Descricao?: string;
 }
 
+export interface Disciplina {
+  IDDisciplina: string;
+  NomeDaDisciplina: string;
+  CodigoDaDisciplina?: string;
+  IDCurso: string;
+  curso?: {
+    IDCurso: string;
+    NomeDoCurso: string;
+  };
+}
+
 export interface CreateUserRequest {
   Email: string;
   password: string;
@@ -15,6 +26,9 @@ export interface CreateUserRequest {
     Nome: string;
     Semestre: number;
     IDCurso: string;
+  };
+  disciplinaData?: {
+    IDDisciplina: string;
   };
 }
 
@@ -61,6 +75,24 @@ export const userService = {
       return response.data.data;
     } catch (error: any) {
       console.error('Erro ao buscar cursos:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Busca lista de disciplinas disponíveis
+   */
+  getDisciplinas: async (): Promise<Disciplina[]> => {
+    try {
+      const response = await apiConnection.get<{ data: Disciplina[] }>('/disciplinas', {
+        params: {
+          limit: 100, // Buscar todas as disciplinas
+          ativa: 'true', // Apenas disciplinas ativas
+        },
+      });
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Erro ao buscar disciplinas:', error);
       throw error;
     }
   },
